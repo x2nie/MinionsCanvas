@@ -119,7 +119,8 @@ uses
 { miniGlue lib }
   igLayers,
   igLayerIO,
-  igBrightContrastLayer, 
+  igBrightContrastLayer,
+  igPaintFuncs,
 { miniGlue }
   MainForm,
   NewFileForm,
@@ -153,6 +154,10 @@ begin
         // set background size before create background layer
         imgWorkArea.Bitmap.SetSize(frmNewFile.BitmapWidth, frmNewFile.BitmapHeight);
         imgWorkArea.Bitmap.Clear($00000000);
+
+        // draw checkerboard pattern
+        CheckerboardBmp.SetSizeFrom(imgWorkArea.Bitmap);
+        DrawCheckerboardPattern(CheckerboardBmp, CheckerboardBmp.ClipRect);
 
         // create background layer
         LLayerPanel := CreateNormalLayer(clWhite32, True);
@@ -369,6 +374,10 @@ begin
                                      LayerPanelList.SelectedPanel.LayerBitmap.Height);
 
           imgWorkArea.Bitmap.Clear($00000000);
+
+          // draw checkerboard pattern
+          CheckerboardBmp.SetSizeFrom(imgWorkArea.Bitmap);
+          DrawCheckerboardPattern(CheckerboardBmp, CheckerboardBmp.ClipRect);
 
           // update the view
           LayerPanelList.SelectedPanel.Changed;

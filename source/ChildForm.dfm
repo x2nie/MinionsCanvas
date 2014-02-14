@@ -1,8 +1,8 @@
 object frmChild: TfrmChild
   Left = 367
   Top = 179
-  Width = 638
-  Height = 417
+  ClientHeight = 378
+  ClientWidth = 622
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,14 +16,15 @@ object frmChild: TfrmChild
   OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object imgWorkArea: TImgView32
     Left = 0
     Top = 0
-    Width = 630
-    Height = 390
+    Width = 622
+    Height = 378
     Align = alClient
     Bitmap.ResamplerClassName = 'TNearestResampler'
     BitmapAlign = baCustom
