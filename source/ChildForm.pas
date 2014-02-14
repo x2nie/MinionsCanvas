@@ -59,9 +59,11 @@ type
       Y: Integer; Layer: TCustomLayer);
     procedure imgWorkAreaMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer; Layer: TCustomLayer);
+    procedure FormDestroy(Sender: TObject);
   private
-    FLayerPanelList : TigLayerPanelList;
-    FLeftButtonDown : Boolean;
+    FLayerPanelList  : TigLayerPanelList;
+    FLeftButtonDown  : Boolean;
+    FCheckerboardBmp : TBitmap32;   // holding checkerboard pattern for background rendering
 
     // callback functions
     procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
@@ -80,7 +82,8 @@ type
     procedure DeleteCurrentLayer;
     procedure SetCallbacksForLayerPanelsInList;
 
-    property LayerPanelList : TigLayerPanelList read FLayerPanelList;
+    property LayerPanelList  : TigLayerPanelList read FLayerPanelList;
+    property CheckerboardBmp : TBitmap32         read FCheckerboardBmp;
   end;
 
 var
@@ -103,7 +106,9 @@ procedure TfrmChild.AfterLayerCombined(ASender: TObject; const ARect: TRect);
 begin
   if Assigned(FLayerPanelList) then
   begin
-    imgWorkArea.Bitmap.FillRectS(ARect, $00FFFFFF);  // must be transparent white
+    // rendering the checkerboard pattern as background first
+    imgWorkArea.Bitmap.Draw(ARect, ARect, FCheckerboardBmp);
+    // then rendering the combined result of layers on the background
     imgWorkArea.Bitmap.Draw(ARect, ARect, FLayerPanelList.CombineResult);
     imgWorkArea.Bitmap.Changed(ARect);
   end;
@@ -315,7 +320,14 @@ begin
   imgWorkArea.RepaintMode     := rmOptimizer;
   imgWorkArea.Bitmap.DrawMode := dmBlend;
 
-  FLeftButtonDown := False;            
+  FLeftButtonDown := False;
+  FCheckerboardBmp := TBitmap32.Create;
+end;
+
+procedure TfrmChild.FormDestroy(Sender: TObject);
+begin
+  FLayerPanelList.Free;
+  FCheckerboardBmp.Free;
 end;
 
 procedure TfrmChild.FormActivate(Sender: TObject);
@@ -347,7 +359,6 @@ begin
   Buffer.Clear($FFC0C0C0);
 
   LRect := imgWorkArea.GetBitmapRect;
-  DrawCheckerboardPattern(Buffer, LRect);
 
   LRect.Left   := LRect.Left   - 1;
   LRect.Top    := LRect.Top    - 1;
