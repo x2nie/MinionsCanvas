@@ -24,6 +24,7 @@ unit igLayers;
  * Please see the file LICENSE.txt for additional information concerning this
  * license.
  *
+ * Update Date: 2nd, Mar, 2014
  *
  * The Initial Developer of this unit are
  *   Ma Xiaoguang and Ma Xiaoming < gmbros[at]hotmail[dot]com >
@@ -125,6 +126,7 @@ type
 
     property LayerBitmap          : TBitmap32            read FLayerBitmap;
     property LayerThumbnail       : TBitmap32            read FLayerThumb;
+    property MaskBitmap           : TBitmap32            read FMaskBitmap;
     property MaskThumbnail        : TBitmap32            read FMaskThumb;
     property IsLayerVisible       : Boolean              read FLayerVisible         write SetLayerVisible;
     property IsDuplicated         : Boolean              read FDuplicated;
