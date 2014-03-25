@@ -24,7 +24,7 @@ unit igLayers;
  * Please see the file LICENSE.txt for additional information concerning this
  * license.
  *
- * Update Date: 2nd, Mar, 2014
+ * Update Date: 24th, Mar, 2014
  *
  * The Initial Developer of this unit are
  *   Ma Xiaoguang and Ma Xiaoming < gmbros[at]hotmail[dot]com >
@@ -58,24 +58,20 @@ type
   TigLayerProcessStage = (lpsLayer, lpsMask);
 
   { Forward Declarations }
-  TigCustomLayerPanel = class;
   TigLayerPanelList = class;
   TigClassCounter = class;
-
-  { Event }
-  TigLayerChangeEvent = procedure(Sender: TObject; ALayer: TigCustomLayerPanel) of object;
 
   { TigCustomLayerPanel }
   
   TigCustomLayerPanel = class(TPersistent)
-  private
-    procedure DoParentLayerChanged;
   protected
     FOwner                : TigLayerPanelList;
     FLayerBitmap          : TBitmap32;
     FLayerThumb           : TBitmap32;
     FMaskBitmap           : TBitmap32;
     FMaskThumb            : TBitmap32;
+    FLogoBitmap           : TBitmap32;
+    FLogoThumb            : TBitmap32;
     FLayerBlendMode       : TBlendMode32;
     FLayerBlendEvent      : TPixelCombineEvent;
     FLayerVisible         : Boolean;
@@ -85,20 +81,27 @@ type
     FDuplicated           : Boolean;               // indicate whether this layer is duplicated from another one
     FMaskEnabled          : Boolean;               // indicate whether this layer has a mask
     FMaskLinked           : Boolean;               // indicate whether this layer is linked to a mask
+    FLayerThumbEnabled    : Boolean;               // indicate whether this layer has a layer thumbnail
+    FLogoThumbEnabled     : Boolean;               // indicate whether this layer has a logo thumbnail
     FRealThumbRect        : TRect;
     FDefaultLayerName     : string;
-    FLayerName            : string;
+    FLayerName            : string;                // current layer name
 
     FOnChange             : TNotifyEvent;
     FOnThumbUpdate        : TNotifyEvent;
     FOnPanelDblClick      : TNotifyEvent;
     FOnLayerThumbDblClick : TNotifyEvent;
     FOnMaskThumbDblClick  : TNotifyEvent;
+    FOnLogoThumbDblClick  : TNotifyEvent;
 
     function GetLayerOpacity: Byte;
 
     function GetThumbZoomScale(
       const ASrcWidth, ASrcHeight, AThumbWidth, AThumbHeight: Integer): Single;
+
+    function GetRealThumbRect(
+      const ASrcWidth, ASrcHeight, AThumbWidth, AThumbHeight: Integer;
+      const AMarginSize: Integer = 4): TRect;
 
     procedure SetLayerVisible(AValue: Boolean);
     procedure SetMaskEnabled(AValue: Boolean);
@@ -106,7 +109,6 @@ type
     procedure SetLayerBlendMode(AValue: TBlendMode32);
     procedure SetLayerOpacity(AValue: Byte);
     procedure SetLayerProcessStage(AValue: TigLayerProcessStage);
-    procedure CalcRealThumbRect; virtual;
     procedure LayerBlend(F: TColor32; var B: TColor32; M: TColor32); virtual;
     procedure InitMask;
   public
@@ -118,6 +120,7 @@ type
 
     procedure UpdateLayerThumbnail; virtual;
     procedure UpdateMaskThumbnail;
+    procedure UpdateLogoThumbnail; virtual;
     procedure Changed; overload;
     procedure Changed(const ARect: TRect); overload;
 
@@ -128,11 +131,15 @@ type
     property LayerThumbnail       : TBitmap32            read FLayerThumb;
     property MaskBitmap           : TBitmap32            read FMaskBitmap;
     property MaskThumbnail        : TBitmap32            read FMaskThumb;
+    property LogoBitmap           : TBitmap32            read FLogoBitmap;
+    property LogoThumbnail        : TBitmap32            read FLogoThumb;
     property IsLayerVisible       : Boolean              read FLayerVisible         write SetLayerVisible;
     property IsDuplicated         : Boolean              read FDuplicated;
     property IsSelected           : Boolean              read FSelected             write FSelected;
     property IsMaskEnabled        : Boolean              read FMaskEnabled;
     property IsMaskLinked         : Boolean              read FMaskLinked           write SetMaskLinked;
+    property IsLayerThumbEnabled  : Boolean              read FLayerThumbEnabled;
+    property IsLogoThumbEnabled   : Boolean              read FLogoThumbEnabled;
     property LayerName            : string               read FLayerName            write FLayerName;
     property LayerBlendMode       : TBlendMode32         read FLayerBlendMode       write SetLayerBlendMode;
     property LayerOpacity         : Byte                 read GetLayerOpacity       write SetLayerOpacity;
@@ -143,6 +150,7 @@ type
     property OnPanelDblClick      : TNotifyEvent         read FOnPanelDblClick      write FOnPanelDblClick;
     property OnLayerThumbDblClick : TNotifyEvent         read FOnLayerThumbDblClick write FOnLayerThumbDblClick;
     property OnMaskThumbDblClick  : TNotifyEvent         read FOnMaskThumbDblClick  write FOnMaskThumbDblClick;
+    property OnLogoThumbDblClick  : TNotifyEvent         read FOnLogoThumbDblClick  write FOnLogoThumbDblClick;
   end;
 
   { TigNormalLayerPanel }
@@ -181,7 +189,6 @@ type
     FOnFlattenLayers      : TigMergeLayerEvent;
 
     FPanelTypeCounter     : TigClassCounter;
-    FOnLayerChanged: TigLayerChangeEvent;
 
     function GetPanelCount: Integer;
     function GetPanelMaxIndex: Integer;
@@ -195,7 +202,6 @@ type
     procedure DeleteVisibleLayerPanels;
     procedure DeselectAllPanels;
     procedure SetLayerPanelInitialName(ALayerPanel: TigCustomLayerPanel);
-    procedure DoLayerChanged(ALayer : TigCustomLayerPanel);
   public
     constructor Create;
     destructor Destroy; override;
@@ -224,7 +230,6 @@ type
     property SelectedIndex                : Integer               read GetSelectedPanelIndex;
     property LayerPanels[AIndex: Integer] : TigCustomLayerPanel   read GetLayerPanel;
     property SelectedPanel                : TigCustomLayerPanel   read FSelectedPanel;
-    property OnLayerChanged               : TigLayerChangeEvent   read FOnLayerChanged       write FOnLayerChanged; 
     property OnLayerCombined              : TigLayerCombinedEvent read FOnLayerCombined      write FOnLayerCombined;
     property OnSelectionChanged           : TNotifyEvent          read FOnSelectionChanged   write FOnSelectionChanged;
     property OnLayerOrderChanged          : TNotifyEvent          read FOnLayerOrderChanged  write FOnLayerOrderChanged;
@@ -268,6 +273,7 @@ type
 
 const
   LAYER_THUMB_SIZE = 36;
+  LAYER_LOGO_SIZE  = 36;
 
 implementation
 
@@ -296,6 +302,8 @@ begin
   FSelected          := True;
   FMaskEnabled       := False;
   FMaskLinked        := False;
+  FLayerThumbEnabled := False;
+  FLogoThumbEnabled  := False;
   FDefaultLayerName  := '';
   FLayerName         := '';
   FLayerProcessStage := lpsLayer;
@@ -305,7 +313,8 @@ begin
   FOnThumbUpdate        := nil;
   FOnPanelDblClick      := nil;
   FOnLayerThumbDblClick := nil;
-  FOnMaskThumbDblClick  := nil; 
+  FOnMaskThumbDblClick  := nil;
+  FOnLogoThumbDblClick  := nil;
 
   FLayerBitmap := TBitmap32.Create;
   with FLayerBitmap do
@@ -317,20 +326,15 @@ begin
     Clear(AFillColor);
   end;
 
-  FLayerThumb := TBitmap32.Create;
-  with FLayerThumb do
-  begin
-    SetSize(LAYER_THUMB_SIZE, LAYER_THUMB_SIZE);
-  end;
-
   FMaskBitmap := nil;
   FMaskThumb  := nil;
+  FLogoBitmap := nil;
+  FLogoThumb  := nil;
 
-  CalcRealThumbRect;
-  UpdateLayerThumbnail;
+  FRealThumbRect := GetRealThumbRect(ALayerWidth, ALayerHeight,
+                                     LAYER_THUMB_SIZE, LAYER_THUMB_SIZE);
 
-
-  // test
+// test
 //  Self.EnableMask;
 //  Self.FMaskBitmap.FillRectS( 20, 20, 120, 120, $FF7F7F7F );
 //  Self.IsMaskLinked := True;
@@ -346,11 +350,14 @@ begin
   FOnPanelDblClick      := nil;
   FOnLayerThumbDblClick := nil;
   FOnMaskThumbDblClick  := nil;
+  FOnLogoThumbDblClick  := nil;
   
   FLayerBitmap.Free;
   FLayerThumb.Free;
   FMaskBitmap.Free;
   FMaskThumb.Free;
+  FLogoBitmap.Free;
+  FLogoThumb.Free;
   
   inherited;
 end;
@@ -382,6 +389,29 @@ begin
     begin
       Result := hs;
     end;
+  end;
+end;
+
+function TigCustomLayerPanel.GetRealThumbRect(
+  const ASrcWidth, ASrcHeight, AThumbWidth, AThumbHeight: Integer;
+  const AMarginSize: Integer = 4): TRect;
+var
+  LThumbWidth  : Integer;
+  LThumbHeight : Integer;
+  LScale       : Single;
+begin
+  LScale := GetThumbZoomScale(ASrcWidth, ASrcHeight,
+    AThumbWidth - AMarginSize, AThumbHeight - AMarginSize);
+
+  LThumbWidth  := Round(ASrcWidth  * LScale);
+  LThumbHeight := Round(ASrcHeight * LScale);
+
+  with Result do
+  begin
+    Left   := (LAYER_THUMB_SIZE - LThumbWidth)  div 2;
+    Top    := (LAYER_THUMB_SIZE - LThumbHeight) div 2;
+    Right  := Left + LThumbWidth;
+    Bottom := Top  + LThumbHeight;
   end;
 end;
 
@@ -461,27 +491,6 @@ begin
   end;
 end;
 
-procedure TigCustomLayerPanel.CalcRealThumbRect;
-var
-  LThumbWidth  : Integer;
-  LThumbHeight : Integer;
-  LScale       : Single;
-begin
-  LScale := Self.GetThumbZoomScale(FLayerBitmap.Width, FLayerBitmap.Height,
-                                   FLayerThumb.Width - 4, FLayerThumb.Height - 4);
-
-  LThumbWidth  := Round(FLayerBitmap.Width  * LScale);
-  LThumbHeight := Round(FLayerBitmap.Height * LScale);
-
-  with FRealThumbRect do
-  begin
-    Left   := (FLayerThumb.Width  - LThumbWidth)  div 2;
-    Top    := (FLayerThumb.Height - LThumbHeight) div 2;
-    Right  := Left + LThumbWidth;
-    Bottom := Top  + LThumbHeight;
-  end;
-end;
-
 procedure TigCustomLayerPanel.LayerBlend(
   F: TColor32; var B: TColor32; M: TColor32);
 begin
@@ -539,7 +548,6 @@ begin
   InflateRect(LRect, 1, 1);
   FLayerThumb.FrameRectS(LRect, clBlack32);
 
-  DoParentLayerChanged();
   if Assigned(FOnThumbUpdate) then
   begin
     FOnThumbUpdate(Self);
@@ -562,6 +570,25 @@ begin
   begin
     FOnThumbUpdate(Self);
   end; 
+end;
+
+procedure TigCustomLayerPanel.UpdateLogoThumbnail;
+var
+  LRect : TRect;
+begin
+  LRect := GetRealThumbRect(FLogoBitmap.Width, FLogoBitmap.Height,
+                            LAYER_LOGO_SIZE, LAYER_LOGO_SIZE);
+
+  FLogoThumb.Clear( Color32(clBtnFace) );
+  FLogoThumb.Draw(LRect, FLogoBitmap.BoundsRect, FLogoBitmap);
+
+  InflateRect(LRect, 1, 1);
+  FLogoThumb.FrameRectS(LRect, clBlack32);
+
+  if Assigned(FOnThumbUpdate) then
+  begin
+    FOnThumbUpdate(Self);
+  end;
 end;
 
 procedure TigCustomLayerPanel.Changed;
@@ -622,11 +649,6 @@ begin
   end;
 end;
 
-procedure TigCustomLayerPanel.DoParentLayerChanged;
-begin
-  FOwner.DoLayerChanged(Self);
-end;
-
 { TigNormalLayerPanel }
 
 constructor TigNormalLayerPanel.Create(AOwner: TigLayerPanelList;
@@ -636,15 +658,24 @@ constructor TigNormalLayerPanel.Create(AOwner: TigLayerPanelList;
 begin
   inherited Create(AOwner, ALayerWidth, ALayerHeight, AFillColor);
 
-  FPixelFeature     := lpfNormalPixelized;
-  FAsBackground     := AsBackLayerPanel;
-  FDefaultLayerName := 'Layer';
+  FPixelFeature      := lpfNormalPixelized;
+  FAsBackground      := AsBackLayerPanel;
+  FDefaultLayerName  := 'Layer';
+  FLayerThumbEnabled := True;
 
   if FAsBackground then
   begin
     FDefaultLayerName := 'Background';
     FLayerName        := FDefaultLayerName;
   end;
+
+  FLayerThumb := TBitmap32.Create;
+  with FLayerThumb do
+  begin
+    SetSize(LAYER_THUMB_SIZE, LAYER_THUMB_SIZE);
+  end;
+
+  UpdateLayerThumbnail;
 end;
 
 // applying the mask settings to the alpha channel of each pixel on the
@@ -1427,12 +1458,6 @@ begin
       end;
     end;
   end;
-end;
-
-procedure TigLayerPanelList.DoLayerChanged(ALayer: TigCustomLayerPanel);
-begin
-  if Assigned(FOnLayerChanged) then
-    FOnLayerChanged(Self, ALayer);
 end;
 
 { TigClassRec }

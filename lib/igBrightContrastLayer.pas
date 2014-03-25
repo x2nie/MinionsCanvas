@@ -20,6 +20,7 @@ unit igBrightContrastLayer;
  * Please see the file LICENSE.txt for additional information concerning this
  * license.
  *
+ * Update Date: 25th, Mar, 2014
  *
  * The Initial Developer of this unit are
  *   Ma Xiaoguang and Ma Xiaoming < gmbros[at]hotmail[dot]com >
@@ -41,7 +42,6 @@ type
 
   TigBrightContrastLayerPanel = class(TigCustomLayerPanel)
   private
-    FLayerIcon      : TBitmap32;
     FBrightAmount   : Integer;
     FContrastAmount : Integer;
 
@@ -49,14 +49,9 @@ type
     procedure SetContrastAmount(AValue: Integer);
   protected
     procedure LayerBlend(F: TColor32; var B: TColor32; M: TColor32); override;
-    procedure CalcRealThumbRect; override;
   public
     constructor Create(AOwner: TigLayerPanelList;
       const ALayerWidth, ALayerHeight: Integer);
-
-    destructor Destroy; override;
-
-    procedure UpdateLayerThumbnail; override;
 
     property BrightAmount   : Integer read FBrightAmount   write SetBrightAmount;
     property ContrastAmount : Integer read FContrastAmount write SetContrastAmount;
@@ -142,27 +137,24 @@ end;
 constructor TigBrightContrastLayerPanel.Create(AOwner: TigLayerPanelList;
   const ALayerWidth, ALayerHeight: Integer);
 begin
-  // The Parent constructor will invoke CalcRealThumbRect() and
-  // UpdateLayerThumbnail(). And the overloaded version of the both
-  // methods in this class need to reference FLayerIcon. So we
-  // initialize FLayerIcon before Parent constructor calling.
-  
-  FLayerIcon := TBitmap32.Create;
-  FLayerIcon.LoadFromResourceName(HInstance, 'BCLAYERICON');
-
   inherited Create(AOwner, ALayerWidth, ALayerHeight);
 
   FPixelFeature     := lpfNonPixelized;
   FDefaultLayerName := 'Brightness/Contrast';
   FBrightAmount     := 0;
   FContrastAmount   := 0;
-end;
+  FLogoThumbEnabled := True;
 
-destructor TigBrightContrastLayerPanel.Destroy;
-begin
-  FLayerIcon.Free;
+  FLogoBitmap := TBitmap32.Create;
+  FLogoBitmap.LoadFromResourceName(HInstance, 'BCLAYERICON');
 
-  inherited;
+  FLogoThumb := TBitmap32.Create;
+  with FLogoThumb do
+  begin
+    SetSize(LAYER_LOGO_SIZE, LAYER_LOGO_SIZE);
+  end;
+
+  UpdateLogoThumbnail;
 end;
 
 procedure TigBrightContrastLayerPanel.SetBrightAmount(AValue: Integer);
@@ -210,45 +202,6 @@ begin
     end;
   end;
 end;
-
-procedure TigBrightContrastLayerPanel.CalcRealThumbRect;
-var
-  LThumbWidth  : Integer;
-  LThumbHeight : Integer;
-  LScale       : Single;
-begin
-  LScale := Self.GetThumbZoomScale(FLayerIcon.Width, FLayerIcon.Height,
-                                   FLayerThumb.Width - 4, FLayerThumb.Height - 4);
-
-  LThumbWidth  := Round(FLayerIcon.Width  * LScale);
-  LThumbHeight := Round(FLayerIcon.Height * LScale);
-
-  with FRealThumbRect do
-  begin
-    Left   := (FLayerThumb.Width  - LThumbWidth)  div 2;
-    Top    := (FLayerThumb.Height - LThumbHeight) div 2;
-    Right  := Left + LThumbWidth;
-    Bottom := Top  + LThumbHeight;
-  end;
-end;
-
-procedure TigBrightContrastLayerPanel.UpdateLayerThumbnail;
-var
-  LRect : TRect;
-begin
-  LRect := FRealThumbRect;
-
-  FLayerThumb.Clear( Color32(clBtnFace) );
-  FLayerThumb.Draw(LRect, FLayerIcon.BoundsRect, FLayerIcon);
-
-  InflateRect(LRect, 1, 1);
-  FLayerThumb.FrameRectS(LRect, clBlack32);
-
-  if Assigned(FOnThumbUpdate) then
-  begin
-    FOnThumbUpdate(Self);
-  end;
-end; 
 
 
 end.
