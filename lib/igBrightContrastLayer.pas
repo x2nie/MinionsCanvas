@@ -50,12 +50,15 @@ type
   protected
     procedure LayerBlend(F: TColor32; var B: TColor32; M: TColor32); override;
   public
-    constructor Create(AOwner: TigLayerPanelList;
-      const ALayerWidth, ALayerHeight: Integer);
+    constructor Create(AOwner: TigLayerPanelList); override;
+    //constructor Create(AOwner: TigLayerPanelList;  const ALayerWidth, ALayerHeight: Integer);
 
     property BrightAmount   : Integer read FBrightAmount   write SetBrightAmount;
     property ContrastAmount : Integer read FContrastAmount write SetContrastAmount;
   end;
+
+  function TigBrightContrastLayerPanel_Create(APanelList : TigLayerPanelList;
+    AWidth,AHeight: Integer): TigBrightContrastLayerPanel;
 
 implementation
 
@@ -66,6 +69,15 @@ uses
   GR32_LowLevel;
 
 {$R igBCLayerIcons.res}
+
+
+function TigBrightContrastLayerPanel_Create(APanelList : TigLayerPanelList;
+  AWidth,AHeight: Integer): TigBrightContrastLayerPanel;
+begin
+  Result := TigBrightContrastLayerPanel.Create(nil);
+  Result.LayerBitmap.SetSize(AWidth,AHeight);
+  Result.Collection := APanelList;
+end;    
 
 
 const
@@ -129,11 +141,33 @@ begin
   end;
 
   Result := $FF000000 or (r shl 16) or (g shl 8) or b;
-end; 
+end;
 
 
 { TigBrightContrastLayerPanel }
+constructor TigBrightContrastLayerPanel.Create(AOwner: TigLayerPanelList);
+begin
+  inherited;
+  FPixelFeature     := lpfNonPixelized;
+  FDefaultLayerName := 'Brightness/Contrast';
+  FBrightAmount     := 0;
+  FContrastAmount   := 0;
+  FLogoThumbEnabled := True;
 
+  FLogoBitmap := TBitmap32.Create;
+  FLogoBitmap.LoadFromResourceName(HInstance, 'BCLAYERICON');
+
+  FLogoThumb := TBitmap32.Create;
+  with FLogoThumb do
+  begin
+    SetSize(LAYER_LOGO_SIZE, LAYER_LOGO_SIZE);
+  end;
+
+  UpdateLogoThumbnail;
+end;
+
+{
+// we have problem to deal with polymorphism when reconstruct with this:
 constructor TigBrightContrastLayerPanel.Create(AOwner: TigLayerPanelList;
   const ALayerWidth, ALayerHeight: Integer);
 begin
@@ -155,7 +189,7 @@ begin
   end;
 
   UpdateLogoThumbnail;
-end;
+end;}
 
 procedure TigBrightContrastLayerPanel.SetBrightAmount(AValue: Integer);
 begin
@@ -202,6 +236,8 @@ begin
     end;
   end;
 end;
+
+
 
 
 end.

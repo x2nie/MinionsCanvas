@@ -190,7 +190,7 @@ begin
         LBmp.CombineMode := cmMerge;
       end;
 
-      LLayerPanel := TigNormalLayerPanel.Create(ALayerPanelList,
+      LLayerPanel := TigNormalLayerPanel_Create(ALayerPanelList,
         LBmp.Width, LBmp.Height, $00000000, ALayerPanelList.Count = 0);
 
       LLayerPanel.LayerBitmap.Assign(LBmp);

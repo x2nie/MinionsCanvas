@@ -1,4 +1,4 @@
-unit MainForm;
+unit igCore_Viewer;
 
 (* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1 or LGPL 2.1 with linking exception
@@ -22,7 +22,7 @@ unit MainForm;
  *
  *
  * The Initial Developer of this unit are
- *   Ma Xiaoguang and Ma Xiaoming < gmbros[at]hotmail[dot]com >
+ *  x2nie - Fathony Luthfillah  <x2nie@yahoo.com>
  *
  * Contributor(s):
  *
@@ -30,57 +30,59 @@ unit MainForm;
 
 interface
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
-
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs;
+{ Standard }
+  Messages, Windows, SysUtils, Classes, Controls, Forms,StdCtrls, Graphics,
+  ExtCtrls, Buttons, CommDlg, //Dlgs,
+  ExtDlgs, Dialogs,
+{ Graphics32 }
+  GR32_Image;
+{ GraphicsMagic }
+
 
 type
-  TfrmMain = class(TForm)
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure FormShow(Sender: TObject);
+  TigCoreViewer = class(TImgView32)
   private
-    { Private declarations }
+
+  protected
+
   public
-    { Public declarations }
+    //for universal file dialog
+    constructor Create(AOwner : TComponent); override;
+    procedure LoadFromFile(const FileName: string); virtual; abstract;
+    function GetReaderFilter : string; virtual;
+    function GetWriterFilter : string; virtual; 
+
+  published
+
   end;
 
-var
-  frmMain: TfrmMain;
+  TigCoreViewerClass = class of TigCoreViewer;
+
 
 implementation
 
-uses
-{ miniGlue lib }
-  //igPng,
-  igJpg,
-{ miniGlue }
-  MainDataModule,
-  LayerForm;
+//uses  Consts;
+resourcestring
+    SDefaultFilter = 'All files (*.*)|*.*';
 
-{$R *.dfm}
 
-procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-  i: Integer;
+{ TigCoreViewer }
+
+constructor TigCoreViewer.Create(AOwner: TComponent);
 begin
-  if MDIChildCount > 0 then
-  begin
-    for i := (MDIChildCount - 1) downto 0 do
-    begin
-      MDIChildren[i].Close;
-    end;
-  end;
+  inherited;
+  self.Bitmap.ResamplerClassName := 'TKernelResampler';
 end;
 
-procedure TfrmMain.FormShow(Sender: TObject);
+function TigCoreViewer.GetReaderFilter: string;
 begin
-  frmLayers.Left := Screen.Width - frmLayers.Width;
-  frmLayers.Show;
+  Result := SDefaultFilter;
+end;
+
+function TigCoreViewer.GetWriterFilter: string;
+begin
+  Result := SDefaultFilter;
 end;
 
 end.

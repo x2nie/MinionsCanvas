@@ -62,6 +62,8 @@ type
   TigIntegrator = class;
   TigAgent = class;                     // bridge for link-unlink, avoid error
   TigTheme = class;
+  TigUndoRedoManager = class;
+  TigCommand = class;
 
   TigDebugLog = procedure(Sender : TObject; const Msg : string; ident: Integer = 0) of object;
 
@@ -107,6 +109,7 @@ type
     constructor Create(AOwner: TComponent); override;
     function ActivateTool(AToolClass: TigToolClass):Boolean; overload;
     function ActivateTool(AToolInstance: TigTool):Boolean; overload;
+    procedure InvalidateListeners;
 
     property ActivePaintBox : TigPaintBox read FActivePaintBox
       write SetActivePaintBox;
@@ -119,12 +122,14 @@ type
   }
   private
     FOnActivePaintBoxSwitched: TNotifyEvent;
+    FOnInvalidateListener: TNotifyEvent;
   protected
     procedure DoActivePaintBoxSwitched;
   public
     constructor Create(AOwner: TComponent); override;
   published
     property OnActivePaintBoxSwitch: TNotifyEvent read FOnActivePaintBoxSwitched write FOnActivePaintBoxSwitched;
+    property OnInvalidateListener: TNotifyEvent read FOnInvalidateListener write FOnInvalidateListener;
   end;
 
 
@@ -133,6 +138,7 @@ type
   }
   private
     FLayerList: TigLayerPanelList;
+    FUndoRedo: TigUndoRedoManager;
     procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
 
   protected
@@ -145,16 +151,31 @@ type
     procedure SetFocus; override;
 
     property LayerList : TigLayerPanelList read FLayerList;
+    property UndoRedo : TigUndoRedoManager read FUndoRedo; 
   published
     property Align;
+    property Bitmap;
+    property BitmapAlign;
+    property Color;
+    property Constraints;
+    property Cursor;
+    property ParentColor;
+    property ParentShowHint;
+    property PopupMenu;
+    property RepaintMode;
+    property Scale;
+    property ScaleMode;
+    property ShowHint;
+    property TabOrder;
     property TabStop default True;
+    property Visible;
     property Options default [pboAutoFocus];
   end;
 
   TigTool = class(TComponent)
   private
     FCursor: TCursor;
-    FImage32: TCustomImage32;
+    //FImage32: TCustomImage32;
     FOnAfterDblClick: TNotifyEvent;
     FOnBeforeDblClick: TNotifyEvent;
     FOnFinalEdit: TNotifyEvent;
@@ -213,9 +234,89 @@ type
   TigTheme = class(TComponent)
   end;
 
+    { it should attached to TigPaintBox
+  }
+  TigUndoRedoManager = class(TComponent)
+  private
+    FItemIndex: Integer;
+    FPanelList: TigLayerPanelList;
+    function GetCount: Integer;
 
-{GLOBAL SCOPE}
-function  GIntegrator : TigIntegrator; //read only
+  protected
+    FUndoList : TStrings;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+    function IsUndoAllowed : Boolean;
+    function IsRedoAllowed : Boolean;
+
+    procedure Undo;
+    procedure Redo;
+    procedure AddUndo(AUndo : TigCommand; AComment : string);
+    //function AllocateUndo(AUndoMessage : string) : PigUndoStruct;
+
+    property Strings :TStrings read FUndoList;
+    property Count : Integer read GetCount;
+    property PanelList : TigLayerPanelList read FPanelList write FPanelList;
+    property ItemIndex : Integer read FItemIndex;
+  published
+
+  end;
+
+  TigCommand = class(TComponent)
+  private
+    FManager: TigUndoRedoManager;
+  protected
+    {properties}
+    function PanelList : TigLayerPanelList;
+    property Manager : TigUndoRedoManager read FManager write FManager;
+  protected
+    {helper, call internally}
+    procedure RestorePreviousState; virtual; 
+  public
+    {call by outside}
+    procedure Play;   virtual; abstract;        // run within action list | redo
+    procedure Revert; virtual;                  // run by undo | restore
+    class function Signature : string; virtual;  //do not localize!
+
+  end;
+
+  TigCommandClass = class of TigCommand;
+
+
+  //modify = edit surface, such by penTool, pencilTool, add/remove node on vectorLayer
+  TigCmdLayer_Modify = class(TigCommand)
+  private
+    FLayerIndex: Integer;
+    FStreamLayer : TStream;
+    FLayer: TigLayerPanel;
+    FLayerClass: TigLayerPanelClass;
+  public
+    constructor Create(AOwner : TComponent); override;
+    destructor Destroy; override;
+    procedure BackupLayer(ALayer : TigLayerPanel);
+    procedure Play; override;
+    //procedure Revert; override;
+    //class function Signature : string; override; //not localized string
+    property  LayerClass : TigLayerPanelClass read FLayerClass write FLayerClass;    
+  published
+    property LayerIndex: Integer read FLayerIndex write FLayerIndex;
+    property Layer : TigLayerPanel read FLayer write FLayer;
+  end;
+
+  TigCmdLayer_New = class(TigCmdLayer_Modify)
+  public
+    procedure Play; override;
+    procedure Revert; override;
+  end;
+
+{GLOBAL SCOPE VAR}
+  function  GIntegrator : TigIntegrator; //read only
+
+{GLOBAL PROCS}
+  //for later reconstruct command from stream
+  procedure RegisterIgCommandHandler(ACommandClass : TigCommand);
 
 
 implementation
@@ -224,6 +325,7 @@ implementation
 {UNIT SCOPE}
 var
   UIntegrator : TigIntegrator = nil;
+  UCommandHandlers : TStrings = nil;    //List of signatures and related class for reconstruction
 
 
 
@@ -238,6 +340,24 @@ begin
   Result := UIntegrator;
 end;
 
+
+
+
+procedure RegisterIgCommandHandler(ACommandClass : TigCommand);
+var
+  LSignature : string;
+  LIndex : Integer;
+begin
+  if not assigned(UCommandHandlers) then
+    UCommandHandlers := TStringList.Create;
+
+  LSignature := ACommandClass.Signature;
+  LIndex := UCommandHandlers.IndexOf(LSignature);
+  if LIndex < 0 then
+    LIndex := UCommandHandlers.Add(LSignature);
+  UCommandHandlers.Objects[LIndex] := TObject(ACommandClass);
+
+end;
 
 { TigAgent }
 
@@ -255,18 +375,6 @@ end;
 
 
 { TigIntegrator }
-
-function TigIntegrator.ActivateTool(AToolInstance: TigTool): Boolean;
-begin
-  Assert(Assigned(AToolInstance),'Cannot activate a nil drawing tool'); //error should be a programatic wrong logic.
-  
-  Result := Self.ReadyToSwitchTool; //ask wether current active tool is not working in progress.
-  if Result then
-  begin
-    Result := Self.IsToolSwitched(AToolInstance); //ask the new tool to be active
-  end;
-
-end;
 
 function TigIntegrator.ActivateTool(AToolClass: TigToolClass): Boolean;
 var
@@ -447,74 +555,6 @@ begin
 end;
 
 
-{ TigPaintBox }
-
-procedure TigPaintBox.AfterLayerCombined(ASender: TObject;
-  const ARect: TRect);
-begin
-  Bitmap.FillRectS(ARect, $00FFFFFF);  // must be transparent white
-  Bitmap.Draw(ARect, ARect, FLayerList.CombineResult);
-  Bitmap.Changed(ARect);
-end;
-
-constructor TigPaintBox.Create(AOwner: TComponent);
-var
-  LLayerPanel : TigCustomLayerPanel;
-begin
-  inherited;
-  Options := [pboAutoFocus];
-  TabStop := True;
-  //FAgent := TigAgent.Create(self); //autodestroy. //maybe better to use integrator directly.
-  FLayerList := TigLayerPanelList.Create; //TPersistent is not autodestroy
-  FLayerList.OnLayerCombined := AfterLayerCombined;
-
-  if not (csDesigning in self.ComponentState) then
-  begin
-    // set background size before create background layer
-    Bitmap.SetSize(300,300);
-    Bitmap.Clear($00000000);
-
-    // create background layer
-    LLayerPanel :=  TigNormalLayerPanel.Create(FLayerList,
-      Bitmap.Width, Bitmap.Height, clWhite32, True);
-
-    FLayerList.Add(LLayerPanel);
-  end;  
-end;
-
-destructor TigPaintBox.Destroy;
-begin
-  FLayerList.Free;
-  inherited;
-end;
-
-procedure TigPaintBox.MouseDown(Button: TMouseButton; Shift: TShiftState;
-  X, Y: Integer);
-begin
-  inherited;
-  GIntegrator.DoMouseDown(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
-end;
-
-procedure TigPaintBox.MouseMove(Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  GIntegrator.DoMouseMove(Self, Shift, X, Y, FLayerList.SelectedPanel);
-end;
-
-procedure TigPaintBox.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
-  Y: Integer);
-begin
-  inherited;
-  GIntegrator.DoMouseUp(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
-end;
-
-procedure TigPaintBox.SetFocus;
-begin
-  inherited;
-  GIntegrator.ActivePaintBox := Self;
-end;
-
-
 { TigTool }
 
 //sometime a tool can't be switched automatically.
@@ -646,11 +686,293 @@ begin
   //descendant may do something
 end;
 
+function TigIntegrator.ActivateTool(AToolInstance: TigTool): Boolean;
+begin
+  Assert(Assigned(AToolInstance),'Cannot activate a nil drawing tool'); //error should be a programatic wrong logic.
+  
+  Result := Self.ReadyToSwitchTool; //ask wether current active tool is not working in progress.
+  if Result then
+  begin
+    Result := Self.IsToolSwitched(AToolInstance); //ask the new tool to be active
+  end;
+
+end;
 
 
 
 
 
+
+procedure TigIntegrator.InvalidateListeners;
+var i : Integer;
+begin
+  for i := 0 to FListeners.Count -1 do
+  begin
+    with TigAgent( FListeners[i] ) do
+    begin
+        if Assigned(FOnInvalidateListener) then
+        OnInvalidateListener(Self);
+    end;
+  end;
+end;
+
+{ TigPaintBox }
+
+procedure TigPaintBox.AfterLayerCombined(ASender: TObject;
+  const ARect: TRect);
+begin
+  Bitmap.FillRectS(ARect, $00FFFFFF);  // must be transparent white
+  Bitmap.Draw(ARect, ARect, FLayerList.CombineResult);
+  Bitmap.Changed(ARect);
+end;
+
+constructor TigPaintBox.Create(AOwner: TComponent);
+var
+  LLayerPanel : TigCustomLayerPanel;
+begin
+  inherited;
+  Options := [pboAutoFocus];
+  TabStop := True;
+  //FAgent := TigAgent.Create(self); //autodestroy. //maybe better to use integrator directly.
+  FLayerList := TigLayerPanelList.Create(Self); //TPersistent is not autodestroy
+  FLayerList.OnLayerCombined := AfterLayerCombined;
+
+  FUndoRedo:= TigUndoRedoManager.Create(Self);
+  FUndoRedo.PanelList := FLayerList;
+  if not (csDesigning in self.ComponentState) then
+  begin
+    // set background size before create background layer
+    Bitmap.SetSize(300,300);
+    Bitmap.Clear($00000000);
+
+    // create background layer
+    LLayerPanel :=  TigNormalLayerPanel.Create(FLayerList);
+    LLayerPanel.LayerBitmap.SetSize(  Bitmap.Width, Bitmap.Height);
+    LLayerPanel.LayerBitmap.Clear(clWhite32);
+    LLayerPanel.UpdateLayerThumbnail;
+    //TigNormalLayerPanel(LLayerPanel).IsAsBackground := True;
+
+    FLayerList.Add(LLayerPanel);
+  end;  
+end;
+
+destructor TigPaintBox.Destroy;
+begin
+  FLayerList.Free;
+  inherited;
+end;
+
+procedure TigPaintBox.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  inherited;
+  GIntegrator.DoMouseDown(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
+end;
+
+procedure TigPaintBox.MouseMove(Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  GIntegrator.DoMouseMove(Self, Shift, X, Y, FLayerList.SelectedPanel);
+end;
+
+procedure TigPaintBox.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  inherited;
+  GIntegrator.DoMouseUp(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
+end;
+
+procedure TigPaintBox.SetFocus;
+begin
+  inherited;
+  GIntegrator.ActivePaintBox := Self;
+end;
+
+
+
+{ TigUndoRedoManager }
+
+procedure TigUndoRedoManager.AddUndo(AUndo: TigCommand; AComment: string);
+var i : Integer;
+  cmd : TigCommand;
+begin
+  //delete redo if any
+  if IsRedoAllowed then
+  begin
+    for i := Count -1 downto FItemIndex +1  do
+    begin
+      cmd := TigCommand( FUndoList.Objects[i]);
+      cmd.Free;
+      FUndoList.Delete(i);
+    end;
+  end;
+  i :=FUndoList.AddObject(AComment, AUndo);
+  AUndo.Manager := Self;
+  FItemIndex := i;
+end;
+
+constructor TigUndoRedoManager.Create(AOwner: TComponent);
+begin
+  inherited;
+  FUndoList := TStringList.Create;
+  FItemIndex := -1;
+end;
+
+destructor TigUndoRedoManager.Destroy;
+begin
+  FUndoList.Free;
+  inherited;
+end;
+
+function TigUndoRedoManager.GetCount: Integer;
+begin
+  Result := FUndoList.Count;
+end;
+
+function TigUndoRedoManager.IsRedoAllowed: Boolean;
+begin
+  Result := ItemIndex < Count -1;
+end;
+
+function TigUndoRedoManager.IsUndoAllowed: Boolean;
+begin
+  Result := (ItemIndex > -1)
+end;
+
+procedure TigUndoRedoManager.Redo;
+var LIgCommand : TigCommand;
+begin
+  if not IsRedoAllowed then Exit;
+
+  Inc(FItemIndex);
+  
+  LIgCommand := TigCommand(FUndoList.Objects[FItemIndex]);
+  LIgCommand.Play;
+  GIntegrator.InvalidateListeners;
+end;
+
+procedure TigUndoRedoManager.Undo;
+var LIgCommand : TigCommand;
+begin
+  if not IsUndoAllowed then Exit;
+
+  LIgCommand := TigCommand(FUndoList.Objects[FItemIndex]);
+  LIgCommand.Revert;
+
+  Dec(FItemIndex);
+  if FItemIndex < -1 then
+    FItemIndex := -1;
+  GIntegrator.InvalidateListeners;
+end;
+
+{ TigCommand }
+
+function TigCommand.PanelList: TigLayerPanelList;
+begin
+  Result := nil;
+  if Assigned(self.FManager) then
+    Result := FManager.PanelList;
+end;
+
+procedure TigCommand.RestorePreviousState;
+var LIgCommand : TigCommand;
+begin
+  try
+    LIgCommand := TigCommand(Manager.FUndoList.Objects[Manager.FItemIndex-1]);
+    LIgCommand.Play;
+  except
+    raise Exception.Create('Don''t use this as first action');
+  end;
+end;
+
+procedure TigCommand.Revert;
+begin
+  RestorePreviousState;
+end;
+
+class function TigCommand.Signature: string;
+begin
+  result := Self.ClassName;
+end;
+
+{ TigCmdModifyLayer }
+
+  procedure DebugSave(AStreamLayer:TStream);
+  var 
+    f : TFileStream;
+  begin
+    AStreamLayer.Seek(0, soFromBeginning);
+    f := TFileStream.Create( ChangeFileExt(Application.ExeName,'.txt'),fmCreate);
+    ObjectBinaryToText(AStreamLayer, f);
+    f.Free;
+  end;
+
+procedure TigCmdLayer_Modify.BackupLayer(ALayer: TigLayerPanel);
+begin
+
+  FLayerClass := TigLayerPanelClass(ALayer.ClassType);//TigLayerPanelClass(FindClass(ALayer.ClassName));//
+  FLayer := ALayer;
+  FLayerIndex := ALayer.Index;
+  FStreamLayer.WriteComponent(self);
+//  DebugSave();
+end;
+
+constructor TigCmdLayer_Modify.Create(AOwner: TComponent);
+begin
+  inherited;
+  FStreamLayer := TMemoryStream.Create;
+end;
+
+destructor TigCmdLayer_Modify.Destroy;
+begin
+  FStreamLayer.Destroy;
+  inherited;
+end;
+
+procedure TigCmdLayer_Modify.Play;
+//var LLayer : TigLayerPanel;
+begin
+  if FStreamLayer.Size > 0 then
+  begin
+    //DebugSave(FStreamLayer);
+
+    //refresh reference to current layer object, maybe has been recreated by other command
+    FLayer := PanelList.LayerPanels[Self.LayerIndex];
+
+    FStreamLayer.Position := 0;
+    FStreamLayer.ReadComponent(self); //restore
+    FLayer.Changed; //update thumbnail
+    
+    // I dont know, but it required to refresh the paintobx
+    Self.Manager.PanelList.Insert(self.LayerIndex, FLayer);
+
+    //FLayer.Index := Self.LayerIndex;
+//    Self.Manager.PanelList.
+
+
+
+    //FStreamLayer.
+  end;
+end;
+
+{ TigCmdLayer_New }
+
+procedure TigCmdLayer_New.Play;
+begin
+  if FLayer = nil then
+  begin
+    //FLayer := TigNormalLayerPanel.Create( Self.PanelList, 300,300); //its work
+    FLayer := FLayerClass.Create(self.PanelList);
+    self.PanelList.Add(FLayer);
+  end;
+  inherited;
+end;
+
+procedure TigCmdLayer_New.Revert;
+begin
+  PanelList.DeleteLayerPanel(self.FLayerIndex);
+  FLayer := nil;
+end;
 
 initialization
   //UIntegrator := TigIntegrator.Create(Application);

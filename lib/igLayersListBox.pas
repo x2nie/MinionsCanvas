@@ -52,6 +52,7 @@ type
     FLayerList : TigLayerPanelList;       //to compare between last & current 
     procedure ActivePaintBoxSwitched(Sender: TObject);
     procedure SoInvalidate(Sender: TObject; ALayer: TigCustomLayerPanel);
+    procedure InvalidateEvent(Sender: TObject);
   public
     constructor Create(AOwner: TComponent); override;
     
@@ -92,6 +93,12 @@ begin
   inherited;
   FAgent := TigAgent.Create(Self); //autodestroy
   FAgent.OnActivePaintBoxSwitch := self.ActivePaintBoxSwitched;
+  FAgent.OnInvalidateListener := InvalidateEvent;
+end;
+
+procedure TigLayersListBox.InvalidateEvent(Sender: TObject);
+begin
+  Invalidate;
 end;
 
 procedure TigLayersListBox.SoInvalidate(Sender: TObject;ALayer: TigCustomLayerPanel);

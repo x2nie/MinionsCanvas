@@ -14,9 +14,14 @@ type
     { Private declarations }
   public
     { Public declarations }
+    //property DocumentName : string read DocumentName
+    procedure LoadDocument(AFileName : string);
   end;
 
 implementation
+
+uses
+  igLayers, jpeg;
 
 {$R *.dfm}
 
@@ -28,6 +33,22 @@ end;
 procedure TMDIChild.FormActivate(Sender: TObject);
 begin
   img1.SetFocus(); //I dont know how to delete this line :(
+end;
+
+procedure TMDIChild.LoadDocument(AFileName: string);
+var P : TPicture;
+begin
+  p := TPicture.Create;
+  p.LoadFromFile(AFileName);
+  with TigNormalLayerPanel(img1.LayerList.LayerPanels[0]) do
+  begin
+
+    //LayerBitmap.LoadFromFile(AFileName);
+    LayerBitmap.Assign(p);
+    img1.Bitmap.SetSizeFrom(LayerBitmap);
+    img1.LayerList.CombineResult.SetSizeFrom(img1.Bitmap);
+    Changed;
+  end;
 end;
 
 end.

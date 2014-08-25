@@ -42,7 +42,9 @@ uses
 { Graphics32 }
   GR32,
 { externals\Graphics32_add_ons }
-  GR32_Add_BlendModes;
+  GR32_Add_BlendModes,
+{ miniGlue }
+  igCore_Items;
 
 type
   TigLayerPixelFeature = (lpfNone,
@@ -57,24 +59,81 @@ type
   // mark process stage -- on the layer or on the mask
   TigLayerProcessStage = (lpsLayer, lpsMask);
 
+  TigLayerProcessStageChanged = procedure (ASender: TObject; const AStage: TigLayerProcessStage) of object;
+
   { Forward Declarations }
+  TigCustomLayerPanel = class;
   TigLayerPanelList = class;
   TigClassCounter = class;
 
+  { Event }
+  TigLayerChangeEvent = procedure(Sender: TObject; ALayer: TigCustomLayerPanel) of object;
+
+  TigLayerPanel = class(TigCoreItem)
+  private
+    //FOnChange: TNotifyEvent;
+    FChangedRect: TRect;
+    FUpdateCount: Integer;
+  protected
+    FLayerVisible          : Boolean;
+    FLayerEnabled          : Boolean;               // indicate whether the layer is currently editable
+    FLayerThumb           : TBitmap32;
+    FThumbValid            : Boolean;               // indicate thumbnail has been rebuild from layer
+    FOnLayerDisabled       : TNotifyEvent;
+    FOnLayerEnabled        : TNotifyEvent;
+    FOnPanelDblClick      : TNotifyEvent;
+    FOnThumbUpdate        : TNotifyEvent;
+    FOnLayerThumbDblClick : TNotifyEvent;
+
+    function GetEmpty: Boolean; override;
+    procedure PaintLayerThumb; virtual;
+    procedure Paint(ABuffer: TBitmap32; DstRect: TRect); virtual;
+
+    function GetLayerThumb: TBitmap32;
+    procedure SetLayerEnabled(AValue: Boolean);
+    procedure SetLayerVisible(AValue: Boolean);
+  public
+    constructor Create(AOwner: TigLayerPanelList); virtual;
+    function PanelList : TigLayerPanelList; //ref to Owner / Collection
+    procedure Changed; overload;
+    procedure Changed(const ARect: TRect); overload;
+    procedure BeginUpdate; virtual;
+    procedure EndUpdate; virtual;
+
+
+    property ChangedRect          : TRect                read FChangedRect;  //used by collection.update
+    property LayerThumbnail       : TBitmap32            read GetLayerThumb;
+
+    //property OnChange             : TNotifyEvent         read FOnChange             write FOnChange;
+    property OnPanelDblClick      : TNotifyEvent         read FOnPanelDblClick      write FOnPanelDblClick;
+    property OnLayerDisabled      : TNotifyEvent         read FOnLayerDisabled       write FOnLayerDisabled;
+    property OnLayerEnabled       : TNotifyEvent         read FOnLayerEnabled        write FOnLayerEnabled;
+    property OnLayerThumbDblClick : TNotifyEvent         read FOnLayerThumbDblClick write FOnLayerThumbDblClick;
+  published
+    //for backup/restore or undo/redo or actionlist-script
+    property IsLayerEnabled       : Boolean              read FLayerEnabled         write SetLayerEnabled;
+    property IsLayerVisible       : Boolean              read FLayerVisible         write SetLayerVisible;
+  end;
+
+  TigLayerPanelClass = class of TigLayerPanel;
+
   { TigCustomLayerPanel }
-  
-  TigCustomLayerPanel = class(TPersistent)
+
+  TigCustomLayerPanel = class(TigLayerPanel)
+  private
+    procedure DoParentLayerChanged;
+    procedure SetLayerBitmap(const Value: TBitmap32);
+    procedure SetMaskBitmap(const Value: TBitmap32);
   protected
     FOwner                : TigLayerPanelList;
     FLayerBitmap          : TBitmap32;
-    FLayerThumb           : TBitmap32;
+    //FLayerThumb           : TBitmap32;
     FMaskBitmap           : TBitmap32;
     FMaskThumb            : TBitmap32;
     FLogoBitmap           : TBitmap32;
     FLogoThumb            : TBitmap32;
     FLayerBlendMode       : TBlendMode32;
     FLayerBlendEvent      : TPixelCombineEvent;
-    FLayerVisible         : Boolean;
     FLayerProcessStage    : TigLayerProcessStage;
     FPixelFeature         : TigLayerPixelFeature;  // the pixel feature of the layer
     FSelected             : Boolean;
@@ -85,14 +144,14 @@ type
     FLogoThumbEnabled     : Boolean;               // indicate whether this layer has a logo thumbnail
     FRealThumbRect        : TRect;
     FDefaultLayerName     : string;
-    FLayerName            : string;                // current layer name
+    //FLayerName            : string;                // current layer name
 
-    FOnChange             : TNotifyEvent;
-    FOnThumbUpdate        : TNotifyEvent;
-    FOnPanelDblClick      : TNotifyEvent;
-    FOnLayerThumbDblClick : TNotifyEvent;
+    //FOnChange             : TNotifyEvent;
+    FOnMaskEnabled         : TNotifyEvent;
+    FOnMaskDisabled        : TNotifyEvent;
     FOnMaskThumbDblClick  : TNotifyEvent;
     FOnLogoThumbDblClick  : TNotifyEvent;
+    FOnProcessStageChanged : TigLayerProcessStageChanged;
 
     function GetLayerOpacity: Byte;
 
@@ -102,8 +161,9 @@ type
     function GetRealThumbRect(
       const ASrcWidth, ASrcHeight, AThumbWidth, AThumbHeight: Integer;
       const AMarginSize: Integer = 4): TRect;
-
-    procedure SetLayerVisible(AValue: Boolean);
+    procedure LayerBitmapChanged(Sender : TObject);
+    //procedure SetLayerEnabled(AValue: Boolean);
+    //procedure SetLayerVisible(AValue: Boolean);
     procedure SetMaskEnabled(AValue: Boolean);
     procedure SetMaskLinked(AValue: Boolean);
     procedure SetLayerBlendMode(AValue: TBlendMode32);
@@ -111,46 +171,55 @@ type
     procedure SetLayerProcessStage(AValue: TigLayerProcessStage);
     procedure LayerBlend(F: TColor32; var B: TColor32; M: TColor32); virtual;
     procedure InitMask;
+    procedure PaintLayerThumb; override;
+    procedure Paint(ABuffer: TBitmap32; DstRect: TRect); override;
+
   public
-    constructor Create(AOwner: TigLayerPanelList;
-      const ALayerWidth, ALayerHeight: Integer;
-      const AFillColor: TColor32 = $00000000);
+    constructor Create(AOwner: TigLayerPanelList); override;
+    //constructor Create(AOwner: TigLayerPanelList;
+      //const ALayerWidth, ALayerHeight: Integer;
+      //const AFillColor: TColor32 = $00000000); overload; virtual;
 
     destructor Destroy; override;
+
 
     procedure UpdateLayerThumbnail; virtual;
     procedure UpdateMaskThumbnail;
     procedure UpdateLogoThumbnail; virtual;
-    procedure Changed; overload;
-    procedure Changed(const ARect: TRect); overload;
 
     function EnableMask: Boolean;
     function DiscardMask: Boolean;
 
-    property LayerBitmap          : TBitmap32            read FLayerBitmap;
-    property LayerThumbnail       : TBitmap32            read FLayerThumb;
-    property MaskBitmap           : TBitmap32            read FMaskBitmap;
+    //property LayerBitmap          : TBitmap32            read FLayerBitmap;
+    //property LayerThumbnail       : TBitmap32            read FLayerThumb;
+    //property MaskBitmap           : TBitmap32            read FMaskBitmap;
     property MaskThumbnail        : TBitmap32            read FMaskThumb;
     property LogoBitmap           : TBitmap32            read FLogoBitmap;
     property LogoThumbnail        : TBitmap32            read FLogoThumb;
-    property IsLayerVisible       : Boolean              read FLayerVisible         write SetLayerVisible;
+    //property IsLayerEnabled        : Boolean                     read FLayerEnabled          write SetLayerEnabled;
+    //property IsLayerVisible       : Boolean              read FLayerVisible         write SetLayerVisible;
     property IsDuplicated         : Boolean              read FDuplicated;
     property IsSelected           : Boolean              read FSelected             write FSelected;
     property IsMaskEnabled        : Boolean              read FMaskEnabled;
     property IsMaskLinked         : Boolean              read FMaskLinked           write SetMaskLinked;
     property IsLayerThumbEnabled  : Boolean              read FLayerThumbEnabled;
     property IsLogoThumbEnabled   : Boolean              read FLogoThumbEnabled;
-    property LayerName            : string               read FLayerName            write FLayerName;
+    //property LayerName            : string               read FLayerName            write FLayerName;
     property LayerBlendMode       : TBlendMode32         read FLayerBlendMode       write SetLayerBlendMode;
     property LayerOpacity         : Byte                 read GetLayerOpacity       write SetLayerOpacity;
     property LayerProcessStage    : TigLayerProcessStage read FLayerProcessStage    write SetLayerProcessStage;
     property PixelFeature         : TigLayerPixelFeature read FPixelFeature;
-    property OnChange             : TNotifyEvent         read FOnChange             write FOnChange;
+    //property OnChange             : TNotifyEvent         read FOnChange             write FOnChange;
     property OnThumbnailUpdate    : TNotifyEvent         read FOnThumbUpdate        write FOnThumbUpdate;
-    property OnPanelDblClick      : TNotifyEvent         read FOnPanelDblClick      write FOnPanelDblClick;
-    property OnLayerThumbDblClick : TNotifyEvent         read FOnLayerThumbDblClick write FOnLayerThumbDblClick;
+    property OnMaskEnabled         : TNotifyEvent                read FOnMaskEnabled         write FOnMaskEnabled;
+    property OnMaskDisabled        : TNotifyEvent                read FOnMaskDisabled        write FOnMaskDisabled;
     property OnMaskThumbDblClick  : TNotifyEvent         read FOnMaskThumbDblClick  write FOnMaskThumbDblClick;
     property OnLogoThumbDblClick  : TNotifyEvent         read FOnLogoThumbDblClick  write FOnLogoThumbDblClick;
+    property OnProcessStageChanged : TigLayerProcessStageChanged read FOnProcessStageChanged write FOnProcessStageChanged;
+  published
+    //for backup/restore or undo/redo or actionlist-script
+    property LayerBitmap          : TBitmap32            read FLayerBitmap write SetLayerBitmap;
+    property MaskBitmap           : TBitmap32            read FMaskBitmap  write SetMaskBitmap;
   end;
 
   { TigNormalLayerPanel }
@@ -158,15 +227,18 @@ type
   TigNormalLayerPanel = class(TigCustomLayerPanel)
   private
     FAsBackground : Boolean; // if this layer is a background layer
+    FOnMaskApplied : TNotifyEvent;
   public
-    constructor Create(AOwner: TigLayerPanelList;
-      const ALayerWidth, ALayerHeight: Integer;
-      const AFillColor: TColor32 = $00000000;
-      const AsBackLayerPanel: Boolean = False);
+    constructor Create(AOwner: TigLayerPanelList); override; 
+    //constructor Create(AOwner: TigLayerPanelList;
+      //const ALayerWidth, ALayerHeight: Integer;
+      //const AFillColor: TColor32 = $00000000;
+      //const AsBackLayerPanel: Boolean = False); overload; virtual; 
 
     function ApplyMask: Boolean;
 
     property IsAsBackground : Boolean read FAsBackground;
+    property OnMaskApplied  : TNotifyEvent read FOnMaskApplied write FOnMaskApplied;
   end;
 
   { TigLayerPanelList }
@@ -174,13 +246,13 @@ type
   TigLayerCombinedEvent = procedure (ASender: TObject; const ARect: TRect) of object;
   TigMergeLayerEvent = procedure (AResultPanel: TigCustomLayerPanel) of object;
 
-  TigLayerPanelList = class(TPersistent)
+  TigLayerPanelList = class(TigCoreCollection)
   private
-    FItems                : TObjectList;
+    //FItems                : TObjectList;
     FSelectedPanel        : TigCustomLayerPanel;
     FCombineResult        : TBitmap32;
-    FLayerWidth           : Integer;
-    FLayerHeight          : Integer;
+    //FLayerWidth           : Integer; use CombineResult.Width instead
+    //FLayerHeight          : Integer;
 
     FOnLayerCombined      : TigLayerCombinedEvent;
     FOnSelectionChanged   : TNotifyEvent;
@@ -189,8 +261,9 @@ type
     FOnFlattenLayers      : TigMergeLayerEvent;
 
     FPanelTypeCounter     : TigClassCounter;
+    FOnLayerChanged: TigLayerChangeEvent;
 
-    function GetPanelCount: Integer;
+    
     function GetPanelMaxIndex: Integer;
     function GetSelectedPanelIndex: Integer;
     function GetLayerPanel(AIndex: Integer): TigCustomLayerPanel;
@@ -202,13 +275,15 @@ type
     procedure DeleteVisibleLayerPanels;
     procedure DeselectAllPanels;
     procedure SetLayerPanelInitialName(ALayerPanel: TigCustomLayerPanel);
+    procedure DoLayerChanged(ALayer : TigCustomLayerPanel);
   public
-    constructor Create;
+    constructor Create(AOwner: TComponent); override; 
     destructor Destroy; override;
+    procedure Update(Item: TCollectionItem); override;{ COLLECTION. }
 
-    procedure Add(APanel: TigCustomLayerPanel);
+    procedure Add(APanel: TigLayerPanel);
     procedure SimpleAdd(APanel: TigCustomLayerPanel); 
-    procedure Insert(AIndex: Integer; APanel: TigCustomLayerPanel);
+    procedure Insert(AIndex: Integer; APanel: TigLayerPanel);
     procedure Move(ACurIndex, ANewIndex: Integer);
     procedure SelectLayerPanel(const AIndex: Integer);
     procedure DeleteSelectedLayerPanel;
@@ -221,15 +296,15 @@ type
     function FlattenLayers: Boolean;
     function MergeSelectedLayerDown: Boolean;
     function MergeVisibleLayers: Boolean;
-    function IsValidIndex(const AIndex: Integer): Boolean;
     function GetHiddenLayerCount: Integer;
 
     property CombineResult                : TBitmap32             read FCombineResult;
-    property Count                        : Integer               read GetPanelCount;
+    //property Count                        : Integer               read GetPanelCount;
     property MaxIndex                     : Integer               read GetPanelMaxIndex;
     property SelectedIndex                : Integer               read GetSelectedPanelIndex;
     property LayerPanels[AIndex: Integer] : TigCustomLayerPanel   read GetLayerPanel;
     property SelectedPanel                : TigCustomLayerPanel   read FSelectedPanel;
+    property OnLayerChanged               : TigLayerChangeEvent   read FOnLayerChanged       write FOnLayerChanged; 
     property OnLayerCombined              : TigLayerCombinedEvent read FOnLayerCombined      write FOnLayerCombined;
     property OnSelectionChanged           : TNotifyEvent          read FOnSelectionChanged   write FOnSelectionChanged;
     property OnLayerOrderChanged          : TNotifyEvent          read FOnLayerOrderChanged  write FOnLayerOrderChanged;
@@ -271,9 +346,14 @@ type
     function GetCount(const AClassName: ShortString): Integer;
   end;
 
+  {HELPER FUNC}
+  function TigNormalLayerPanel_Create(APanelList : TigLayerPanelList;
+    AWidth,AHeight: Integer; AColor : TColor32;  AsBackground : Boolean): TigNormalLayerPanel;
+  
 const
   LAYER_THUMB_SIZE = 36;
   LAYER_LOGO_SIZE  = 36;
+  EMPTY_RECT: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
 
 implementation
 
@@ -281,55 +361,33 @@ uses
 { Delphi }
   SysUtils, Graphics, Math,
 { Graphics32 }
-  GR32_LowLevel,
+  GR32_LowLevel, GR32_Resamplers, GR32_Blend,
 { miniGlue lib }
-  igPaintFuncs;
+  igBase,igPaintFuncs;
 
+function TigNormalLayerPanel_Create(APanelList : TigLayerPanelList;
+  AWidth,AHeight: Integer; AColor : TColor32;  AsBackground : Boolean): TigNormalLayerPanel;
+begin
+  Result := TigNormalLayerPanel.Create(nil);
+  Result.LayerBitmap.SetSize(AWidth,AHeight);
+  Result.LayerBitmap.Clear(AColor);
+  Result.FAsBackground := AsBackGround;
+  Result.Collection := APanelList;
+end;    
 
 { TigCustomLayerPanel }
 
-constructor TigCustomLayerPanel.Create(AOwner: TigLayerPanelList;
+{constructor TigCustomLayerPanel.Create(AOwner: TigLayerPanelList;
   const ALayerWidth, ALayerHeight: Integer;
   const AFillColor: TColor32 = $00000000);
+  //we have problem of polymorphism when introducing non-uniform constructor
 begin
-  inherited Create;
-
-  FOwner             := AOwner;
-  FLayerBlendMode    := bbmNormal32;
-  FLayerBlendEvent   := GetBlendMode( Ord(FLayerBlendMode) );
-  FDuplicated        := False;
-  FLayerVisible      := True;
-  FSelected          := True;
-  FMaskEnabled       := False;
-  FMaskLinked        := False;
-  FLayerThumbEnabled := False;
-  FLogoThumbEnabled  := False;
-  FDefaultLayerName  := '';
-  FLayerName         := '';
-  FLayerProcessStage := lpsLayer;
-  FPixelFeature      := lpfNone;
-  
-  FOnChange             := nil;
-  FOnThumbUpdate        := nil;
-  FOnPanelDblClick      := nil;
-  FOnLayerThumbDblClick := nil;
-  FOnMaskThumbDblClick  := nil;
-  FOnLogoThumbDblClick  := nil;
-
-  FLayerBitmap := TBitmap32.Create;
+  Create(AOwner);
   with FLayerBitmap do
   begin
-    DrawMode    := dmBlend;
-    CombineMode := cmMerge;
-    
     SetSize(ALayerWidth, ALayerHeight);
     Clear(AFillColor);
   end;
-
-  FMaskBitmap := nil;
-  FMaskThumb  := nil;
-  FLogoBitmap := nil;
-  FLogoThumb  := nil;
 
   FRealThumbRect := GetRealThumbRect(ALayerWidth, ALayerHeight,
                                      LAYER_THUMB_SIZE, LAYER_THUMB_SIZE);
@@ -339,18 +397,19 @@ begin
 //  Self.FMaskBitmap.FillRectS( 20, 20, 120, 120, $FF7F7F7F );
 //  Self.IsMaskLinked := True;
 //  Self.UpdateMaskThumbnail;
-end;
+end;}
 
 destructor TigCustomLayerPanel.Destroy;
 begin
   FLayerBlendEvent      := nil;
   FOwner                := nil;
-  FOnChange             := nil;
+  //FOnChange             := nil;
   FOnThumbUpdate        := nil;
   FOnPanelDblClick      := nil;
   FOnLayerThumbDblClick := nil;
   FOnMaskThumbDblClick  := nil;
   FOnLogoThumbDblClick  := nil;
+  FOnProcessStageChanged := nil;
   
   FLayerBitmap.Free;
   FLayerThumb.Free;
@@ -415,7 +474,27 @@ begin
   end;
 end;
 
-procedure TigCustomLayerPanel.SetLayerVisible(AValue: Boolean);
+procedure TigLayerPanel.SetLayerEnabled(AValue: Boolean);
+begin
+  if FLayerEnabled <> AValue then
+  begin
+    FLayerEnabled := AValue;
+
+    if FLayerEnabled then
+    begin
+      if Assigned(FOnLayerEnabled) then
+      begin
+        FOnLayerEnabled(Self);
+      end;
+    end
+    else
+    begin
+      FOnLayerDisabled(Self);
+    end;
+  end;
+end;
+
+procedure TigLayerPanel.SetLayerVisible(AValue: Boolean);
 begin
   if FLayerVisible <> AValue then
   begin
@@ -484,9 +563,9 @@ begin
   begin
     FLayerProcessStage := AValue;
 
-    if Assigned(FOnChange) then
+    if Assigned(FOnProcessStageChanged) then
     begin
-      FOnChange(Self);
+      FOnProcessStageChanged(Self, FLayerProcessStage);
     end;
   end;
 end;
@@ -528,9 +607,9 @@ var
   LRect : TRect;
   LBmp  : TBitmap32;
 begin
-  LRect := FRealThumbRect;
-  
-  FLayerThumb.Clear( Color32(clBtnFace) );
+{  LRect := FRealThumbRect;
+
+  Self.GetLayerThumb.Clear( Color32(clBtnFace) ); //maybe create
   DrawCheckerboardPattern(FLayerThumb, LRect, True);
 
   LBmp := TBitmap32.Create;
@@ -539,6 +618,7 @@ begin
     // The MasterAlpha only takes effect when layer blending.
     LBmp.Assign(FLayerBitmap);
     LBmp.MasterAlpha := 255;
+    LBmp.ResamplerClassName := 'TLanczosKernel';
 
     FLayerThumb.Draw(LRect, LBmp.BoundsRect, LBmp);
   finally
@@ -548,10 +628,11 @@ begin
   InflateRect(LRect, 1, 1);
   FLayerThumb.FrameRectS(LRect, clBlack32);
 
+  DoParentLayerChanged();
   if Assigned(FOnThumbUpdate) then
   begin
     FOnThumbUpdate(Self);
-  end;
+  end;}
 end;
 
 procedure TigCustomLayerPanel.UpdateMaskThumbnail;
@@ -591,30 +672,43 @@ begin
   end;
 end;
 
-procedure TigCustomLayerPanel.Changed;
+procedure TigLayerPanel.Changed;
 begin
-  if Assigned(FOwner) then
+  Changed(EMPTY_RECT); //I can't determine the whole bounds of vector (non raster) layer.
+  
+  {FThumbValid := False;
+  FChangedRect := EMPTY_RECT;
+  inherited Changed(False); //true = allitem, false = self
+
+  if Assigned(Collection) then
   begin
-    FOwner.BlendLayers;
-  end; 
+    PanelList.BlendLayers;
+  end;
 
   if Assigned(FOnChange) then
   begin
     FOnChange(Self);
-  end;
+  end;}
 end;
 
-procedure TigCustomLayerPanel.Changed(const ARect: TRect);
+procedure TigLayerPanel.Changed(const ARect: TRect);
 begin
-  if Assigned(FOwner) then
+  FThumbValid := False;
+
+  if (FUpdateCount > 0) then
+    Exit;
+
+  FChangedRect := ARect;
+  inherited Changed(False);
+  {if Assigned(Collection) then
   begin
-    FOwner.BlendLayers(ARect);
+    PanelList.BlendLayers(ARect);
   end;
 
   if Assigned(FOnChange) then
   begin
     FOnChange(Self);
-  end;
+  end;}
 end;
 
 // enable mask, if it has not ...
@@ -626,9 +720,9 @@ begin
   begin
     SetMaskEnabled(True);
 
-    if Assigned(FOnChange) then
+    if Assigned(FOnMaskEnabled) then
     begin
-      FOnChange(Self);
+      FOnMaskEnabled(Self);
     end;
 
     Result := FMaskEnabled;
@@ -645,18 +739,216 @@ begin
     SetMaskEnabled(False);
     Self.Changed;
 
+    if Assigned(FOnMaskDisabled) then
+    begin
+      FOnMaskDisabled(Self);
+    end;
+
     Result := not FMaskEnabled;
   end;
+
+end;
+
+procedure TigCustomLayerPanel.DoParentLayerChanged;
+begin
+  FOwner.DoLayerChanged(Self);
+end;
+
+procedure TigCustomLayerPanel.SetLayerBitmap(const Value: TBitmap32);
+begin
+  FLayerBitmap.Assign(Value);
+  FThumbValid := False;
+end;
+
+procedure TigCustomLayerPanel.SetMaskBitmap(const Value: TBitmap32);
+begin
+  FMaskBitmap.Assign(Value);
+end;
+
+procedure TigCustomLayerPanel.Paint(ABuffer: TBitmap32; DstRect: TRect);
+var
+  i            : Integer;
+  k, j, x, y : Integer;
+  LRectWidth   : Integer;
+  LRectHeight  : Integer;
+  m            : Cardinal;
+  //LLayerPanel  : TigCustomLayerPanel;
+  LResultRow   : PColor32Array;
+  LLayerRow    : PColor32Array;
+  LMaskRow     : PColor32Array;
+  LRect       : TRect;
+
+  {LPixelCount : Integer;
+  LForeBits   : PColor32;
+  LBackBits   : PColor32;
+  LMaskBits   : PColor32;}
+begin
+  // copied from procedure TCustomBitmap32.DrawTo(Dst: TCustomBitmap32; const DstRect, SrcRect: TRect);
+  {
+  procedure StretchTransfer(
+    Dst: TCustomBitmap32; DstRect: TRect; DstClip: TRect;
+    Src: TCustomBitmap32; SrcRect: TRect;
+    Resampler: TCustomResampler;
+    CombineOp: TDrawMode; CombineCallBack: TPixelCombineEvent);
+  }
+  {StretchTransfer(
+    ABuffer, ABuffer.ClipRect, ABuffer.ClipRect,
+    LayerBitmap, ABuffer.ClipRect,
+    LayerBitmap.Resampler,
+    LayerBitmap.DrawMode, LayerBlend);
+
+Exit;}
+
+  if FLayerBitmap.Empty then Exit;
+  LRect := Rect(0,0, FLayerBitmap.Width -1, FLayerBitmap.Height-1);
+
+  
+  // for sure the range check
+  GR32.IntersectRect(LRect, DstRect, LRect);
+  if EqualRect(LRect, EMPTY_RECT) then Exit;
+
+  LRectWidth  := LRect.Right - LRect.Left + 1;
+  LRectHeight := LRect.Bottom - LRect.Top + 1;
+
+  for j := 0 to (LRectHeight - 1) do
+  begin
+    y := j + LRect.Top;
+
+    // get entries of one line pixels on the background bitmap ...
+    LResultRow := ABuffer.ScanLine[y];
+
+    // get entries of one line pixels on each layer bitmap ...
+    LLayerRow := FLayerBitmap.ScanLine[y];
+
+    if IsMaskEnabled and IsMaskLinked then
+    begin
+      // get entries of one line pixels on each layer mask bitmap, if any ...
+      LMaskRow := FMaskBitmap.ScanLine[y];
+    end;
+
+    for k := 0 to (LRectWidth - 1) do
+    begin
+      x := k + LRect.Left;
+
+      Assert(x * y < FLayerBitmap.Width * FLayerBitmap.Height, 'FLayerBitmap');
+      Assert(x * y < ABuffer.Width * ABuffer.Height, 'ABuffer');
+
+      if Self.Index = 0 then
+      begin
+        //LResultRow[x] := $00000000;
+      end;
+
+      // blending ...
+      m := FLayerBitmap.MasterAlpha;
+
+      if IsMaskEnabled and IsMaskLinked then
+      begin
+        // adjust the MasterAlpha with Mask setting
+        m := m * (LMaskRow[x] and $FF) div 255;
+      end;
+      
+      {$RANGECHECKS OFF}
+      LayerBlend(LLayerRow[x], LResultRow[x], m);
+      {$RANGECHECKS ON}
+    end;
+  end;
+
+  //EMMS;
+
+
+{
+  LMaskBits := nil;
+  //FLayerBitmap.SetSize(FLayerWidth, FLayerHeight);
+
+
+  LPixelCount := LayerBitmap.Width * LayerBitmap.Height;
+  LForeBits := @FLayerBitmap.Bits[0];
+  LBackBits := @ABuffer.Bits[0];
+
+  if IsMaskEnabled and IsMaskLinked then
+  begin
+    LMaskBits := @FMaskBitmap.Bits[0];
+  end;
+
+  for j := 1 to LPixelCount do
+  begin
+    m := FLayerBitmap.MasterAlpha;
+
+    if IsMaskEnabled and IsMaskLinked then
+    begin
+      // adjust the MasterAlpha with Mask setting
+      m := m * (LMaskBits^ and $FF) div 255;
+    end;
+
+    LayerBlend(LForeBits^, LBackBits^, m);
+
+    Inc(LForeBits);
+    Inc(LBackBits);
+    if IsMaskEnabled and IsMaskLinked then
+    begin
+      Inc(LMaskBits);
+    end;
+  end;}
+end;
+
+constructor TigCustomLayerPanel.Create(AOwner: TigLayerPanelList);
+begin
+  inherited Create(AOwner);
+  FOwner             := AOwner;
+  FLayerBlendMode    := bbmNormal32;
+  FLayerBlendEvent   := GetBlendMode( Ord(FLayerBlendMode) );
+  FDuplicated        := False;
+  FLayerVisible      := True;
+  FSelected          := True;
+  FLayerEnabled      := True;
+  FMaskEnabled       := False;
+  FMaskLinked        := False;
+  FLayerThumbEnabled := False;
+  FLogoThumbEnabled  := False;
+  FDefaultLayerName  := '';
+  //FLayerName         := '';
+  FLayerProcessStage := lpsLayer;
+  FPixelFeature      := lpfNone;
+
+  //FOnChange             := nil;
+  FOnThumbUpdate        := nil;
+  FOnMaskEnabled         := nil;
+  FOnMaskDisabled        := nil;
+  FOnPanelDblClick      := nil;
+  FOnLayerThumbDblClick := nil;
+  FOnMaskThumbDblClick  := nil;
+  FOnLogoThumbDblClick  := nil;
+  FOnProcessStageChanged := nil;
+
+  FLayerBitmap := TBitmap32.Create;
+  with FLayerBitmap do
+  begin
+    DrawMode    := dmBlend;
+    CombineMode := cmMerge;
+
+    //SetSize(ALayerWidth, ALayerHeight);
+    //Clear(AFillColor);
+  end;
+
+  FMaskBitmap := nil;
+  FMaskThumb  := nil;
+  FLogoBitmap := nil;
+  FLogoThumb  := nil;
+
+  FRealThumbRect := GetRealThumbRect(32,32,
+                                     LAYER_THUMB_SIZE, LAYER_THUMB_SIZE);
 end;
 
 { TigNormalLayerPanel }
 
-constructor TigNormalLayerPanel.Create(AOwner: TigLayerPanelList;
+{constructor TigNormalLayerPanel.Create(AOwner: TigLayerPanelList;
   const ALayerWidth, ALayerHeight: Integer;
   const AFillColor: TColor32 = $00000000;
   const AsBackLayerPanel: Boolean = False);
+    //we have problem of polymorphism when introducing non-uniform constructor
 begin
-  inherited Create(AOwner, ALayerWidth, ALayerHeight, AFillColor);
+  //inherited Create(AOwner, ALayerWidth, ALayerHeight, AFillColor);
+  inherited Create(AOwner);
 
   FPixelFeature      := lpfNormalPixelized;
   FAsBackground      := AsBackLayerPanel;
@@ -666,7 +958,7 @@ begin
   if FAsBackground then
   begin
     FDefaultLayerName := 'Background';
-    FLayerName        := FDefaultLayerName;
+    DisplayName       := FDefaultLayerName;
   end;
 
   FLayerThumb := TBitmap32.Create;
@@ -676,7 +968,7 @@ begin
   end;
 
   UpdateLayerThumbnail;
-end;
+end;}
 
 // applying the mask settings to the alpha channel of each pixel on the
 // layer bitmap, and then disable the mask
@@ -715,7 +1007,7 @@ begin
     // the current blending result is correct 
     if not LMaskLinked then
     begin
-      if Assigned(FOwner) then
+      if Assigned(Collection) then
       begin
         FOwner.BlendLayers;
       end;
@@ -724,14 +1016,44 @@ begin
     UpdateLayerThumbnail;
     
     Result := not FMaskEnabled;
+
+    if Assigned(FOnMaskApplied) then
+    begin
+      FOnMaskApplied(Self);
+    end;
   end;
+end;
+
+constructor TigNormalLayerPanel.Create(AOwner: TigLayerPanelList);
+begin
+  //Create(AOwner, 0,0,0, False);
+  inherited Create(AOwner);
+  FPixelFeature      := lpfNormalPixelized;
+  FAsBackground      := False;//AsBackLayerPanel;
+  FDefaultLayerName  := 'Layer';
+  FLayerThumbEnabled := True;
+
+  {if FAsBackground then
+  begin
+    FDefaultLayerName := 'Background';
+    DisplayName       := FDefaultLayerName;
+  end;}
+
+  {FLayerThumb := TBitmap32.Create;
+  with FLayerThumb do
+  begin
+    SetSize();
+  end;}
+
+//  UpdateLayerThumbnail;
+
 end;
 
 { TigLayerPanelList }
 
-constructor TigLayerPanelList.Create;
+constructor TigLayerPanelList.Create(AOwner: TComponent);
 begin
-  inherited;
+  inherited Create(AOwner,TigLayerPanel );
 
   FSelectedPanel        := nil;
   FOnLayerCombined      := nil;
@@ -740,7 +1062,7 @@ begin
   FOnMergeVisibleLayers := nil;
   FOnFlattenLayers      := nil;
 
-  FItems            := TObjectList.Create(True);
+  //FItems            := TObjectList.Create(True);
   FPanelTypeCounter := TigClassCounter.Create;
 
   FCombineResult := TBitmap32.Create;
@@ -752,22 +1074,17 @@ end;
 
 destructor TigLayerPanelList.Destroy;
 begin
-  FItems.Clear;
-  FItems.Free;
+  //FItems.Clear;
+  //FItems.Free;
   FCombineResult.Free;
   FPanelTypeCounter.Free;
   
   inherited;
 end;
 
-function TigLayerPanelList.GetPanelCount: Integer;
-begin
-  Result := FItems.Count;
-end;
-
 function TigLayerPanelList.GetPanelMaxIndex: Integer;
 begin
-  Result := FItems.Count - 1;
+  Result := Count - 1;
 end;
 
 function TigLayerPanelList.GetSelectedPanelIndex: Integer;
@@ -776,9 +1093,9 @@ var
 begin
   Result := -1;
 
-  if (FItems.Count > 0) and Assigned(FSelectedPanel) then
+  if (Count > 0) and Assigned(FSelectedPanel) then
   begin
-    for i := 0 to (FItems.Count - 1) do
+    for i := 0 to (Count - 1) do
     begin
       if FSelectedPanel = Self.LayerPanels[i] then
       begin
@@ -795,7 +1112,7 @@ begin
 
   if ISValidIndex(AIndex) then
   begin
-    Result := TigCustomLayerPanel(FItems.Items[AIndex]);
+    Result := TigCustomLayerPanel(Items[AIndex]);
   end;
 end;
 
@@ -805,9 +1122,9 @@ var
 begin
   Result := 0;
 
-  if FItems.Count > 0 then
+  if Count > 0 then
   begin
-    for i := 0 to (FItems.Count - 1) do
+    for i := 0 to (Count - 1) do
     begin
       if Self.LayerPanels[i].IsLayerVisible then
       begin
@@ -826,9 +1143,9 @@ var
 begin
   Result := 0;
 
-  if FItems.Count > 0 then
+  if Count > 0 then
   begin
-    for i := 0 to (FItems.Count - 1) do
+    for i := 0 to (Count - 1) do
     begin
       LLayerPanel := Self.LayerPanels[i];
 
@@ -847,56 +1164,28 @@ var
   LPixelCount : Integer;
   m           : Cardinal;
   LLayerPanel : TigCustomLayerPanel;
-  LForeBits   : PColor32;
-  LBackBits   : PColor32;
-  LMaskBits   : PColor32;
 begin
-  LMaskBits := nil;
+  BlendLayers(FCombineResult.BoundsRect);
+  Exit;
+{
 
   FCombineResult.BeginUpdate;
   try
     FCombineResult.Clear($00000000);
 
-    if FItems.Count > 0 then
+    if Count > 0 then
     begin
       LPixelCount := FLayerWidth * FLayerHeight;
 
-      for i := 0 to (FItems.Count - 1) do
+      for i := 0 to (Count - 1) do
       begin
         LLayerPanel := GetLayerPanel(i);
 
-        if not LLayerPanel.IsLayerVisible then
-        begin
+        if (not LLayerPanel.IsLayerVisible) //or LLayerPanel.FLayerBitmap.Empty
+        then
           Continue;
-        end;
 
-        LForeBits := @LLayerPanel.FLayerBitmap.Bits[0];
-        LBackBits := @FCombineResult.Bits[0];
-
-        if LLayerPanel.IsMaskEnabled and LLayerPanel.IsMaskLinked then
-        begin
-          LMaskBits := @LLayerPanel.FMaskBitmap.Bits[0];
-        end;
-
-        for j := 1 to LPixelCount do
-        begin
-          m := LLayerPanel.FLayerBitmap.MasterAlpha;
-
-          if LLayerPanel.IsMaskEnabled and LLayerPanel.IsMaskLinked then
-          begin
-            // adjust the MasterAlpha with Mask setting
-            m := m * (LMaskBits^ and $FF) div 255;
-          end;
-
-          LLayerPanel.LayerBlend(LForeBits^, LBackBits^, m);
-
-          Inc(LForeBits);
-          Inc(LBackBits);
-          if LLayerPanel.IsMaskEnabled and LLayerPanel.IsMaskLinked then
-          begin
-            Inc(LMaskBits);
-          end;
-        end;
+        //LLayerPanel.Paint(FCombineResult, LRect);
       end;
     end;
 
@@ -907,7 +1196,7 @@ begin
   if Assigned(FOnLayerCombined) then
   begin
     FOnLayerCombined( Self, Rect(0, 0, FLayerWidth, FLayerHeight) );
-  end;
+  end;  }
 end;
 
 procedure TigLayerPanelList.BlendLayers(const ARect: TRect);
@@ -926,16 +1215,24 @@ begin
 {$RANGECHECKS OFF}
 
   LMaskRow := nil;
+  if EqualRect(ARect, EMPTY_RECT) then
+  begin
+    LRect := Rect(0,0, FCombineResult.Width -1, FCombineResult.Height-1);
 
-  LRect.Left   := Math.Min(ARect.Left, ARect.Right);
-  LRect.Right  := Math.Max(ARect.Left, ARect.Right);
-  LRect.Top    := Math.Min(ARect.Top, ARect.Right);
-  LRect.Bottom := Math.Max(ARect.Top, ARect.Bottom);
-  
+  end
+  else
+  begin
+    LRect.Left   := Math.Min(ARect.Left, ARect.Right);
+    LRect.Right  := Math.Max(ARect.Left, ARect.Right);
+    LRect.Top    := Math.Min(ARect.Top, ARect.Right);
+    LRect.Bottom := Math.Max(ARect.Top, ARect.Bottom);
+    GR32.IntersectRect(LRect, LRect, FCombineResult.BoundsRect);
+  end;
+
   if (LRect.Left = LRect.Right) or
      (LRect.Top = LRect.Bottom) or
-     (LRect.Left > FLayerWidth) or
-     (LRect.Top > FLayerHeight) or
+     (LRect.Left > FCombineResult.Width) or
+     (LRect.Top > FCombineResult.Height) or
      (LRect.Right <= 0) or
      (LRect.Bottom <= 0) then
   begin
@@ -947,7 +1244,22 @@ begin
 
   FCombineResult.BeginUpdate;
   try
-    if FItems.Count > 0 then
+    FCombineResult.ClipRect := LRect; //save to global usage
+
+
+      for i := 0 to (Count - 1) do
+      begin
+        LLayerPanel := GetLayerPanel(i);
+
+        if (not LLayerPanel.IsLayerVisible) {or LLayerPanel.FLayerBitmap.Empty} then
+          Continue;
+
+        LLayerPanel.Paint(FCombineResult, LRect);
+      end;
+
+
+    //original-------------------------------------
+    {if Count > 0 then
     begin
       for y := 0 to (LRectHeight - 1) do
       begin
@@ -961,7 +1273,7 @@ begin
         // get entries of one line pixels on the background bitmap ...
         LResultRow := FCombineResult.ScanLine[yy];
 
-        for i := 0 to (FItems.Count - 1) do
+        for i := 0 to (Count - 1) do
         begin
           LLayerPanel := GetLayerPanel(i);
 
@@ -1006,9 +1318,10 @@ begin
           end;
         end;
       end;
-    end;
+    end;}
 
   finally
+    FCombineResult.ResetClipRect;
     FCombineResult.EndUpdate;
   end;
 
@@ -1016,7 +1329,7 @@ begin
   begin
     FOnLayerCombined(Self, ARect);
   end;
-     
+
 {$RANGECHECKS ON}
 end;
 
@@ -1025,15 +1338,15 @@ var
   i           : Integer;
   LLayerPanel : TigCustomLayerPanel;
 begin
-  if FItems.Count > 0 then
+  if Count > 0 then
   begin
-    for i := (FItems.Count - 1) downto 0 do
+    for i := (Count - 1) downto 0 do
     begin
       LLayerPanel := Self.LayerPanels[i];
 
       if LLayerPanel.IsLayerVisible then
       begin
-        FItems.Delete(i);
+        Delete(i);
       end;
     end;
   end;
@@ -1043,11 +1356,11 @@ procedure TigLayerPanelList.DeselectAllPanels;
 var
   i : Integer;
 begin
-  if FItems.Count > 0 then
+  if Count > 0 then
   begin
     Self.FSelectedPanel := nil;
 
-    for i := 0 to (FItems.Count - 1) do
+    for i := 0 to (Count - 1) do
     begin
       // NOTICE :
       //   Setting with field FSelected, not with property Selected,
@@ -1073,15 +1386,17 @@ begin
     end;
 
     LNumber := FPanelTypeCounter.GetCount(ALayerPanel.ClassName);
-    ALayerPanel.LayerName := ALayerPanel.FDefaultLayerName + ' ' + IntToStr(LNumber);
+    ALayerPanel.DisplayName := ALayerPanel.FDefaultLayerName + ' ' + IntToStr(LNumber);
   end;
 end;
 
-procedure TigLayerPanelList.Add(APanel: TigCustomLayerPanel);
+procedure TigLayerPanelList.Add(APanel: TigLayerPanel);
 begin
   if Assigned(APanel) then
   begin
-    FItems.Add(APanel);
+    //FItems.Add(APanel);
+    APanel.Collection := self;
+
 
     // we don't count background layers
     if APanel is TigNormalLayerPanel then
@@ -1095,18 +1410,18 @@ begin
     begin
       FPanelTypeCounter.Increase(APanel.ClassName);
     end;
-    
+
     // first adding
-    if FItems.Count = 1 then
+    if (Count = 1) and (APanel is TigCustomLayerPanel) then
     begin
-      FLayerWidth  := APanel.FLayerBitmap.Width;
-      FLayerHeight := APanel.FLayerBitmap.Height;
-      
-      FCombineResult.SetSize(FLayerWidth, FLayerHeight);
+      //FLayerWidth  := TigCustomLayerPanel(APanel).FLayerBitmap.Width;
+      //FLayerHeight := TigCustomLayerPanel(APanel).FLayerBitmap.Height;
+
+      FCombineResult.SetSizeFrom(TigCustomLayerPanel(APanel).FLayerBitmap);
     end;
 
     BlendLayers;
-    SelectLayerPanel(FItems.Count - 1);
+    SelectLayerPanel(Count - 1);
 
     if not FSelectedPanel.IsDuplicated then
     begin
@@ -1122,26 +1437,26 @@ procedure TigLayerPanelList.SimpleAdd(APanel: TigCustomLayerPanel);
 begin
   if Assigned(APanel) then
   begin
-    FItems.Add(APanel);
+    //FItems.Add(APanel);
+    APanel.Collection := Self;
     
     // first adding
-    if FItems.Count = 1 then
+    if (Count = 1) and (APanel is TigCustomLayerPanel) then
     begin
-      FLayerWidth  := APanel.FLayerBitmap.Width;
-      FLayerHeight := APanel.FLayerBitmap.Height;
-      
-      FCombineResult.SetSize(FLayerWidth, FLayerHeight);
+      FCombineResult.SetSizeFrom(TigCustomLayerPanel(APanel).FLayerBitmap);
     end;
   end;
 end; 
 
 procedure TigLayerPanelList.Insert(AIndex: Integer;
-  APanel: TigCustomLayerPanel);
+  APanel: TigLayerPanel);
 begin
   if Assigned(APanel) then
   begin
-    AIndex := Clamp(AIndex, 0, FItems.Count);
-    FItems.Insert(AIndex, APanel);
+    AIndex := Clamp(AIndex, 0, Count);
+    //FItems.Insert(AIndex, APanel);
+    APanel.Collection := Self;
+    APanel.Index := AIndex;
 
     // we don't count background layers
     if APanel is TigNormalLayerPanel then
@@ -1172,7 +1487,8 @@ begin
      IsValidIndex(ANewIndex) and
      (ACurIndex <> ANewIndex) then
   begin
-    FItems.Move(ACurIndex, ANewIndex);
+    //FItems.Move(ACurIndex, ANewIndex);
+    LayerPanels[ACurIndex].Index := ANewIndex;
     BlendLayers;
 
     if Assigned(FOnLayerOrderChanged) then
@@ -1201,7 +1517,11 @@ begin
       begin
         FOnSelectionChanged(Self);
       end;
+      GIntegrator.InvalidateListeners; // such layer listbox doesn't invalidate her self
     end;
+
+    // always enable the layer when it is selected
+    FSelectedPanel.IsLayerEnabled := True;
   end;
 end;
 
@@ -1215,14 +1535,14 @@ end;
 
 procedure TigLayerPanelList.DeleteLayerPanel(AIndex: Integer);
 begin
-  if (FItems.Count = 1) or ( not IsValidIndex(AIndex) ) then
+  if (Count = 1) or ( not IsValidIndex(AIndex) ) then
   begin
     Exit;
   end;
 
   FSelectedPanel := nil;
 
-  FItems.Delete(AIndex);
+  Delete(AIndex);
   BlendLayers;
 
   // select the previous layer ...
@@ -1235,6 +1555,7 @@ begin
   end;
 
   SelectLayerPanel(AIndex);
+  GIntegrator.InvalidateListeners;
 end;
 
 // This method is similar to DeleteLayerPanel(), but it will also
@@ -1243,13 +1564,13 @@ procedure TigLayerPanelList.CancelLayerPanel(AIndex: Integer);
 var
   LPanel : TigCustomLayerPanel;
 begin
-  if (FItems.Count = 1) or ( not IsValidIndex(AIndex) ) then
+  if (Count = 1) or ( not IsValidIndex(AIndex) ) then
   begin
     Exit;
   end;
 
   LPanel := Self.LayerPanels[AIndex];
-  Self.FPanelTypeCounter.Decrease(LPanel.LayerName);
+  Self.FPanelTypeCounter.Decrease(LPanel.DisplayName);
 
   DeleteLayerPanel(AIndex);
 end;
@@ -1258,9 +1579,9 @@ function TigLayerPanelList.CanFlattenLayers: Boolean;
 begin
   Result := False;
 
-  if FItems.Count > 0 then
+  if Count > 0 then
   begin
-    if FItems.Count = 1 then
+    if Count = 1 then
     begin
       if Self.SelectedPanel is TigNormalLayerPanel then
       begin
@@ -1311,7 +1632,8 @@ begin
   
   if Result then
   begin
-    LBackPanel := TigNormalLayerPanel.Create(Self, FLayerWidth, FLayerHeight, clWhite32, True);
+    LBackPanel := TigNormalLayerPanel.Create(Self);
+    LBackPanel.LayerBitmap.SetSizeFrom( FCombineResult );
 
     with LBackPanel do
     begin
@@ -1326,7 +1648,7 @@ begin
       UpdateLayerThumbnail;
     end;
 
-    FItems.Clear;
+    Clear;
     FPanelTypeCounter.Clear;
     Self.Add(LBackPanel);
     Self.SelectLayerPanel(0);
@@ -1368,7 +1690,7 @@ begin
       LMaskEffected := True;
     end;
 
-    for i := 1 to (FLayerWidth * FLayerHeight) do
+    for i := 1 to (FCombineResult.Width * FCombineResult.Height) do
     begin
       m := FSelectedPanel.FLayerBitmap.MasterAlpha;
       
@@ -1413,21 +1735,22 @@ begin
       LAsBackground := TigNormalLayerPanel(FSelectedPanel).FAsBackground;
     end;
 
-    LMergedPanel := TigNormalLayerPanel.Create(Self,
-      FLayerWidth, FLayerHeight, $00000000, LAsBackground);
+    LMergedPanel := TigNormalLayerPanel_Create(Self,
+       FCombineResult.Width, FCombineResult.Height, $00000000, LAsBackground);
 
     with LMergedPanel do
     begin
       FLayerBitmap.Assign(FCombineResult);
       UpdateLayerThumbnail;
 
-      FLayerName := FSelectedPanel.FLayerName;
+      FDisplayName := FSelectedPanel.FDisplayName;
     end;
     
     DeleteVisibleLayerPanels;
     FSelectedPanel := nil;
 
-    FItems.Insert(0, LMergedPanel);
+    //FItems.Insert(0, LMergedPanel);
+    LMergedPanel.Index := 0;
     Self.SelectLayerPanel(0);
 
     if Assigned(FOnMergeVisibleLayers) then
@@ -1437,10 +1760,10 @@ begin
   end;
 end;
 
-function TigLayerPanelList.IsValidIndex(const AIndex: Integer): Boolean;
+{function TigLayerPanelList.IsValidIndex(const AIndex: Integer): Boolean;
 begin
-  Result := (AIndex >= 0) and (AIndex < FItems.Count);
-end;
+  Result := (AIndex >= 0) and (AIndex < Count);
+end;}
 
 function TigLayerPanelList.GetHiddenLayerCount: Integer;
 var
@@ -1448,9 +1771,9 @@ var
 begin
   Result := 0;
 
-  if FItems.Count > 0 then
+  if Count > 0 then
   begin
-    for i := 0 to (FItems.Count - 1) do
+    for i := 0 to (Count - 1) do
     begin
       if not Self.LayerPanels[i].IsLayerVisible then
       begin
@@ -1458,6 +1781,21 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TigLayerPanelList.DoLayerChanged(ALayer: TigCustomLayerPanel);
+begin
+  if Assigned(FOnLayerChanged) then
+    FOnLayerChanged(Self, ALayer);
+end;
+
+procedure TigLayerPanelList.Update(Item: TCollectionItem);
+// this chance to invalidate the document apperance
+begin
+  //inherited;
+  if Assigned(Item) then
+    BlendLayers( TigLayerPanel(Item).FChangedRect );
+
 end;
 
 { TigClassRec }
@@ -1600,5 +1938,90 @@ begin
   end;
 end;
 
+
+
+constructor TigLayerPanel.Create(AOwner: TigLayerPanelList);
+begin
+  inherited Create(AOwner);
+end;
+
+function TigLayerPanel.PanelList: TigLayerPanelList;
+begin
+  Result := Collection as TigLayerPanelList;
+end;
+
+function TigLayerPanel.GetEmpty: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TigLayerPanel.Paint(ABuffer: TBitmap32; DstRect: TRect);
+begin
+
+end;
+
+function TigLayerPanel.GetLayerThumb: TBitmap32;
+begin
+  if not Assigned(FLayerThumb) then
+  begin
+    FLayerThumb := TBitmap32.Create();
+    FLayerThumb.SetSize( LAYER_THUMB_SIZE, LAYER_THUMB_SIZE);
+  end;
+    
+  if not FThumbValid then
+  begin
+    PaintLayerThumb; // repaint only when needed
+    FThumbValid := True;
+  end;
+  Result := FLayerThumb;
+end;
+
+procedure TigLayerPanel.PaintLayerThumb;
+begin
+
+end;
+
+procedure TigCustomLayerPanel.LayerBitmapChanged(Sender: TObject);
+begin
+  FThumbValid := False;
+end;
+
+procedure TigCustomLayerPanel.PaintLayerThumb;
+var
+  LRect : TRect;
+  LBmp  : TBitmap32;
+begin
+  LRect := FRealThumbRect;
+
+  FLayerThumb.Clear( Color32(clBtnFace) ); //maybe create
+  DrawCheckerboardPattern(FLayerThumb, LRect, True);
+
+  LBmp := TBitmap32.Create;
+  try
+    // The thumbnail should not shows the MasterAlpha settings of the layer.
+    // The MasterAlpha only takes effect when layer blending.
+    LBmp.Assign(FLayerBitmap);
+    LBmp.MasterAlpha := 255;
+    LBmp.ResamplerClassName := 'TLanczosKernel';
+
+    FLayerThumb.Draw(LRect, LBmp.BoundsRect, LBmp);
+  finally
+    LBmp.Free;
+  end;
+
+  InflateRect(LRect, 1, 1);
+  FLayerThumb.FrameRectS(LRect, clBlack32);
+end;
+
+procedure TigLayerPanel.BeginUpdate;
+begin
+  Inc(FUpdateCount);
+end;
+
+procedure TigLayerPanel.EndUpdate;
+begin
+  Assert(FUpdateCount > 0, 'Unpaired TThreadPersistent.EndUpdate');
+  Dec(FUpdateCount);
+end;
 
 end.
