@@ -1,6 +1,7 @@
 package mg_D7;
 
 {$R *.res}
+{$R '..\igReg.dcr'}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -32,10 +33,10 @@ requires
 
 contains
   igBase in '..\igBase.pas',
-  igReg in '..\igReg.pas',
   igLayerPanelManager in '..\igLayerPanelManager.pas',
   igLayers in '..\igLayers.pas',
   igLayersListBox in '..\igLayersListBox.pas',
-  igComboboxBlendModes in '..\igComboboxBlendModes.pas';
+  igComboboxBlendModes in '..\igComboboxBlendModes.pas',
+  igReg in '..\igReg.pas';
 
 end.
