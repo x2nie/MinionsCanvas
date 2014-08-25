@@ -108,12 +108,19 @@ end;
 
 procedure TigToolBrushSimple.MouseUp(Sender: TigPaintBox; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+var cmd : TigCmdLayer_Modify;
 begin
   if FLeftButtonDown then
   begin
     FLeftButtonDown := False;
 
-    Layer.UpdateLayerThumbnail;
+    cmd := TigCmdLayer_Modify.Create(GIntegrator.ActivePaintBox.UndoRedo);
+    cmd.BackupLayer(Layer);
+    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(cmd,'Brush paint');
+    GIntegrator.InvalidateListeners;
+
+    //Layer.UpdateLayerThumbnail;
+    //Layer.Changed;
   end;
 end;
 

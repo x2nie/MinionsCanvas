@@ -47,6 +47,7 @@ type
   TigSelectedPanelArea = (spaUnknown,
                           spaVisibleMark,
                           spaStageMark,
+                          spaLogoThumbnail,
                           spaLayerThumbnail,
                           spaMaskLinkageMark,
                           spaMaskThumbnail,
@@ -88,6 +89,7 @@ type
     FSpanColor        : TColor32;
     FSelectedColor    : TColor32;
     FDeselectedColor  : TColor32;
+    FDisabledColor    : TColor32;
   protected
     function GetLayerVisibleIconRect(const APanelRect: TRect): TRect; override;
 
@@ -243,6 +245,7 @@ begin
   FSpanColor       := clSilver32;
   FSelectedColor   := Color32(clHighlight);
   FDeselectedColor := Color32(clBtnFace);
+  FDisabledColor   := $FFDFDFDF;
 end;
 
 destructor TigLayerPanelStdTheme.Destroy;
@@ -313,15 +316,30 @@ begin
     Exit;
   end;
 
-  // if point on layer thumbnail ...
-
-  LRect.Left  := LRect.Right + 1;
-  LRect.Right := LRect.Left + APanel.LayerThumbnail.Width + LSpan2 - 1;
-
-  if Windows.PtInRect(LRect, LTestPoint) then
+  // if point on layer logo thumbnail ...
+  if APanel.IsLogoThumbEnabled then
   begin
-    Result := spaLayerThumbnail;
-    Exit;
+    LRect.Left  := LRect.Right + 1;
+    LRect.Right := LRect.Left + APanel.LogoThumbnail.Width + LSpan2 - 1;
+
+    if Windows.PtInRect(LRect, LTestPoint) then
+    begin
+      Result := spaLogoThumbnail;
+      Exit;
+    end;
+  end;
+  
+  // if point on layer thumbnail ...
+  if APanel.IsLayerThumbEnabled then
+  begin
+    LRect.Left  := LRect.Right + 1;
+    LRect.Right := LRect.Left + APanel.LayerThumbnail.Width + LSpan2 - 1;
+
+    if Windows.PtInRect(LRect, LTestPoint) then
+    begin
+      Result := spaLayerThumbnail;
+      Exit;
+    end;
   end;
 
   // if mask enabled ...
@@ -491,15 +509,27 @@ begin
 
     LRect.Left  := LRect.Right;
     LRect.Right := LRect.Left + LBmp.Width + FObjectSpan;
-
-    if APanel.IsSelected then
-    begin
-      // drawing stage icon only when the panel is currently selected
-      DrawProcessStageIcon(ABuffer, LRect, APanel.LayerProcessStage);
-    end;
+    DrawProcessStageIcon(ABuffer, LRect, APanel.LayerProcessStage);
     ABuffer.LineS(LRect.Right, LRect.Top, LRect.Right, LRect.Bottom, FSpanColor);
 
+    // draw logo thumbnail
+    if APanel.IsLogoThumbEnabled then
+    begin
+      LRect.Left   := LRect.Right + FObjectSpan;
+      LRect.Top    := LRect.Top + (LSize.cy - APanel.LogoThumbnail.Height) div 2;
+      LRect.Right  := LRect.Left + APanel.LogoThumbnail.Width;
+      LRect.Bottom := LRect.Top + APanel.LogoThumbnail.Height;
+      ABuffer.Draw(LRect.Left, LRect.Top, APanel.LogoThumbnail);
+
+      LRect.Top    := ARect.Top;
+      LRect.Right  := LRect.Right + FObjectSpan;
+      LRect.Bottom := ARect.Bottom;
+    ABuffer.LineS(LRect.Right, LRect.Top, LRect.Right, LRect.Bottom, FSpanColor);
+    end;
+
     // draw layer thumbnail
+    if APanel.IsLayerThumbEnabled then
+    begin
     LRect.Left   := LRect.Right + FObjectSpan;
     LRect.Top    := LRect.Top + (LSize.cy - APanel.LayerThumbnail.Height) div 2;
     LRect.Right  := LRect.Left + APanel.LayerThumbnail.Width;
@@ -510,6 +540,7 @@ begin
     LRect.Right  := LRect.Right + FObjectSpan;
     LRect.Bottom := ARect.Bottom;
     ABuffer.LineS(LRect.Right, LRect.Top, LRect.Right, LRect.Bottom, FSpanColor);
+    end;
 
     // draw Mask-Link mark
     if APanel.IsMaskEnabled then
@@ -549,8 +580,16 @@ begin
 
     if APanel.IsSelected then
     begin
-      ABuffer.FillRectS(LRect, FSelectedColor);
-      LCaptionColor := clWhite32;
+      if APanel.IsLayerEnabled then
+      begin
+        ABuffer.FillRectS(LRect, FSelectedColor);
+        LCaptionColor := clWhite32;
+      end
+      else
+      begin
+        ABuffer.FillRectS(LRect, FDisabledColor);
+        LCaptionColor := clBlack32;
+      end;
     end
     else
     begin
@@ -560,9 +599,9 @@ begin
 
     // draw panel caption
     LRect.Left := LRect.Left + FObjectSpan;
-    LRect.Top  := LRect.Top + ( LSize.cy - ABuffer.TextHeight(APanel.LayerName) ) div 2;
+    LRect.Top  := LRect.Top + ( LSize.cy - ABuffer.TextHeight(APanel.DisplayName) ) div 2;
 
-    ABuffer.RenderText(LRect.Left, LRect.Top, APanel.LayerName, 0, LCaptionColor);
+    ABuffer.RenderText(LRect.Left, LRect.Top, APanel.DisplayName, 0, LCaptionColor);
 
     // draw panel border
     DrawPanelBorder(ABuffer, ARect);
@@ -627,7 +666,7 @@ begin
     BorderStyle  := bsNone;
     Kind         := sbVertical;
     Align        := alRight;
-    Width        := GetSystemMetrics(SM_CYVSCROLL) div 2;
+    Width        := GetSystemMetrics(SM_CYVSCROLL) div 3 * 2;
     OnUserChange := ScrollHandler;
   end;
 
@@ -907,6 +946,14 @@ begin
               end;
             end;
 
+          spaLogoThumbnail:
+            begin
+              if Assigned(LLayerPanel.OnLogoThumbDblClick) then
+              begin
+                LLayerPanel.OnLogoThumbDblClick(LLayerPanel);
+              end;
+            end;
+
           spaLayerCaption:
             begin
               if Assigned(LLayerPanel.OnPanelDblClick) then
@@ -1052,6 +1099,7 @@ begin
                 FPanelList.SelectedPanel.LayerProcessStage := lpsMask;
               end;
 
+            spaLogoThumbnail,
             spaLayerCaption:
               begin
                 FPanelList.SelectLayerPanel(LIndex);

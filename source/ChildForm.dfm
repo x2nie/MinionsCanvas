@@ -1,8 +1,8 @@
 object frmChild: TfrmChild
   Left = 367
   Top = 179
-  ClientHeight = 378
-  ClientWidth = 622
+  Width = 638
+  Height = 416
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

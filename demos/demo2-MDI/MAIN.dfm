@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 187
-  Top = 127
-  Width = 717
+  Left = 324
+  Top = 142
+  Width = 1021
   Height = 405
   Caption = 'MDI Application'
   Color = clAppWorkSpace
@@ -18,10 +18,16 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
+  object spl1: TSplitter
+    Left = 685
+    Top = 30
+    Height = 298
+    Align = alRight
+  end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 321
-    Width = 709
+    Top = 328
+    Width = 1005
     Height = 19
     AutoHint = True
     Panels = <>
@@ -30,7 +36,7 @@ object MainForm: TMainForm
   object ToolBar2: TToolBar
     Left = 0
     Top = 0
-    Width = 709
+    Width = 1005
     Height = 30
     BorderWidth = 1
     Color = clBtnFace
@@ -120,20 +126,56 @@ object MainForm: TMainForm
       Top = 2
       Action = actTool_Pencil
     end
+    object btn1: TToolButton
+      Left = 282
+      Top = 2
+      Width = 8
+      Caption = 'btn1'
+      ImageIndex = 24
+      Style = tbsSeparator
+    end
+    object btnUndo: TToolButton
+      Left = 290
+      Top = 2
+      Action = actUndo
+      DropdownMenu = pmUndo
+      Style = tbsDropDown
+    end
+    object btnRedo: TToolButton
+      Left = 328
+      Top = 2
+      Action = actRedo
+      DropdownMenu = pmRedo
+      Style = tbsDropDown
+    end
+    object btn2: TToolButton
+      Left = 366
+      Top = 2
+      Width = 8
+      Caption = 'btn2'
+      ImageIndex = 5
+      Style = tbsSeparator
+    end
+    object btn3: TToolButton
+      Left = 374
+      Top = 2
+      Caption = 'btn3'
+      ImageIndex = 13
+      OnClick = btn3Click
+    end
   end
   object pnlLayer: TPanel
-    Left = 392
+    Left = 688
     Top = 30
     Width = 317
-    Height = 291
+    Height = 298
     Align = alRight
     BevelOuter = bvNone
-    BorderWidth = 3
     TabOrder = 2
     object tlbrLayers: TToolBar
-      Left = 3
-      Top = 264
-      Width = 311
+      Left = 0
+      Top = 274
+      Width = 317
       Height = 24
       Align = alBottom
       AutoSize = True
@@ -175,18 +217,10 @@ object MainForm: TMainForm
         Action = actLayer_Delete
       end
     end
-    object lyrs1: TigLayersListBox
-      Left = 3
-      Top = 47
-      Width = 311
-      Height = 217
-      OnMouseUp = lyrs1MouseUp
-      Align = alClient
-    end
     object tlbrBlendModes: TToolBar
-      Left = 3
-      Top = 24
-      Width = 311
+      Left = 0
+      Top = 21
+      Width = 317
       Height = 23
       AutoSize = True
       ButtonHeight = 21
@@ -195,7 +229,7 @@ object MainForm: TMainForm
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 2
+      TabOrder = 1
       object tlbnSeparator2: TToolButton
         Left = 0
         Top = 0
@@ -215,9 +249,9 @@ object MainForm: TMainForm
       end
     end
     object tlbrLayerOpacity: TToolBar
-      Left = 3
-      Top = 3
-      Width = 311
+      Left = 0
+      Top = 0
+      Width = 317
       Height = 21
       AutoSize = True
       ButtonHeight = 19
@@ -226,7 +260,7 @@ object MainForm: TMainForm
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 3
+      TabOrder = 2
       object ToolButton12: TToolButton
         Left = 0
         Top = 0
@@ -268,6 +302,20 @@ object MainForm: TMainForm
         ParentFont = False
       end
     end
+    object lyrs1: TigLayersListBox
+      Left = 0
+      Top = 44
+      Width = 317
+      Height = 230
+      Align = alClient
+    end
+  end
+  object igLayersListBox1: TigLayersListBox
+    Left = 448
+    Top = 30
+    Width = 237
+    Height = 298
+    Align = alRight
   end
   object MainMenu1: TMainMenu
     Images = ImageList1
@@ -472,6 +520,22 @@ object MainForm: TMainForm
       ImageIndex = 5
       OnExecute = actLayer_DeleteExecute
       OnUpdate = EnabledWhenMDIavailabled
+    end
+    object actUndo: TAction
+      Category = 'Edit'
+      Caption = 'actUndo'
+      ImageIndex = 3
+      ShortCut = 16474
+      OnExecute = actUndoExecute
+      OnUpdate = actUndoUpdate
+    end
+    object actRedo: TAction
+      Category = 'Edit'
+      Caption = 'actRedo'
+      ImageIndex = 4
+      ShortCut = 16473
+      OnExecute = actRedoExecute
+      OnUpdate = actRedoUpdate
     end
   end
   object ImageList1: TImageList
@@ -1540,5 +1604,15 @@ object MainForm: TMainForm
       FEBF80030003DCF7FC9F80070003FF0FFDDF807F0003FFFFFDDF80FF8007FFFF
       FDDF81FFF87FFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000
       000000000000}
+  end
+  object pmUndo: TPopupMenu
+    OnPopup = pmUndoPopup
+    Left = 232
+    Top = 96
+  end
+  object pmRedo: TPopupMenu
+    OnPopup = pmRedoPopup
+    Left = 288
+    Top = 104
   end
 end

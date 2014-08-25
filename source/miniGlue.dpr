@@ -16,7 +16,7 @@ uses
   igLayers in '..\lib\igLayers.pas',
   igMath in '..\lib\igMath.pas',
   igLayerPanelManager in '..\lib\igLayerPanelManager.pas',
-  igPng in '..\lib\igPng.pas',
+//  igPng in '..\lib\igPng.pas',
   igBmp in '..\lib\igBmp.pas',
   igLayerIO in '..\lib\igLayerIO.pas',
   igGraphicsLayerIO in '..\lib\igGraphicsLayerIO.pas',

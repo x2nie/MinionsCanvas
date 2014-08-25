@@ -68,7 +68,6 @@ type
     tlbrAddMask: TToolButton;
     btnLayer_New: TToolButton;
     btnLayer_Delete: TToolButton;
-    lyrs1: TigLayersListBox;
     actTool_Brush: TAction;
     actTool_Pencil: TAction;
     ToolButton13: TToolButton;
@@ -84,6 +83,18 @@ type
     ggbrLayerOpacity: TGaugeBar;
     edtLayerOpacity: TEdit;
     lblLayerOpacity: TLabel;
+    actUndo: TAction;
+    actRedo: TAction;
+    btn1: TToolButton;
+    btnUndo: TToolButton;
+    btnRedo: TToolButton;
+    spl1: TSplitter;
+    pmUndo: TPopupMenu;
+    pmRedo: TPopupMenu;
+    btn2: TToolButton;
+    btn3: TToolButton;
+    lyrs1: TigLayersListBox;
+    igLayersListBox1: TigLayersListBox;
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure HelpAbout1Execute(Sender: TObject);
@@ -94,8 +105,13 @@ type
     procedure FormCreate(Sender: TObject);
     procedure EnabledWhenMDIavailabled(Sender: TObject);
     procedure actLayer_DeleteExecute(Sender: TObject);
-    procedure lyrs1MouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+    procedure actUndoExecute(Sender: TObject);
+    procedure actRedoExecute(Sender: TObject);
+    procedure actUndoUpdate(Sender: TObject);
+    procedure actRedoUpdate(Sender: TObject);
+    procedure pmUndoPopup(Sender: TObject);
+    procedure pmRedoPopup(Sender: TObject);
+    procedure btn3Click(Sender: TObject);
   private
     { Private declarations }
     procedure CreateMDIChild(const Name: string);
@@ -123,7 +139,7 @@ begin
   { create a new MDI child window }
   Child := TMDIChild.Create(Application);
   Child.Caption := Name;
-  //if FileExists(Name) then Child.Memo1.Lines.LoadFromFile(Name);
+  if FileExists(Name) then Child.LoadDocument(Name);
 end;
 
 procedure TMainForm.FileNew1Execute(Sender: TObject);
@@ -139,6 +155,7 @@ end;
 
 procedure TMainForm.HelpAbout1Execute(Sender: TObject);
 begin
+
   AboutBox.ShowModal;
 end;
 
@@ -151,10 +168,11 @@ procedure TMainForm.btnLayer_NewClick(Sender: TObject);
 var
   LLayerPanel : TigCustomLayerPanel;
   LPanelIndex : Integer;
+var cmd : TigCmdLayer_New;
 begin
   if not Assigned(GIntegrator.ActivePaintBox) then
     Exit;
-    
+
   Screen.Cursor := crHourGlass;
   try
     //with gActiveChildForm do
@@ -162,13 +180,22 @@ begin
       Randomize;
 
       //LLayerPanel := CreateNormalLayer( $FF000000 or Cardinal(Random($FFFFFF)), False );
-      LLayerPanel := TigNormalLayerPanel.Create(lyrs1.PanelList,
-        300,300,
-        $FF000000 or Cardinal(Random($FFFFFF)));
+      //LLayerPanel := TigNormalLayerPanel.Create(GIntegrator.ActivePaintBox.LayerList); //error access violation
+      LLayerPanel := TigNormalLayerPanel.Create(nil);
+      LLayerPanel.BeginUpdate;
+      LLayerPanel.LayerBitmap.SetSize(300,300);
+      LLayerPanel.LayerBitmap.Clear($FF000000 or Cardinal(Random($FFFFFF)));
+      //LLayerPanel.UpdateLayerThumbnail;
+      LLayerPanel.EndUpdate;
 
-      LPanelIndex := lyrs1.PanelList.SelectedIndex + 1;
+      LPanelIndex := GIntegrator.ActivePaintBox.LayerList.SelectedIndex + 1;
 
-      lyrs1.PanelList.Insert(LPanelIndex, LLayerPanel);
+      GIntegrator.ActivePaintBox.LayerList.Insert(LPanelIndex, LLayerPanel);
+
+      cmd := TigCmdLayer_New.Create(GIntegrator.ActivePaintBox.UndoRedo);
+      cmd.BackupLayer(LLayerPanel);
+      GIntegrator.ActivePaintBox.UndoRedo.AddUndo(cmd,'New Layer');
+
     end;
   finally
     Screen.Cursor := crDefault;
@@ -192,6 +219,7 @@ begin
   //actTool_Pencil.Execute(); failed
   GetBlendModeList(cmbbxBlendModes.Items);
   self.actTool_PencilExecute(self);
+  self.actTool_BrushExecute(self);
 end;
 
 procedure TMainForm.EnabledWhenMDIavailabled(Sender: TObject);
@@ -201,17 +229,81 @@ end;
 
 procedure TMainForm.actLayer_DeleteExecute(Sender: TObject);
 begin
-//
+  if not Assigned(GIntegrator.ActivePaintBox) then
+    Exit;
+  GIntegrator.ActivePaintBox.LayerList.DeleteSelectedLayerPanel;
 end;
 
-procedure TMainForm.lyrs1MouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+procedure TMainForm.actUndoExecute(Sender: TObject);
 begin
-  // TODO: we have to refresh the layers list box on each mouse up,
-  // if not, after we switched to an unselected layer with mouse click,
-  // the layers list box will not showing the changes up.
-  // Should we do the refreshing at here?
-  lyrs1.Invalidate;
+  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
+  GIntegrator.ActivePaintBox.UndoRedo.Undo;
+end;
+
+procedure TMainForm.actRedoExecute(Sender: TObject);
+begin
+  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
+  GIntegrator.ActivePaintBox.UndoRedo.Redo;
+end;
+
+procedure TMainForm.actUndoUpdate(Sender: TObject);
+begin
+  if not Assigned(GIntegrator.ActivePaintBox) then
+    Caption := 'no active paintbox'
+  else
+    with GIntegrator.ActivePaintBox.UndoRedo do
+      self.Caption := Format('@ %d   (%d of %d undos)',[ ItemIndex, ItemIndex +1, Count]);
+
+
+  actUndo.Enabled := Assigned(GIntegrator.ActivePaintBox) and
+    GIntegrator.ActivePaintBox.UndoRedo.IsUndoAllowed;
+end;
+
+procedure TMainForm.actRedoUpdate(Sender: TObject);
+begin
+  actRedo.Enabled := Assigned(GIntegrator.ActivePaintBox) and
+    GIntegrator.ActivePaintBox.UndoRedo.IsRedoAllowed;
+end;
+
+procedure TMainForm.pmUndoPopup(Sender: TObject);
+var i : Integer;
+  m : TMenuItem;
+begin
+  pmUndo.Items.Clear;
+  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
+  with GIntegrator.ActivePaintBox.UndoRedo do
+  begin
+    for i := ItemIndex downto 0 do
+    begin
+      m := TMenuItem.Create(pmUndo);
+      m.Caption := Strings[i];
+      pmundo.Items.Add(m);
+    end;
+  end;
+end;
+
+procedure TMainForm.pmRedoPopup(Sender: TObject);
+var i : Integer;
+  m : TMenuItem;
+begin
+  pmRedo.Items.Clear;
+  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
+  with GIntegrator.ActivePaintBox.UndoRedo do
+  begin
+    for i := ItemIndex +1 to Count -1 do
+    begin
+      m := TMenuItem.Create(pmRedo);
+      m.Caption := Strings[i];
+      pmRedo.Items.Add(m);
+    end;
+  end;
+end;
+
+procedure TMainForm.btn3Click(Sender: TObject);
+begin
+  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
+  GIntegrator.ActivePaintBox.LayerList.SelectLayerPanel(0);
+
 end;
 
 end.

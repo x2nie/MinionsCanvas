@@ -18,8 +18,14 @@ object MDIChild: TMDIChild
   object img1: TigPaintBox
     Left = 0
     Top = 0
-    Width = 504
-    Height = 325
+    Width = 496
+    Height = 314
     Align = alClient
+    Bitmap.ResamplerClassName = 'TNearestResampler'
+    BitmapAlign = baCenter
+    RepaintMode = rmOptimizer
+    Scale = 1.000000000000000000
+    ScaleMode = smNormal
+    TabOrder = 0
   end
 end

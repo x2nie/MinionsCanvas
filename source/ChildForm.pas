@@ -68,7 +68,7 @@ type
     // callback functions
     procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
     procedure AfterSelectedLayerPanelChanged(ASender: TObject);
-    procedure AfterLayerPanelChanged(ASender: TObject);
+    procedure LayerListboxInvalidate(ASender: TObject);
     procedure AfterLayerMerged(AResultPanel: TigCustomLayerPanel);
     procedure BCLayerThumbDblClick(ASender: TObject);
     procedure LayerThumbDblClick(ASender: TObject); // for testing
@@ -125,7 +125,7 @@ begin
   end;
 end;
 
-procedure TfrmChild.AfterLayerPanelChanged(ASender: TObject);
+procedure TfrmChild.LayerListboxInvalidate(ASender: TObject);
 begin
   if Assigned(frmLayers) then
   begin
@@ -136,17 +136,17 @@ end;
 procedure TfrmChild.AfterLayerMerged(AResultPanel: TigCustomLayerPanel);
 begin
   // setting callback functions for the result layer panel
-  if Assigned(AResultPanel) and (AResultPanel is TigNormalLayerPanel) then
+{  if Assigned(AResultPanel) and (AResultPanel is TigNormalLayerPanel) then
   begin
     with AResultPanel do
     begin
-      OnChange             := Self.AfterLayerPanelChanged;
-      OnThumbnailUpdate    := Self.AfterLayerPanelChanged;
+      OnChange             := Self.LayerListboxInvalidate;
+      OnThumbnailUpdate    := Self.LayerListboxInvalidate;
       OnPanelDblClick      := nil;
       OnLayerThumbDblClick := Self.LayerThumbDblClick;
       OnMaskThumbDblClick  := nil;
     end;
-  end;
+  end;}
 end;
 
 procedure TfrmChild.BCLayerThumbDblClick(ASender: TObject);
@@ -213,14 +213,14 @@ function TfrmChild.CreateNormalLayer(
   const ABackColor: TColor32 = $00000000;
   const AsBackLayer: Boolean = False): TigCustomLayerPanel;
 begin
-  Result := TigNormalLayerPanel.Create(FLayerPanelList,
+  Result := TigNormalLayerPanel_Create(FLayerPanelList,
     imgWorkArea.Bitmap.Width, imgWorkArea.Bitmap.Height,
     ABackColor, AsBackLayer);
 
   with Result do
   begin
-    OnChange             := Self.AfterLayerPanelChanged;
-    OnThumbnailUpdate    := Self.AfterLayerPanelChanged;
+    //OnChange             := Self.LayerListboxInvalidate;
+    //OnThumbnailUpdate    := Self.LayerListboxInvalidate;
     OnLayerThumbDblClick := Self.LayerThumbDblClick;
   end;
 end;
@@ -230,15 +230,15 @@ function TfrmChild.CreateBrightContrastLayer(const ABrightAmount: Integer = 0;
 var
   LBCPanel : TigBrightContrastLayerPanel;
 begin
-  LBCPanel := TigBrightContrastLayerPanel.Create(FLayerPanelList,
+  LBCPanel := TigBrightContrastLayerPanel_Create(FLayerPanelList,
     imgWorkArea.Bitmap.Width, imgWorkArea.Bitmap.Height);
 
   with LBCPanel do
   begin
     BrightAmount         := ABrightAmount;
     ContrastAmount       := AContrastAmount;
-    OnChange             := Self.AfterLayerPanelChanged;
-    OnThumbnailUpdate    := Self.AfterLayerPanelChanged;
+    //OnChange             := Self.LayerListboxInvalidate;
+    //OnThumbnailUpdate    := Self.LayerListboxInvalidate;
     OnLayerThumbDblClick := Self.BCLayerThumbDblClick;
   end;
 
@@ -251,7 +251,7 @@ var
 begin
   if FLayerPanelList.Count > 1 then
   begin
-    LLayerName := '"' + FLayerPanelList.SelectedPanel.LayerName + '"';
+    LLayerName := '"' + FLayerPanelList.SelectedPanel.DisplayName + '"';
 
     if MessageDlg('Delete the layer ' + LLayerName + '?',
                   mtConfirmation, [mbOK, mbCancel], 0) = mrOK then
@@ -275,13 +275,13 @@ begin
 
       with LLayerPanel do
       begin
-        OnChange            := Self.AfterLayerPanelChanged;
+        //OnChange            := Self.LayerListboxInvalidate;
         OnPanelDblClick     := nil;
-        OnMaskThumbDblClick := nil;
+        //OnMaskThumbDblClick := nil;
 
         if LLayerPanel is TigNormalLayerPanel then
         begin
-          OnThumbnailUpdate    := Self.AfterLayerPanelChanged;
+          OnThumbnailUpdate    := Self.LayerListboxInvalidate;
           OnLayerThumbDblClick := Self.LayerThumbDblClick;
         end
         else if LLayerPanel is TigBrightContrastLayerPanel then
@@ -295,12 +295,12 @@ end;
 
 procedure TfrmChild.FormCreate(Sender: TObject);
 begin
-  FLayerPanelList := TigLayerPanelList.Create;
+  FLayerPanelList := TigLayerPanelList.Create(Self);
   with FLayerPanelList do
   begin
     OnLayerCombined      := Self.AfterLayerCombined;
     OnSelectionChanged   := Self.AfterSelectedLayerPanelChanged;
-    OnLayerOrderChanged  := Self.AfterLayerPanelChanged;
+    OnLayerOrderChanged  := Self.LayerListboxInvalidate;
     OnMergeVisibleLayers := Self.AfterLayerMerged;
     OnFlattenLayers      := Self.AfterLayerMerged;
   end;
