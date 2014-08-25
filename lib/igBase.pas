@@ -124,7 +124,7 @@ type
     FOnActivePaintBoxSwitched: TNotifyEvent;
     FOnInvalidateListener: TNotifyEvent;
   protected
-    procedure DoActivePaintBoxSwitched;
+    //procedure DoActivePaintBoxSwitched;
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -367,11 +367,11 @@ begin
   GIntegrator.RegisterListener(Self);
 end;
 
-procedure TigAgent.DoActivePaintBoxSwitched;
+{procedure TigAgent.DoActivePaintBoxSwitched;
 begin
   if Assigned(FOnActivePaintBoxSwitched) then
     FOnActivePaintBoxSwitched(Self);
-end;
+end;}
 
 
 { TigIntegrator }
@@ -397,7 +397,9 @@ var i : Integer;
 begin
   for i := 0 to FListeners.Count -1 do
   begin
-    TigAgent( FListeners[i] ).DoActivePaintBoxSwitched;
+    with TigAgent( FListeners[i] ) do
+      if Assigned(FOnActivePaintBoxSwitched) then
+        FOnActivePaintBoxSwitched(Self);
   end;
 
 end;

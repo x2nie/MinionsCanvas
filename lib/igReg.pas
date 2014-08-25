@@ -12,7 +12,7 @@ uses
 
 procedure Register();
 begin
-  registerComponents('miniGlue',[TigPaintBox, TigLayersListBox, TigComboBoxBlendMode]);
+  registerComponents('miniGlue',[TigPaintBox, TigAgent, TigLayersListBox, TigComboBoxBlendMode]);
 end;
 
 end.
