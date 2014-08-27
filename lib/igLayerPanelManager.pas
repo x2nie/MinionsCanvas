@@ -1051,16 +1051,16 @@ begin
         LIndex := GetPanelIndexAtXY(LPos.X, LPos.Y);
 
         FPanelList.Move(FMovingPanelIndex, LIndex);
-        FPanelList.SelectLayerPanel(LIndex);
+        //FPanelList.SelectLayerPanel(LIndex);
 
         // If the layer order is changed, the external callbacks should to
         // take care of the refreshing of the GUI of layer manager,
         // otherwise, we should to refresh the view by ourselves.
-        if ScrollSelectedPanelInViewport or
+        {if ScrollSelectedPanelInViewport or
            (FMovingPanelIndex = FPanelList.SelectedIndex) then
         begin
-          Invalidate;
-        end;
+          //Invalidate;
+        end;}
       end
       else
       begin
@@ -1274,11 +1274,13 @@ begin
 end;
 
 procedure TigScrollPanelThread.Execute;
+var needToScroll : boolean;
 begin
   if Assigned(FPanelManager) then
   begin
     while (not Terminated) do
     begin
+      needToScroll := false;
       with FPanelManager do
       begin
         if FIsPanelMoving and (FMouseX >= 0) and (FMouseX < ClientWidth) then
@@ -1289,6 +1291,7 @@ begin
             begin
               Scroll(LAYER_PANEL_HEIGHT);
               Invalidate;
+              needToScroll := true;
             end;
           end
           else if FMouseY > ClientHeight then
@@ -1297,9 +1300,11 @@ begin
             begin
               Scroll(-LAYER_PANEL_HEIGHT);
               Invalidate;
+              needToScroll := true;
             end;
           end;
 
+          if needToScroll then
           Sleep(500);
         end;
       end;

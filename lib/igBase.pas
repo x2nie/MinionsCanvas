@@ -797,7 +797,7 @@ begin
     LLayerPanel :=  TigNormalLayerPanel.Create(FLayerList);
     LLayerPanel.LayerBitmap.SetSize(  Bitmap.Width, Bitmap.Height);
     LLayerPanel.LayerBitmap.Clear(clWhite32);
-    LLayerPanel.UpdateLayerThumbnail;
+    //LLayerPanel.UpdateLayerThumbnail;
     //TigNormalLayerPanel(LLayerPanel).IsAsBackground := True;
 
     FLayerList.Add(LLayerPanel);

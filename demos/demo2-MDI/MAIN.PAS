@@ -116,6 +116,7 @@ type
     procedure btn3Click(Sender: TObject);
     procedure igAgent1SelectionChange(Sender: TObject);
     procedure cmbbxBlendModesChange(Sender: TObject);
+    procedure ggbrLayerOpacityUserChange(Sender: TObject);
   private
     { Private declarations }
     procedure CreateMDIChild(const Name: string);
@@ -329,6 +330,7 @@ begin
       if LLayer is TigCustomLayerPanel then
       begin
         cmbbxBlendModes.ItemIndex :=  ord(TigCustomLayerPanelAccess(LLayer).LayerBlendMode);
+        ggbrLayerOpacity.Position :=  TigCustomLayerPanelAccess(LLayer).LayerOpacity;
       end;
     end;
   end;
@@ -349,6 +351,22 @@ begin
     end;
   end;
 
+end;
+
+procedure TMainForm.ggbrLayerOpacityUserChange(Sender: TObject);
+var LLayer : TigLayerPanel;
+begin
+  if assigned(GIntegrator.ActivePaintBox) then
+  begin
+    LLayer := GIntegrator.ActivePaintBox.LayerList.SelectedPanel;
+    if assigned(LLayer) then
+    begin
+      if LLayer is TigCustomLayerPanel then
+      begin
+        TigCustomLayerPanelAccess(LLayer).LayerOpacity := ggbrLayerOpacity.Position;
+      end;
+    end;
+  end;
 end;
 
 end.
