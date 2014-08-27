@@ -1,5 +1,5 @@
 object MainForm: TMainForm
-  Left = 324
+  Left = 11
   Top = 142
   Width = 1021
   Height = 405
@@ -19,15 +19,15 @@ object MainForm: TMainForm
   PixelsPerInch = 96
   TextHeight = 13
   object spl1: TSplitter
-    Left = 685
+    Left = 693
     Top = 30
-    Height = 298
+    Height = 310
     Align = alRight
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 328
-    Width = 1005
+    Top = 340
+    Width = 1013
     Height = 19
     AutoHint = True
     Panels = <>
@@ -36,7 +36,7 @@ object MainForm: TMainForm
   object ToolBar2: TToolBar
     Left = 0
     Top = 0
-    Width = 1005
+    Width = 1013
     Height = 30
     BorderWidth = 1
     Color = clBtnFace
@@ -142,14 +142,14 @@ object MainForm: TMainForm
       Style = tbsDropDown
     end
     object btnRedo: TToolButton
-      Left = 328
+      Left = 326
       Top = 2
       Action = actRedo
       DropdownMenu = pmRedo
       Style = tbsDropDown
     end
     object btn2: TToolButton
-      Left = 366
+      Left = 362
       Top = 2
       Width = 8
       Caption = 'btn2'
@@ -157,7 +157,7 @@ object MainForm: TMainForm
       Style = tbsSeparator
     end
     object btn3: TToolButton
-      Left = 374
+      Left = 370
       Top = 2
       Caption = 'btn3'
       ImageIndex = 13
@@ -165,16 +165,16 @@ object MainForm: TMainForm
     end
   end
   object pnlLayer: TPanel
-    Left = 688
+    Left = 696
     Top = 30
     Width = 317
-    Height = 298
+    Height = 310
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 2
     object tlbrLayers: TToolBar
       Left = 0
-      Top = 274
+      Top = 286
       Width = 317
       Height = 24
       Align = alBottom
@@ -306,15 +306,15 @@ object MainForm: TMainForm
       Left = 0
       Top = 44
       Width = 317
-      Height = 230
+      Height = 242
       Align = alClient
     end
   end
   object igLayersListBox1: TigLayersListBox
-    Left = 448
+    Left = 456
     Top = 30
     Width = 237
-    Height = 298
+    Height = 310
     Align = alRight
   end
   object MainMenu1: TMainMenu
@@ -1607,12 +1607,16 @@ object MainForm: TMainForm
   end
   object pmUndo: TPopupMenu
     OnPopup = pmUndoPopup
-    Left = 232
-    Top = 96
+    Left = 296
+    Top = 40
   end
   object pmRedo: TPopupMenu
     OnPopup = pmRedoPopup
-    Left = 288
-    Top = 104
+    Left = 328
+    Top = 40
+  end
+  object igAgent1: TigAgent
+    Left = 136
+    Top = 200
   end
 end

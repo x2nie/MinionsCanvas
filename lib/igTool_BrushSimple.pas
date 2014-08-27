@@ -40,7 +40,7 @@ type
   TigToolBrushSimple = class(TigTool)
   private
     FLeftButtonDown : Boolean;
-
+    FCmd : TigCmdLayer_Modify;
   protected
     //Events. Polymorpism.
     procedure MouseDown(Sender: TigPaintBox; Button: TMouseButton;
@@ -70,6 +70,9 @@ var
 begin
   if Button = mbLeft then
   begin
+    FCmd := TigCmdLayer_Modify.Create(GIntegrator.ActivePaintBox.UndoRedo);
+    FCmd.CheckInLayer(Layer);
+    
     FLeftButtonDown := True;
     LPoint := Sender.ControlToBitmap( Point(X, Y) );
 
@@ -108,15 +111,13 @@ end;
 
 procedure TigToolBrushSimple.MouseUp(Sender: TigPaintBox; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
-var cmd : TigCmdLayer_Modify;
 begin
   if FLeftButtonDown then
   begin
     FLeftButtonDown := False;
-
-    cmd := TigCmdLayer_Modify.Create(GIntegrator.ActivePaintBox.UndoRedo);
-    cmd.BackupLayer(Layer);
-    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(cmd,'Brush paint');
+    FCmd.CheckOutLayer(Layer);
+    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(FCmd,'Brush paint');    
+    
     GIntegrator.InvalidateListeners;
 
     //Layer.UpdateLayerThumbnail;
