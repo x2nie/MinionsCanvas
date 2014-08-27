@@ -1,7 +1,7 @@
 object MDIChild: TMDIChild
-  Left = 219
-  Top = 344
-  Width = 512
+  Left = 352
+  Top = 124
+  Width = 306
   Height = 352
   ActiveControl = img1
   Caption = 'MDI Child'
@@ -18,7 +18,7 @@ object MDIChild: TMDIChild
   object img1: TigPaintBox
     Left = 0
     Top = 0
-    Width = 504
+    Width = 298
     Height = 325
     Align = alClient
     Bitmap.ResamplerClassName = 'TNearestResampler'

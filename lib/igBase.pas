@@ -89,11 +89,13 @@ type
     FInstancesList : TList;
     FActiveTool: TigTool;
     FActivePaintBox: TigPaintBox;
+    FActiveUndoRedo: TigUndoRedoManager;
     function IsToolSwitched(ATool: TigTool):Boolean;
     function LoadTool(AToolClass: TigToolClass): TigTool;
     procedure MaintainTool(ATool : TigTool);
     function ReadyToSwitchTool : Boolean;
     procedure SetActivePaintBox(const Value: TigPaintBox);
+    procedure SetActiveUndoRedo(const Value: TigUndoRedoManager);
   protected
     procedure ActivePaintBoxSwitched;
     procedure DoMouseDown(Sender: TigPaintBox; Button: TMouseButton;
@@ -109,11 +111,15 @@ type
     constructor Create(AOwner: TComponent); override;
     function ActivateTool(AToolClass: TigToolClass):Boolean; overload;
     function ActivateTool(AToolInstance: TigTool):Boolean; overload;
+
+    //listeners
     procedure InvalidateListeners;
+    procedure SelectionChanged;
 
     property ActivePaintBox : TigPaintBox read FActivePaintBox
       write SetActivePaintBox;
     property ActiveTool : TigTool read FActiveTool;
+    property ActiveUndoRedo : TigUndoRedoManager read FActiveUndoRedo write SetActiveUndoRedo;
   end;
 
   TigAgent = class(TComponent)
@@ -123,6 +129,7 @@ type
   private
     FOnActivePaintBoxSwitched: TNotifyEvent;
     FOnInvalidateListener: TNotifyEvent;
+    FOnSelectionChange: TNotifyEvent;
   protected
     //procedure DoActivePaintBoxSwitched;
   public
@@ -130,6 +137,7 @@ type
   published
     property OnActivePaintBoxSwitch: TNotifyEvent read FOnActivePaintBoxSwitched write FOnActivePaintBoxSwitched;
     property OnInvalidateListener: TNotifyEvent read FOnInvalidateListener write FOnInvalidateListener;
+    property OnSelectionChange: TNotifyEvent read FOnSelectionChange write FOnSelectionChange; 
   end;
 
 
@@ -170,6 +178,13 @@ type
     property TabStop default True;
     property Visible;
     property Options default [pboAutoFocus];
+    property OnMouseWheel;
+    property OnMouseWheelDown;
+    property OnMouseWheelUp;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnPaintStage;
+    property OnResize;    
   end;
 
   TigTool = class(TComponent)
@@ -378,13 +393,6 @@ begin
   GIntegrator.RegisterListener(Self);
 end;
 
-{procedure TigAgent.DoActivePaintBoxSwitched;
-begin
-  if Assigned(FOnActivePaintBoxSwitched) then
-    FOnActivePaintBoxSwitched(Self);
-end;}
-
-
 { TigIntegrator }
 
 function TigIntegrator.ActivateTool(AToolClass: TigToolClass): Boolean;
@@ -561,9 +569,18 @@ begin
   if FActivePaintBox <> Value then
   begin
     FActivePaintBox := Value;
+
     ActivePaintBoxSwitched;
     if Assigned(Value) then
+    begin
+      SetActiveUndoRedo(FActivePaintBox.FUndoRedo);
       Value.FreeNotification(Self); //tell paintobx to report when she were destroying
+    end
+    else
+      SetActiveUndoRedo(nil);
+
+    SelectionChanged;
+
   end;
 end;
 
@@ -725,6 +742,24 @@ begin
     begin
         if Assigned(FOnInvalidateListener) then
         OnInvalidateListener(Self);
+    end;
+  end;
+end;
+
+procedure TigIntegrator.SetActiveUndoRedo(const Value: TigUndoRedoManager);
+begin
+  FActiveUndoRedo := Value;
+end;
+
+procedure TigIntegrator.SelectionChanged;
+var i : Integer;
+begin
+  for i := 0 to FListeners.Count -1 do
+  begin
+    with TigAgent( FListeners[i] ) do
+    begin
+        if Assigned(FOnSelectionChange) then
+        FOnSelectionChange(Self);
     end;
   end;
 end;

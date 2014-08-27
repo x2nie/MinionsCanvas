@@ -1,8 +1,8 @@
 object MainForm: TMainForm
-  Left = 11
-  Top = 142
-  Width = 1021
-  Height = 405
+  Left = 390
+  Top = 86
+  Width = 906
+  Height = 549
   Caption = 'MDI Application'
   Color = clAppWorkSpace
   Font.Charset = DEFAULT_CHARSET
@@ -19,15 +19,15 @@ object MainForm: TMainForm
   PixelsPerInch = 96
   TextHeight = 13
   object spl1: TSplitter
-    Left = 693
+    Left = 578
     Top = 30
-    Height = 310
+    Height = 454
     Align = alRight
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 340
-    Width = 1013
+    Top = 484
+    Width = 898
     Height = 19
     AutoHint = True
     Panels = <>
@@ -36,7 +36,7 @@ object MainForm: TMainForm
   object ToolBar2: TToolBar
     Left = 0
     Top = 0
-    Width = 1013
+    Width = 898
     Height = 30
     BorderWidth = 1
     Color = clBtnFace
@@ -165,16 +165,16 @@ object MainForm: TMainForm
     end
   end
   object pnlLayer: TPanel
-    Left = 696
+    Left = 581
     Top = 30
     Width = 317
-    Height = 310
+    Height = 454
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 2
     object tlbrLayers: TToolBar
       Left = 0
-      Top = 286
+      Top = 430
       Width = 317
       Height = 24
       Align = alBottom
@@ -221,8 +221,7 @@ object MainForm: TMainForm
       Left = 0
       Top = 21
       Width = 317
-      Height = 23
-      AutoSize = True
+      Height = 24
       ButtonHeight = 21
       Caption = 'tlbrBlendModes'
       Ctl3D = False
@@ -246,6 +245,16 @@ object MainForm: TMainForm
         DropDownCount = 40
         ItemHeight = 13
         TabOrder = 0
+        OnChange = cmbbxBlendModesChange
+      end
+      object lbName: TLabel
+        Left = 153
+        Top = 0
+        Width = 160
+        Height = 21
+        Align = alLeft
+        AutoSize = False
+        Caption = 'lbName'
       end
     end
     object tlbrLayerOpacity: TToolBar
@@ -304,17 +313,17 @@ object MainForm: TMainForm
     end
     object lyrs1: TigLayersListBox
       Left = 0
-      Top = 44
+      Top = 45
       Width = 317
-      Height = 242
+      Height = 385
       Align = alClient
     end
   end
   object igLayersListBox1: TigLayersListBox
-    Left = 456
+    Left = 341
     Top = 30
     Width = 237
-    Height = 310
+    Height = 454
     Align = alRight
   end
   object MainMenu1: TMainMenu
@@ -1616,6 +1625,7 @@ object MainForm: TMainForm
     Top = 40
   end
   object igAgent1: TigAgent
+    OnSelectionChange = igAgent1SelectionChange
     Left = 136
     Top = 200
   end
