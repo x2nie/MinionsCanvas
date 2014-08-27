@@ -285,9 +285,11 @@ object MainForm: TMainForm
         Cursor = crHandPoint
         Constraints.MinWidth = 120
         Backgnd = bgPattern
+        Max = 255
         ShowHandleGrip = True
         Style = rbsMac
         Position = 0
+        OnUserChange = ggbrLayerOpacityUserChange
       end
       object edtLayerOpacity: TEdit
         Left = 153

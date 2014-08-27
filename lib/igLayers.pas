@@ -183,7 +183,6 @@ type
     destructor Destroy; override;
 
 
-    procedure UpdateLayerThumbnail; virtual;
     procedure UpdateMaskThumbnail;
     procedure UpdateLogoThumbnail; virtual;
 
@@ -605,38 +604,6 @@ begin
   UpdateMaskThumbnail;
 end;
 
-procedure TigCustomLayerPanel.UpdateLayerThumbnail;
-var
-  LRect : TRect;
-  LBmp  : TBitmap32;
-begin
-{  LRect := FRealThumbRect;
-
-  Self.GetLayerThumb.Clear( Color32(clBtnFace) ); //maybe create
-  DrawCheckerboardPattern(FLayerThumb, LRect, True);
-
-  LBmp := TBitmap32.Create;
-  try
-    // The thumbnail should not shows the MasterAlpha settings of the layer.
-    // The MasterAlpha only takes effect when layer blending.
-    LBmp.Assign(FLayerBitmap);
-    LBmp.MasterAlpha := 255;
-    LBmp.ResamplerClassName := 'TLanczosKernel';
-
-    FLayerThumb.Draw(LRect, LBmp.BoundsRect, LBmp);
-  finally
-    LBmp.Free;
-  end;
-
-  InflateRect(LRect, 1, 1);
-  FLayerThumb.FrameRectS(LRect, clBlack32);
-
-  DoParentLayerChanged();
-  if Assigned(FOnThumbUpdate) then
-  begin
-    FOnThumbUpdate(Self);
-  end;}
-end;
 
 procedure TigCustomLayerPanel.UpdateMaskThumbnail;
 var
@@ -1016,7 +983,7 @@ begin
       end;
     end;
 
-    UpdateLayerThumbnail;
+    
     
     Result := not FMaskEnabled;
 
@@ -1492,6 +1459,7 @@ begin
   begin
     //FItems.Move(ACurIndex, ANewIndex);
     LayerPanels[ACurIndex].Index := ANewIndex;
+    GIntegrator.InvalidateListeners;
     BlendLayers;
 
     if Assigned(FOnLayerOrderChanged) then
@@ -1649,7 +1617,6 @@ begin
       
       //LayerBitmap.Draw(0, 0, FCombineResult);
       LayerBitmap.Assign(FCombineResult);
-      UpdateLayerThumbnail;
     end;
 
     Clear;
@@ -1715,7 +1682,6 @@ begin
       end;
     end;
 
-    LPrevPanel.UpdateLayerThumbnail;
 
     // this routine will make the previous layer be selected automatically
     DeleteSelectedLayerPanel;
@@ -1745,7 +1711,6 @@ begin
     with LMergedPanel do
     begin
       FLayerBitmap.Assign(FCombineResult);
-      UpdateLayerThumbnail;
 
       FDisplayName := FSelectedPanel.FDisplayName;
     end;
