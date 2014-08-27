@@ -236,6 +236,8 @@ procedure RegisterCoreViewer(ACoreViewerClass: TigCoreViewerClass);
 
 implementation
 
+uses
+  igBase;
 
 
 var
@@ -335,6 +337,8 @@ end;
 procedure TigCoreItem.SetDisplayName(const Value: string);
 begin
   FDisplayName := Value;
+  //inherited; has no affect
+  GIntegrator.SelectionChanged;
 end;
 
 { TigCoreCollection }

@@ -205,8 +205,8 @@ type
     property IsLayerThumbEnabled  : Boolean              read FLayerThumbEnabled;
     property IsLogoThumbEnabled   : Boolean              read FLogoThumbEnabled;
     //property LayerName            : string               read FLayerName            write FLayerName;
-    property LayerBlendMode       : TBlendMode32         read FLayerBlendMode       write SetLayerBlendMode;
-    property LayerOpacity         : Byte                 read GetLayerOpacity       write SetLayerOpacity;
+    //property LayerBlendMode       : TBlendMode32         read FLayerBlendMode       write SetLayerBlendMode;
+    //property LayerOpacity         : Byte                 read GetLayerOpacity       write SetLayerOpacity;
     property LayerProcessStage    : TigLayerProcessStage read FLayerProcessStage    write SetLayerProcessStage;
     property PixelFeature         : TigLayerPixelFeature read FPixelFeature;
     //property OnChange             : TNotifyEvent         read FOnChange             write FOnChange;
@@ -220,6 +220,9 @@ type
     //for backup/restore or undo/redo or actionlist-script
     property LayerBitmap          : TBitmap32            read FLayerBitmap write SetLayerBitmap;
     property MaskBitmap           : TBitmap32            read FMaskBitmap  write SetMaskBitmap;
+    property LayerBlendMode       : TBlendMode32         read FLayerBlendMode       write SetLayerBlendMode;
+    property LayerOpacity         : Byte                 read GetLayerOpacity       write SetLayerOpacity;
+    
   end;
 
   { TigNormalLayerPanel }
@@ -1327,7 +1330,7 @@ begin
 
   if Assigned(FOnLayerCombined) then
   begin
-    FOnLayerCombined(Self, ARect);
+    FOnLayerCombined(Self, LRect);
   end;
 
 {$RANGECHECKS ON}
@@ -1503,7 +1506,6 @@ var
   LLayerPanel : TigCustomLayerPanel;
 begin
   LLayerPanel := GetLayerPanel(AIndex);
-
   if Assigned(LLayerPanel) then
   begin
     if FSelectedPanel <> LLayerPanel then
@@ -1523,6 +1525,8 @@ begin
     // always enable the layer when it is selected
     FSelectedPanel.IsLayerEnabled := True;
   end;
+  GIntegrator.SelectionChanged;
+  
 end;
 
 procedure TigLayerPanelList.DeleteSelectedLayerPanel;
@@ -1794,7 +1798,9 @@ procedure TigLayerPanelList.Update(Item: TCollectionItem);
 begin
   //inherited;
   if Assigned(Item) then
-    BlendLayers( TigLayerPanel(Item).FChangedRect );
+    BlendLayers( TigLayerPanel(Item).FChangedRect )
+  else
+    BlendLayers( EMPTY_RECT );  
 
 end;
 

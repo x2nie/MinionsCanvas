@@ -96,6 +96,7 @@ type
     lyrs1: TigLayersListBox;
     igLayersListBox1: TigLayersListBox;
     igAgent1: TigAgent;
+    lbName: TLabel;
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure HelpAbout1Execute(Sender: TObject);
@@ -113,6 +114,8 @@ type
     procedure pmUndoPopup(Sender: TObject);
     procedure pmRedoPopup(Sender: TObject);
     procedure btn3Click(Sender: TObject);
+    procedure igAgent1SelectionChange(Sender: TObject);
+    procedure cmbbxBlendModesChange(Sender: TObject);
   private
     { Private declarations }
     procedure CreateMDIChild(const Name: string);
@@ -133,6 +136,8 @@ uses CHILDWIN, about,
   igTool_BrushSimple,
   igTool_PencilSimple;
 
+type TigCustomLayerPanelAccess = class(TigCustomLayerPanel);
+  
 procedure TMainForm.CreateMDIChild(const Name: string);
 var
   Child: TMDIChild;
@@ -184,7 +189,8 @@ begin
       //LLayerPanel := TigNormalLayerPanel.Create(GIntegrator.ActivePaintBox.LayerList); //error access violation
       LLayerPanel := TigNormalLayerPanel.Create(nil);
       LLayerPanel.BeginUpdate;
-      LLayerPanel.LayerBitmap.SetSize(300,300);
+      with GIntegrator.ActivePaintBox.Bitmap do
+      LLayerPanel.LayerBitmap.SetSize(Width,height);
       LLayerPanel.LayerBitmap.Clear($FF000000 or Cardinal(Random($FFFFFF)));
       //LLayerPanel.UpdateLayerThumbnail;
       LLayerPanel.EndUpdate;
@@ -308,6 +314,40 @@ procedure TMainForm.btn3Click(Sender: TObject);
 begin
   if not Assigned(GIntegrator.ActivePaintBox) then Exit;
   GIntegrator.ActivePaintBox.LayerList.SelectLayerPanel(0);
+
+end;
+
+procedure TMainForm.igAgent1SelectionChange(Sender: TObject);
+var LLayer : TigLayerPanel;
+begin
+  if assigned(GIntegrator.ActivePaintBox) then
+  begin
+    LLayer := GIntegrator.ActivePaintBox.LayerList.SelectedPanel;
+    if assigned(LLayer) then
+    begin
+      lbName.Caption := llayer.DisplayName;
+      if LLayer is TigCustomLayerPanel then
+      begin
+        cmbbxBlendModes.ItemIndex :=  ord(TigCustomLayerPanelAccess(LLayer).LayerBlendMode);
+      end;
+    end;
+  end;
+end;
+
+procedure TMainForm.cmbbxBlendModesChange(Sender: TObject);
+var LLayer : TigLayerPanel;
+begin
+  if assigned(GIntegrator.ActivePaintBox) then
+  begin
+    LLayer := GIntegrator.ActivePaintBox.LayerList.SelectedPanel;
+    if assigned(LLayer) then
+    begin
+      if LLayer is TigCustomLayerPanel then
+      begin
+        TigCustomLayerPanelAccess(LLayer).LayerBlendMode := TBlendMode32(cmbbxBlendModes.ItemIndex);
+      end;
+    end;
+  end;
 
 end;
 

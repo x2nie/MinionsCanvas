@@ -71,7 +71,7 @@ begin
   if Button = mbLeft then
   begin
     FCmd := TigCmdLayer_Modify.Create(GIntegrator.ActivePaintBox.UndoRedo);
-    FCmd.CheckInLayer(Layer);
+    FCmd.ChangingLayer(Layer);
     
     FLeftButtonDown := True;
     LPoint := Sender.ControlToBitmap( Point(X, Y) );
@@ -115,7 +115,7 @@ begin
   if FLeftButtonDown then
   begin
     FLeftButtonDown := False;
-    FCmd.CheckOutLayer(Layer);
+    FCmd.ChangedLayer(Layer);
     GIntegrator.ActivePaintBox.UndoRedo.AddUndo(FCmd,'Brush paint');    
     
     GIntegrator.InvalidateListeners;
