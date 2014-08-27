@@ -307,8 +307,8 @@ type
   public
     constructor Create(AOwner : TComponent); override;
     destructor Destroy; override;
-    procedure CheckOutLayer(ALayer : TigLayerPanel);
-    procedure CheckInLayer(ALayer : TigLayerPanel);
+    procedure ChangedLayer(ALayer : TigLayerPanel);
+    procedure ChangingLayer(ALayer : TigLayerPanel);
     procedure Play; override;
     procedure Revert; override;
     //class function Signature : string; override; //not localized string
@@ -934,9 +934,11 @@ end;
     f.Free;
   end;
 
-procedure TigCmdLayer_Modify.CheckInLayer(ALayer: TigLayerPanel);
+procedure TigCmdLayer_Modify.ChangingLayer(ALayer: TigLayerPanel);
 begin
-  if assigned(Manager) and (Manager.LastCommand is TigCmdLayer) and (TigCmdLayer(Manager.LastCommand).LayerIndex <> ALayer.Index  ) then
+  if assigned(Manager) and ((Manager.LastCommand = nil) or
+    (Manager.LastCommand is TigCmdLayer) and (TigCmdLayer(Manager.LastCommand).LayerIndex <> ALayer.Index)
+    ) then
   begin
     FLayerClass := TigLayerPanelClass(ALayer.ClassType);//TigLayerPanelClass(FindClass(ALayer.ClassName));//
     FLayer := ALayer;
@@ -946,7 +948,7 @@ begin
 //  DebugSave();
 end;
 
-procedure TigCmdLayer_Modify.CheckOutLayer(ALayer: TigLayerPanel);
+procedure TigCmdLayer_Modify.ChangedLayer(ALayer: TigLayerPanel);
 begin
   FLayerClass := TigLayerPanelClass(ALayer.ClassType);//TigLayerPanelClass(FindClass(ALayer.ClassName));//
   FLayer := ALayer;
