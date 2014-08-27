@@ -5,7 +5,7 @@ interface
 uses Windows, SysUtils, Classes, Graphics, Forms, Controls, Menus,
   StdCtrls, Dialogs, Buttons, Messages, ExtCtrls, ComCtrls, StdActns,
   ActnList, ToolWin, ImgList, GR32_Image, igLayerPanelManager,
-  igLayersListBox, GR32_RangeBars;
+  igLayersListBox, GR32_RangeBars, igBase;
 
 type
   TMainForm = class(TForm)
@@ -95,6 +95,7 @@ type
     btn3: TToolButton;
     lyrs1: TigLayersListBox;
     igLayersListBox1: TigLayersListBox;
+    igAgent1: TigAgent;
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure HelpAbout1Execute(Sender: TObject);
@@ -128,7 +129,7 @@ implementation
 
 uses CHILDWIN, about,
   GR32_Add_BlendModes,
-  igBase, igComboboxBlendModes, igLayers,
+  igComboboxBlendModes, igLayers,
   igTool_BrushSimple,
   igTool_PencilSimple;
 
@@ -193,7 +194,7 @@ begin
       GIntegrator.ActivePaintBox.LayerList.Insert(LPanelIndex, LLayerPanel);
 
       cmd := TigCmdLayer_New.Create(GIntegrator.ActivePaintBox.UndoRedo);
-      cmd.BackupLayer(LLayerPanel);
+      cmd.ChangedLayer(LLayerPanel);
       GIntegrator.ActivePaintBox.UndoRedo.AddUndo(cmd,'New Layer');
 
     end;
@@ -247,12 +248,16 @@ begin
 end;
 
 procedure TMainForm.actUndoUpdate(Sender: TObject);
+var c : string;
 begin
   if not Assigned(GIntegrator.ActivePaintBox) then
-    Caption := 'no active paintbox'
+    c := 'no active paintbox'
   else
     with GIntegrator.ActivePaintBox.UndoRedo do
-      self.Caption := Format('@ %d   (%d of %d undos)',[ ItemIndex, ItemIndex +1, Count]);
+      c := Format('@ %d   (%d of %d undos)',[ ItemIndex, ItemIndex +1, Count]);
+
+  //if self.Caption <> c then //avoid flicker
+    //self.Caption := c;
 
 
   actUndo.Enabled := Assigned(GIntegrator.ActivePaintBox) and

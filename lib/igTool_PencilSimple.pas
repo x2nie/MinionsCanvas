@@ -119,7 +119,8 @@ begin
     FLeftButtonDown := False;
 
     cmd := TigCmdLayer_Modify.Create(GIntegrator.ActivePaintBox.UndoRedo);
-    cmd.BackupLayer(Layer);
+    cmd.ChangedLayer(Layer);
+    
     GIntegrator.ActivePaintBox.UndoRedo.AddUndo(cmd,'Pencil paint');
     GIntegrator.InvalidateListeners;
   end;

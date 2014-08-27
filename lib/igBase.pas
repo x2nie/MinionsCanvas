@@ -254,6 +254,7 @@ type
     procedure Undo;
     procedure Redo;
     procedure AddUndo(AUndo : TigCommand; AComment : string);
+    function  LastCommand : TigCommand;
     //function AllocateUndo(AUndoMessage : string) : PigUndoStruct;
 
     property Strings :TStrings read FUndoList;
@@ -273,8 +274,9 @@ type
     property Manager : TigUndoRedoManager read FManager write FManager;
   protected
     {helper, call internally}
-    procedure RestorePreviousState; virtual; 
+    procedure RestorePreviousState; virtual;
   public
+    constructor Create(AOwner : TComponent); override;
     {call by outside}
     procedure Play;   virtual; abstract;        // run within action list | redo
     procedure Revert; virtual;                  // run by undo | restore
@@ -284,24 +286,33 @@ type
 
   TigCommandClass = class of TigCommand;
 
-
-  //modify = edit surface, such by penTool, pencilTool, add/remove node on vectorLayer
-  TigCmdLayer_Modify = class(TigCommand)
+  //for checkin checkout / inter-comparing between commands
+  TigCmdLayer = class(TigCommand)
   private
     FLayerIndex: Integer;
-    FStreamLayer : TStream;
-    FLayer: TigLayerPanel;
     FLayerClass: TigLayerPanelClass;
+  public
+    property  LayerClass : TigLayerPanelClass read FLayerClass write FLayerClass;
+  published
+    property LayerIndex: Integer read FLayerIndex write FLayerIndex;
+  end;
+
+  //modify = edit surface, such by penTool, pencilTool, add/remove node on vectorLayer
+  TigCmdLayer_Modify = class(TigCmdLayer)
+  private
+    FOriginalStream,
+    FModifiedStream : TStream;
+    FLayer: TigLayerPanel;
+    procedure RestoreFromStream(AStream: TStream);
   public
     constructor Create(AOwner : TComponent); override;
     destructor Destroy; override;
-    procedure BackupLayer(ALayer : TigLayerPanel);
+    procedure CheckOutLayer(ALayer : TigLayerPanel);
+    procedure CheckInLayer(ALayer : TigLayerPanel);
     procedure Play; override;
-    //procedure Revert; override;
+    procedure Revert; override;
     //class function Signature : string; override; //not localized string
-    property  LayerClass : TigLayerPanelClass read FLayerClass write FLayerClass;    
   published
-    property LayerIndex: Integer read FLayerIndex write FLayerIndex;
     property Layer : TigLayerPanel read FLayer write FLayer;
   end;
 
@@ -841,6 +852,13 @@ begin
   Result := (ItemIndex > -1)
 end;
 
+function TigUndoRedoManager.LastCommand: TigCommand;
+begin
+  result := nil;
+  if count > 0 then
+  result :=   TigCommand(FUndoList.Objects[Count-1]);
+end;
+
 procedure TigUndoRedoManager.Redo;
 var LIgCommand : TigCommand;
 begin
@@ -868,6 +886,13 @@ begin
 end;
 
 { TigCommand }
+
+constructor TigCommand.Create(AOwner: TComponent);
+begin
+  inherited;
+  if AOwner is TigUndoRedoManager then
+    FManager := TigUndoRedoManager (AOwner);
+end;
 
 function TigCommand.PanelList: TigLayerPanelList;
 begin
@@ -909,52 +934,45 @@ end;
     f.Free;
   end;
 
-procedure TigCmdLayer_Modify.BackupLayer(ALayer: TigLayerPanel);
+procedure TigCmdLayer_Modify.CheckInLayer(ALayer: TigLayerPanel);
 begin
+  if assigned(Manager) and (Manager.LastCommand is TigCmdLayer) and (TigCmdLayer(Manager.LastCommand).LayerIndex <> ALayer.Index  ) then
+  begin
+    FLayerClass := TigLayerPanelClass(ALayer.ClassType);//TigLayerPanelClass(FindClass(ALayer.ClassName));//
+    FLayer := ALayer;
+    FLayerIndex := ALayer.Index;
+    FOriginalStream.WriteComponent(self);
+  end;
+//  DebugSave();
+end;
 
+procedure TigCmdLayer_Modify.CheckOutLayer(ALayer: TigLayerPanel);
+begin
   FLayerClass := TigLayerPanelClass(ALayer.ClassType);//TigLayerPanelClass(FindClass(ALayer.ClassName));//
   FLayer := ALayer;
   FLayerIndex := ALayer.Index;
-  FStreamLayer.WriteComponent(self);
+  FModifiedStream.WriteComponent(self);
 //  DebugSave();
 end;
 
 constructor TigCmdLayer_Modify.Create(AOwner: TComponent);
 begin
   inherited;
-  FStreamLayer := TMemoryStream.Create;
+  FOriginalStream := TMemoryStream.Create;
+  FModifiedStream := TMemoryStream.Create;
 end;
 
 destructor TigCmdLayer_Modify.Destroy;
 begin
-  FStreamLayer.Destroy;
+  FOriginalStream.Free;
+  FModifiedStream.Free;
   inherited;
 end;
 
 procedure TigCmdLayer_Modify.Play;
 //var LLayer : TigLayerPanel;
 begin
-  if FStreamLayer.Size > 0 then
-  begin
-    //DebugSave(FStreamLayer);
-
-    //refresh reference to current layer object, maybe has been recreated by other command
-    FLayer := PanelList.LayerPanels[Self.LayerIndex];
-
-    FStreamLayer.Position := 0;
-    FStreamLayer.ReadComponent(self); //restore
-    FLayer.Changed; //update thumbnail
-    
-    // I dont know, but it required to refresh the paintobx
-    Self.Manager.PanelList.Insert(self.LayerIndex, FLayer);
-
-    //FLayer.Index := Self.LayerIndex;
-//    Self.Manager.PanelList.
-
-
-
-    //FStreamLayer.
-  end;
+  RestoreFromStream( FModifiedStream );
 end;
 
 { TigCmdLayer_New }
@@ -974,6 +992,36 @@ procedure TigCmdLayer_New.Revert;
 begin
   PanelList.DeleteLayerPanel(self.FLayerIndex);
   FLayer := nil;
+end;
+
+procedure TigCmdLayer_Modify.RestoreFromStream(AStream: TStream);
+begin
+  if AStream.Size > 0 then
+  begin
+    //DebugSave(FModifiedStream);
+
+    //refresh reference to current layer object, maybe has been recreated by other command
+    FLayer := PanelList.LayerPanels[Self.LayerIndex];
+
+    AStream.Position := 0;
+    AStream.ReadComponent(self); //restore
+    FLayer.Changed; //update thumbnail
+    
+    // I dont know, but it required to refresh the paintobx
+    Self.Manager.PanelList.Insert(self.LayerIndex, FLayer);
+
+  end;
+end;
+
+procedure TigCmdLayer_Modify.Revert;
+begin
+  if FOriginalStream.Size > 0 then
+  begin
+    RestoreFromStream( FOriginalStream );
+  end
+  else
+    RestorePreviousState;
+
 end;
 
 initialization
