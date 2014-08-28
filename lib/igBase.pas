@@ -146,7 +146,7 @@ type
   { the drawing-canvas object
   }
   private
-    FLayerList: TigLayerPanelList;
+    FLayerList: TigLayerList;
     FUndoRedo: TigUndoRedoManager;
     procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
 
@@ -159,7 +159,7 @@ type
     destructor Destroy; override;
     procedure SetFocus; override;
 
-    property LayerList : TigLayerPanelList read FLayerList;
+    property LayerList : TigLayerList read FLayerList;
     property UndoRedo : TigUndoRedoManager read FUndoRedo; 
   published
     property Align;
@@ -255,7 +255,7 @@ type
   TigUndoRedoManager = class(TComponent)
   private
     FItemIndex: Integer;
-    FPanelList: TigLayerPanelList;
+    FPanelList: TigLayerList;
     function GetCount: Integer;
 
   protected
@@ -275,7 +275,7 @@ type
 
     property Strings :TStrings read FUndoList;
     property Count : Integer read GetCount;
-    property PanelList : TigLayerPanelList read FPanelList write FPanelList;
+    property LayerList : TigLayerList read FPanelList write FPanelList;
     property ItemIndex : Integer read FItemIndex;
   published
 
@@ -286,7 +286,7 @@ type
     FManager: TigUndoRedoManager;
   protected
     {properties}
-    function PanelList : TigLayerPanelList;
+    function LayerList : TigLayerList;
     property Manager : TigUndoRedoManager read FManager write FManager;
   protected
     {helper, call internally}
@@ -789,11 +789,11 @@ begin
   Options := [pboAutoFocus];
   TabStop := True;
   //FAgent := TigAgent.Create(self); //autodestroy. //maybe better to use integrator directly.
-  FLayerList := TigLayerPanelList.Create(Self); //TPersistent is not autodestroy
+  FLayerList := TigLayerList.Create(Self); //TPersistent is not autodestroy
   FLayerList.OnLayerCombined := AfterLayerCombined;
 
   FUndoRedo:= TigUndoRedoManager.Create(Self);
-  FUndoRedo.PanelList := FLayerList;
+  FUndoRedo.LayerList := FLayerList;
   if not (csDesigning in self.ComponentState) then
   begin
     // set background size before create background layer
@@ -937,11 +937,11 @@ begin
     FManager := TigUndoRedoManager (AOwner);
 end;
 
-function TigCommand.PanelList: TigLayerPanelList;
+function TigCommand.LayerList: TigLayerList;
 begin
   Result := nil;
   if Assigned(self.FManager) then
-    Result := FManager.PanelList;
+    Result := FManager.LayerList;
 end;
 
 procedure TigCommand.RestorePreviousState;
@@ -1027,15 +1027,15 @@ begin
   if FLayer = nil then
   begin
     //FLayer := TigNormalLayerPanel.Create( Self.PanelList, 300,300); //its work
-    FLayer := FLayerClass.Create(self.PanelList);
-    self.PanelList.Add(FLayer);
+    FLayer := FLayerClass.Create(self.LayerList);
+    self.LayerList.Add(FLayer);
   end;
   inherited;
 end;
 
 procedure TigCmdLayer_New.Revert;
 begin
-  PanelList.DeleteLayerPanel(self.FLayerIndex);
+  LayerList.DeleteLayerPanel(self.FLayerIndex);
   FLayer := nil;
 end;
 
@@ -1046,14 +1046,14 @@ begin
     //DebugSave(FModifiedStream);
 
     //refresh reference to current layer object, maybe has been recreated by other command
-    FLayer := PanelList.LayerPanels[Self.LayerIndex];
+    FLayer := LayerList.LayerPanels[Self.LayerIndex];
 
     AStream.Position := 0;
     AStream.ReadComponent(self); //restore
     FLayer.Changed; //update thumbnail
     
     // I dont know, but it required to refresh the paintobx
-    Self.Manager.PanelList.Insert(self.LayerIndex, FLayer);
+    Self.Manager.LayerList.Insert(self.LayerIndex, FLayer);
 
   end;
 end;

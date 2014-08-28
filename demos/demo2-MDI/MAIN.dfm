@@ -1,6 +1,6 @@
 object MainForm: TMainForm
-  Left = 390
-  Top = 86
+  Left = 358
+  Top = 163
   Width = 906
   Height = 549
   Caption = 'MDI Application'
