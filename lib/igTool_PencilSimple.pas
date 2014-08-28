@@ -44,11 +44,11 @@ type
   protected
     //Events. Polymorpism.
     procedure MouseDown(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); override;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); override;
     procedure MouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-      Y: Integer; Layer: TigCustomLayerPanel); override;
+      Y: Integer; Layer: TigLayer); override;
     procedure MouseUp(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); override;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); override;
   public
 
   published 
@@ -65,7 +65,7 @@ uses
 
 procedure TigToolPencilSimple.MouseDown(Sender: TigPaintBox;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer;
-  Layer: TigCustomLayerPanel);
+  Layer: TigLayer);
 var
   LRect  : TRect;
 begin
@@ -78,14 +78,14 @@ begin
     LRect.BottomRight := FLastPoint;
     InflateRect(LRect, 1,1);
 
-    Layer.LayerBitmap.Pixel[FLastPoint.X, FLastPoint.Y] :=  $7F000000;
+    TigBItmapLayer(Layer).LayerBitmap.Pixel[FLastPoint.X, FLastPoint.Y] :=  $7F000000;
     Layer.Changed(LRect);
 
   end;
 end;
 
 procedure TigToolPencilSimple.MouseMove(Sender: TigPaintBox; Shift: TShiftState;
-  X, Y: Integer; Layer: TigCustomLayerPanel);
+  X, Y: Integer; Layer: TigLayer);
 var
   LRect  : TRect;
   LPoint : TPoint;
@@ -102,7 +102,7 @@ begin
     InflateRect(LRect,1,1);
 
 
-    Layer.LayerBitmap.LineS(FLastPoint.X, FLastPoint.Y, LPoint.X, LPoint.Y, $7F000000);
+    TigBItmapLayer(Layer).LayerBitmap.LineS(FLastPoint.X, FLastPoint.Y, LPoint.X, LPoint.Y, $7F000000);
     FLastPoint := LPoint;
     Layer.Changed(LRect);
   end;
@@ -111,7 +111,7 @@ begin
 end;
 
 procedure TigToolPencilSimple.MouseUp(Sender: TigPaintBox; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+  Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
 var cmd : TigCmdLayer_Modify;  
 begin
   if FLeftButtonDown then

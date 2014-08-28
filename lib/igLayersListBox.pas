@@ -51,7 +51,7 @@ type
     FAgent : TigAgent;                    //integrator's event listener
     FLayerList : TigLayerPanelList;       //to compare between last & current 
     procedure ActivePaintBoxSwitched(Sender: TObject);
-    procedure SoInvalidate(Sender: TObject; ALayer: TigCustomLayerPanel);
+    procedure SoInvalidate(Sender: TObject; ALayer: TigLayer);
     procedure InvalidateEvent(Sender: TObject);
   public
     constructor Create(AOwner: TComponent); override;
@@ -101,7 +101,7 @@ begin
   Invalidate;
 end;
 
-procedure TigLayersListBox.SoInvalidate(Sender: TObject;ALayer: TigCustomLayerPanel);
+procedure TigLayersListBox.SoInvalidate(Sender: TObject;ALayer: TigLayer);
 begin
   Invalidate;
 end;

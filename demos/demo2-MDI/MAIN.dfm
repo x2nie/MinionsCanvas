@@ -40,6 +40,7 @@ object MainForm: TMainForm
     Height = 30
     BorderWidth = 1
     Color = clBtnFace
+    Flat = True
     Images = ImageList1
     Indent = 5
     ParentColor = False
@@ -49,22 +50,22 @@ object MainForm: TMainForm
     Wrapable = False
     object ToolButton9: TToolButton
       Left = 5
-      Top = 2
+      Top = 0
       Action = FileNew1
     end
     object ToolButton1: TToolButton
       Left = 28
-      Top = 2
+      Top = 0
       Action = FileOpen1
     end
     object ToolButton2: TToolButton
       Left = 51
-      Top = 2
+      Top = 0
       Action = FileSave1
     end
     object ToolButton3: TToolButton
       Left = 74
-      Top = 2
+      Top = 0
       Width = 8
       Caption = 'ToolButton3'
       ImageIndex = 2
@@ -72,22 +73,22 @@ object MainForm: TMainForm
     end
     object ToolButton4: TToolButton
       Left = 82
-      Top = 2
+      Top = 0
       Action = EditCut1
     end
     object ToolButton5: TToolButton
       Left = 105
-      Top = 2
+      Top = 0
       Action = EditCopy1
     end
     object ToolButton6: TToolButton
       Left = 128
-      Top = 2
+      Top = 0
       Action = EditPaste1
     end
     object ToolButton7: TToolButton
       Left = 151
-      Top = 2
+      Top = 0
       Width = 8
       Caption = 'ToolButton7'
       ImageIndex = 3
@@ -95,22 +96,22 @@ object MainForm: TMainForm
     end
     object ToolButton8: TToolButton
       Left = 159
-      Top = 2
+      Top = 0
       Action = WindowCascade1
     end
     object ToolButton10: TToolButton
       Left = 182
-      Top = 2
+      Top = 0
       Action = WindowTileHorizontal1
     end
     object ToolButton11: TToolButton
       Left = 205
-      Top = 2
+      Top = 0
       Action = WindowTileVertical1
     end
     object ToolButton13: TToolButton
       Left = 228
-      Top = 2
+      Top = 0
       Width = 8
       Caption = 'ToolButton13'
       ImageIndex = 17
@@ -118,17 +119,17 @@ object MainForm: TMainForm
     end
     object btnTool_Brush: TToolButton
       Left = 236
-      Top = 2
+      Top = 0
       Action = actTool_Brush
     end
     object btnTool_Pencil: TToolButton
       Left = 259
-      Top = 2
+      Top = 0
       Action = actTool_Pencil
     end
     object btn1: TToolButton
       Left = 282
-      Top = 2
+      Top = 0
       Width = 8
       Caption = 'btn1'
       ImageIndex = 24
@@ -136,32 +137,17 @@ object MainForm: TMainForm
     end
     object btnUndo: TToolButton
       Left = 290
-      Top = 2
+      Top = 0
       Action = actUndo
       DropdownMenu = pmUndo
       Style = tbsDropDown
     end
     object btnRedo: TToolButton
       Left = 326
-      Top = 2
+      Top = 0
       Action = actRedo
       DropdownMenu = pmRedo
       Style = tbsDropDown
-    end
-    object btn2: TToolButton
-      Left = 362
-      Top = 2
-      Width = 8
-      Caption = 'btn2'
-      ImageIndex = 5
-      Style = tbsSeparator
-    end
-    object btn3: TToolButton
-      Left = 370
-      Top = 2
-      Caption = 'btn3'
-      ImageIndex = 13
-      OnClick = btn3Click
     end
   end
   object pnlLayer: TPanel

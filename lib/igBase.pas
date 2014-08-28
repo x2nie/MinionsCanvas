@@ -69,9 +69,9 @@ type
 
   TigChangingEvent = procedure(Sender: TObject; const Info : string) of object;
   TigMouseEvent = procedure(Sender: TigPaintBox; Button: TMouseButton;
-    Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel) of object;
+    Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer) of object;
   TigMouseMoveEvent = procedure(Sender: TigPaintBox; Shift: TShiftState;
-    X, Y: Integer; Layer: TigCustomLayerPanel) of object;
+    X, Y: Integer; Layer: TigBitmapLayer) of object;
 
 
   TigIntegrator = class(TComponent)     // Event Organizer. hidden component
@@ -99,11 +99,11 @@ type
   protected
     procedure ActivePaintBoxSwitched;
     procedure DoMouseDown(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+      Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
     procedure DoMouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-      Y: Integer; Layer: TigCustomLayerPanel);
+      Y: Integer; Layer: TigBitmapLayer);
     procedure DoMouseUp(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+      Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure RegisterListener(AAgent: TigAgent);
 
@@ -134,6 +134,7 @@ type
     //procedure DoActivePaintBoxSwitched;
   public
     constructor Create(AOwner: TComponent); override;
+    procedure AfterConstruction; override;
   published
     property OnActivePaintBoxSwitch: TNotifyEvent read FOnActivePaintBoxSwitched write FOnActivePaintBoxSwitched;
     property OnInvalidateListener: TNotifyEvent read FOnInvalidateListener write FOnInvalidateListener;
@@ -208,11 +209,11 @@ type
     //Events. Descendant may inherited. Polymorpism.
     function CanBeSwitched: Boolean; virtual;
     procedure MouseDown(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); virtual;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); virtual;
     procedure MouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-      Y: Integer; Layer: TigCustomLayerPanel); virtual;
+      Y: Integer; Layer: TigLayer); virtual;
     procedure MouseUp(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); virtual;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); virtual;
     procedure KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState); virtual;
     procedure KeyPress(Sender: TObject; var Key: Char); virtual;
     procedure KeyUp(Sender: TObject; var Key: Word; Shift: TShiftState); virtual;
@@ -222,11 +223,11 @@ type
 
     //Events used internally. Descendant may NOT inherits. call by integrator
     procedure DoMouseDown(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); //virtual;
+      Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer); //virtual;
     procedure DoMouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-      Y: Integer; Layer: TigCustomLayerPanel); //virtual;
+      Y: Integer; Layer: TigBitmapLayer); //virtual;
     procedure DoMouseUp(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); //virtual;
+      Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer); //virtual;
     procedure DoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState); //virtual;
     procedure DoKeyPress(Sender: TObject; var Key: Char); //virtual;
     procedure DoKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState); //virtual;
@@ -317,18 +318,18 @@ type
   private
     FOriginalStream,
     FModifiedStream : TStream;
-    FLayer: TigLayerPanel;
+    FLayer: TigLayer;
     procedure RestoreFromStream(AStream: TStream);
   public
     constructor Create(AOwner : TComponent); override;
     destructor Destroy; override;
-    procedure ChangedLayer(ALayer : TigLayerPanel);
-    procedure ChangingLayer(ALayer : TigLayerPanel);
+    procedure ChangedLayer(ALayer : TigLayer);
+    procedure ChangingLayer(ALayer : TigLayer);
     procedure Play; override;
     procedure Revert; override;
     //class function Signature : string; override; //not localized string
   published
-    property Layer : TigLayerPanel read FLayer write FLayer;
+    property Layer : TigLayer read FLayer write FLayer;
   end;
 
   TigCmdLayer_New = class(TigCmdLayer_Modify)
@@ -387,10 +388,16 @@ end;
 
 { TigAgent }
 
+procedure TigAgent.AfterConstruction;
+begin
+  inherited;
+  if not (csDesigning in ComponentState) then
+    GIntegrator.RegisterListener(self);
+end;
+
 constructor TigAgent.Create(AOwner: TComponent);
 begin
   inherited;
-  GIntegrator.RegisterListener(Self);
 end;
 
 { TigIntegrator }
@@ -445,7 +452,7 @@ end;
 
 procedure TigIntegrator.DoMouseDown(Sender: TigPaintBox;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer;
-  Layer: TigCustomLayerPanel);
+  Layer: TigBitmapLayer);
 begin
   if Assigned(FActiveTool) then
     FActiveTool.DoMouseDown(Sender, Button, Shift, X,Y, Layer);
@@ -453,7 +460,7 @@ end;
 
 
 procedure TigIntegrator.DoMouseMove(Sender: TigPaintBox;
-  Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+  Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
 begin
   if Assigned(FActiveTool) then
     FActiveTool.DoMouseMove(Sender, Shift, X,Y, Layer);
@@ -461,7 +468,7 @@ end;
 
 procedure TigIntegrator.DoMouseUp(Sender: TigPaintBox;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer;
-  Layer: TigCustomLayerPanel);
+  Layer: TigBitmapLayer);
 begin
   if Assigned(FActiveTool) then
     FActiveTool.DoMouseUp(Sender, Button, Shift, X,Y, Layer);
@@ -640,7 +647,7 @@ begin
 end;
 
 procedure TigTool.DoMouseDown(Sender: TigPaintBox; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+  Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
 begin
   if Assigned(FOnBeforeMouseDown) then
     FOnBeforeMouseDown(Sender, Button, Shift, X, Y, Layer);
@@ -652,7 +659,7 @@ begin
 end;
 
 procedure TigTool.DoMouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-  Y: Integer; Layer: TigCustomLayerPanel);
+  Y: Integer; Layer: TigBitmapLayer);
 begin
   if Assigned(FOnBeforeMouseMove) then
     FOnBeforeMouseMove(Sender, Shift, X, Y, Layer);
@@ -664,7 +671,7 @@ begin
 end;
 
 procedure TigTool.DoMouseUp(Sender: TigPaintBox; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+  Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
 begin
   if Assigned(FOnBeforeMouseUp) then
     FOnBeforeMouseUp(Sender, Button, Shift, X, Y, Layer);
@@ -699,19 +706,19 @@ begin
 end;
 
 procedure TigTool.MouseDown(Sender: TigPaintBox; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+  Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
 begin
   //descendant may do something
 end;
 
 procedure TigTool.MouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-  Y: Integer; Layer: TigCustomLayerPanel);
+  Y: Integer; Layer: TigLayer);
 begin
   //descendant may do something
 end;
 
 procedure TigTool.MouseUp(Sender: TigPaintBox; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+  Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
 begin
   //descendant may do something
 end;
@@ -776,7 +783,7 @@ end;
 
 constructor TigPaintBox.Create(AOwner: TComponent);
 var
-  LLayerPanel : TigCustomLayerPanel;
+  LLayerPanel : TigBitmapLayer;
 begin
   inherited;
   Options := [pboAutoFocus];
@@ -969,7 +976,7 @@ end;
     f.Free;
   end;
 
-procedure TigCmdLayer_Modify.ChangingLayer(ALayer: TigLayerPanel);
+procedure TigCmdLayer_Modify.ChangingLayer(ALayer: TigLayer);
 begin
   if assigned(Manager) and ((Manager.LastCommand = nil) or
     (Manager.LastCommand is TigCmdLayer) and (TigCmdLayer(Manager.LastCommand).LayerIndex <> ALayer.Index)
@@ -983,7 +990,7 @@ begin
 //  DebugSave();
 end;
 
-procedure TigCmdLayer_Modify.ChangedLayer(ALayer: TigLayerPanel);
+procedure TigCmdLayer_Modify.ChangedLayer(ALayer: TigLayer);
 begin
   FLayerClass := TigLayerPanelClass(ALayer.ClassType);//TigLayerPanelClass(FindClass(ALayer.ClassName));//
   FLayer := ALayer;
@@ -1007,7 +1014,7 @@ begin
 end;
 
 procedure TigCmdLayer_Modify.Play;
-//var LLayer : TigLayerPanel;
+//var LLayer : TigLayer;
 begin
   RestoreFromStream( FModifiedStream );
 end;
