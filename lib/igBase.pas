@@ -783,7 +783,7 @@ end;
 
 constructor TigPaintBox.Create(AOwner: TComponent);
 var
-  LLayerPanel : TigBitmapLayer;
+  LLayerPanel : TigNormalLayerPanel;
 begin
   inherited;
   Options := [pboAutoFocus];
@@ -802,6 +802,7 @@ begin
 
     // create background layer
     LLayerPanel :=  TigNormalLayerPanel.Create(FLayerList);
+    LLayerPanel.IsAsBackground := True;
     LLayerPanel.LayerBitmap.SetSize(  Bitmap.Width, Bitmap.Height);
     LLayerPanel.LayerBitmap.Clear(clWhite32);
     //LLayerPanel.UpdateLayerThumbnail;

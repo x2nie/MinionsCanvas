@@ -231,6 +231,7 @@ type
   private
     FAsBackground : Boolean; // if this layer is a background layer
     FOnMaskApplied : TNotifyEvent;
+    procedure SetAsBackground(const Value: Boolean);
   public
     constructor Create(AOwner: TigLayerPanelList); override; 
     //constructor Create(AOwner: TigLayerPanelList;
@@ -240,7 +241,7 @@ type
 
     function ApplyMask: Boolean;
 
-    property IsAsBackground : Boolean read FAsBackground;
+    property IsAsBackground : Boolean read FAsBackground write SetAsBackground;
     property OnMaskApplied  : TNotifyEvent read FOnMaskApplied write FOnMaskApplied;
   end;
 
@@ -1004,11 +1005,7 @@ begin
   FDefaultLayerName  := 'Layer';
   FLayerThumbEnabled := True;
 
-  {if FAsBackground then
-  begin
-    FDefaultLayerName := 'Background';
-    DisplayName       := FDefaultLayerName;
-  end;}
+  
 
   {FLayerThumb := TBitmap32.Create;
   with FLayerThumb do
@@ -1994,6 +1991,17 @@ procedure TigLayer.EndUpdate;
 begin
   Assert(FUpdateCount > 0, 'Unpaired TThreadPersistent.EndUpdate');
   Dec(FUpdateCount);
+end;
+
+procedure TigNormalLayerPanel.SetAsBackground(const Value: Boolean);
+begin
+  FAsBackground := Value;
+  if FAsBackground then
+  begin
+    FDefaultLayerName := 'Background';
+    DisplayName       := FDefaultLayerName;
+  end;
+
 end;
 
 end.
