@@ -63,15 +63,15 @@ type
 
     function GetLayerVisibleIconRect(const APanelRect: TRect): TRect; virtual; abstract;
 
-    function GetPanelAreaAtXY(APanel: TigCustomLayerPanel;
+    function GetPanelAreaAtXY(APanel: TigLayer;
       const APanelRect: TRect; const AX, AY: Integer): TigSelectedPanelArea; virtual; abstract;
   public
     constructor Create;
 
-    procedure Paint(ABuffer: TBitmap32; APanel: TigCustomLayerPanel;
+    procedure Paint(ABuffer: TBitmap32; APanel: TigLayer;
       const ARect: TRect); virtual; abstract;
 
-    function GetSnapshot(APanel: TigCustomLayerPanel;
+    function GetSnapshot(APanel: TigLayer;
       const AWidth, AHeight: Integer): TBitmap32; virtual; abstract;
 
     property ObjectSpan : Integer read FObjectSpan write SetObjectSpan;
@@ -93,7 +93,7 @@ type
   protected
     function GetLayerVisibleIconRect(const APanelRect: TRect): TRect; override;
 
-    function GetPanelAreaAtXY(APanel: TigCustomLayerPanel;
+    function GetPanelAreaAtXY(APanel: TigLayer;
       const APanelRect: TRect; const AX, AY: Integer): TigSelectedPanelArea; override;
 
     procedure DrawLayerVisibleIcon(ABuffer: TBitmap32; const ARect: TRect; const AVisible: Boolean);
@@ -104,10 +104,10 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure Paint(ABuffer: TBitmap32; APanel: TigCustomLayerPanel;
+    procedure Paint(ABuffer: TBitmap32; APanel: TigLayer;
       const ARect: TRect); override;
 
-    function GetSnapshot(APanel: TigCustomLayerPanel;
+    function GetSnapshot(APanel: TigLayer;
       const AWidth, AHeight: Integer): TBitmap32; override;
   end;
 
@@ -268,7 +268,7 @@ begin
   Result.Bottom  := APanelRect.Bottom;
 end;
 
-function TigLayerPanelStdTheme.GetPanelAreaAtXY(APanel: TigCustomLayerPanel;
+function TigLayerPanelStdTheme.GetPanelAreaAtXY(APanel: TigLayer;
   const APanelRect: TRect; const AX, AY: Integer): TigSelectedPanelArea;
 var
   LRect      : TRect;
@@ -294,18 +294,19 @@ begin
   end;
 
   // if point on stage mark ...
-
+  { TODO -ox2nie -cfunctionality : please fix it. temporary disabled for name convention }
+  (*
   case APanel.LayerProcessStage of
     lpsLayer:
-      begin
+      begin   *)
         LBmp := FLayerStageIcon;
-      end;
+      (*end;
 
     lpsMask:
       begin
         LBmp := FMaskStageIcon;
       end;
-  end;
+  end;   *)
 
   LRect.Left  := LRect.Right + 1;
   LRect.Right := LRect.Left + LBmp.Width + FObjectSpan - 1;
@@ -317,7 +318,7 @@ begin
   end;
 
   // if point on layer logo thumbnail ...
-  if APanel.IsLogoThumbEnabled then
+  (*if APanel.IsLogoThumbEnabled then
   begin
     LRect.Left  := LRect.Right + 1;
     LRect.Right := LRect.Left + APanel.LogoThumbnail.Width + LSpan2 - 1;
@@ -327,10 +328,10 @@ begin
       Result := spaLogoThumbnail;
       Exit;
     end;
-  end;
+  end;  *)
   
   // if point on layer thumbnail ...
-  if APanel.IsLayerThumbEnabled then
+  (*if APanel.IsLayerThumbEnabled then*)
   begin
     LRect.Left  := LRect.Right + 1;
     LRect.Right := LRect.Left + APanel.LayerThumbnail.Width + LSpan2 - 1;
@@ -343,7 +344,7 @@ begin
   end;
 
   // if mask enabled ...
-
+  (*
   if APanel.IsMaskEnabled then
   begin
     // if point on Mask-Link mark ...
@@ -376,7 +377,7 @@ begin
       Result := spaMaskThumbnail;
       Exit;
     end;
-  end;
+  end; *)
 
   // if point on caption area ...
 
@@ -387,6 +388,7 @@ begin
   begin
     Result := spaLayerCaption;
   end;
+  
 end;
 
 procedure TigLayerPanelStdTheme.DrawLayerVisibleIcon(ABuffer: TBitmap32;
@@ -477,7 +479,7 @@ begin
 end;
 
 procedure TigLayerPanelStdTheme.Paint(ABuffer: TBitmap32;
-  APanel: TigCustomLayerPanel; const ARect: TRect);
+  APanel: TigLayer; const ARect: TRect);
 var
   LRect         : TRect;
   LSize         : TSize;
@@ -495,23 +497,24 @@ begin
     ABuffer.LineS(LRect.Right, LRect.Top, LRect.Right, LRect.Bottom, FSpanColor);
 
     // draw process stage mark
+    (*
     case APanel.LayerProcessStage of
       lpsLayer:
-        begin
+        begin   *)
           LBmp := FLayerStageIcon;
-        end;
+        (*end;
 
       lpsMask:
         begin
           LBmp := FMaskStageIcon;
         end;
-    end;
+    end;   *)
 
     LRect.Left  := LRect.Right;
     LRect.Right := LRect.Left + LBmp.Width + FObjectSpan;
-    DrawProcessStageIcon(ABuffer, LRect, APanel.LayerProcessStage);
+    (*DrawProcessStageIcon(ABuffer, LRect, APanel.LayerProcessStage);*)
     ABuffer.LineS(LRect.Right, LRect.Top, LRect.Right, LRect.Bottom, FSpanColor);
-
+    (*
     // draw logo thumbnail
     if APanel.IsLogoThumbEnabled then
     begin
@@ -525,10 +528,10 @@ begin
       LRect.Right  := LRect.Right + FObjectSpan;
       LRect.Bottom := ARect.Bottom;
     ABuffer.LineS(LRect.Right, LRect.Top, LRect.Right, LRect.Bottom, FSpanColor);
-    end;
+    end;*)
 
     // draw layer thumbnail
-    if APanel.IsLayerThumbEnabled then
+    (*if APanel.IsLayerThumbEnabled then*)
     begin
     LRect.Left   := LRect.Right + FObjectSpan;
     LRect.Top    := LRect.Top + (LSize.cy - APanel.LayerThumbnail.Height) div 2;
@@ -543,7 +546,7 @@ begin
     end;
 
     // draw Mask-Link mark
-    if APanel.IsMaskEnabled then
+    (*if APanel.IsMaskEnabled then
     begin
       if APanel.IsMaskLinked then
       begin
@@ -570,7 +573,8 @@ begin
       LRect.Right  := LRect.Right + FObjectSpan;
       LRect.Bottom := ARect.Bottom;
       ABuffer.LineS(LRect.Right, LRect.Top, LRect.Right, LRect.Bottom, FSpanColor);
-    end;
+    end;*)
+
 
     // fill background color for the panel
     LRect.Left   := LRect.Right + 1;
@@ -602,7 +606,6 @@ begin
     LRect.Top  := LRect.Top + ( LSize.cy - ABuffer.TextHeight(APanel.DisplayName) ) div 2;
 
     ABuffer.RenderText(LRect.Left, LRect.Top, APanel.DisplayName, 0, LCaptionColor);
-
     // draw panel border
     DrawPanelBorder(ABuffer, ARect);
   finally
@@ -610,7 +613,7 @@ begin
   end;
 end;
 
-function TigLayerPanelStdTheme.GetSnapshot(APanel: TigCustomLayerPanel;
+function TigLayerPanelStdTheme.GetSnapshot(APanel: TigLayer;
   const AWidth, AHeight: Integer): TBitmap32;
 var
   LBackColor : TColor32;
@@ -732,7 +735,7 @@ begin
   if Assigned(FScrollThread) then
   begin
     FScrollThread.Terminate;
-    FScrollThread.WaitFor;
+    //FScrollThread.WaitFor;
     FreeAndNil(FScrollThread);
   end;
 end;
@@ -796,7 +799,7 @@ procedure TigLayerPanelManager.PreparePanelSnapshotRendering(
 var
   LPanelIndex : Integer;
   LPanelRect  : TRect;
-  LPanel      : TigCustomLayerPanel;
+  LPanel      : TigLayer;
 begin
   FMovingPanelIndex := -1;
 
@@ -862,7 +865,7 @@ end;
 procedure TigLayerPanelManager.DoPaintBuffer;
 var
   i, y, LMaxY : Integer;
-  LLayerPanel : TigCustomLayerPanel;
+  LLayerPanel : TigLayer;
   LRect       : TRect;
 begin
   CheckLayout;
@@ -906,7 +909,7 @@ procedure TigLayerPanelManager.MouseDown(Button: TMouseButton;
 var
   LIndex      : Integer;
   LPanelRect  : TRect;
-  LLayerPanel : TigCustomLayerPanel;
+  LLayerPanel : TigLayer;
 begin
   if Button = mbLeft then
   begin
@@ -937,7 +940,7 @@ begin
                 LLayerPanel.OnLayerThumbDblClick(LLayerPanel);
               end;
             end;
-
+          (*
           spaMaskThumbnail:
             begin
               if Assigned(LLayerPanel.OnMaskThumbDblClick) then
@@ -953,7 +956,7 @@ begin
                 LLayerPanel.OnLogoThumbDblClick(LLayerPanel);
               end;
             end;
-
+           *)
           spaLayerCaption:
             begin
               if Assigned(LLayerPanel.OnPanelDblClick) then
@@ -1017,7 +1020,7 @@ procedure TigLayerPanelManager.MouseUp(Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
   LIndex      : Integer;
-  LLayerPanel : TigCustomLayerPanel;
+  LLayerPanel : TigLayer;
   LPanelRect  : TRect;
   LValidArea  : TRect;
   LPos        : TPoint;
@@ -1087,7 +1090,7 @@ begin
                 FPanelList.SelectLayerPanel(LIndex);
                 FPanelList.SelectedPanel.LayerProcessStage := lpsLayer;
               end;
-
+            (*
             spaMaskLinkageMark:
               begin
                 LLayerPanel.IsMaskLinked := not LLayerPanel.IsMaskLinked;
@@ -1098,7 +1101,7 @@ begin
                 FPanelList.SelectLayerPanel(LIndex);
                 FPanelList.SelectedPanel.LayerProcessStage := lpsMask;
               end;
-
+            *)
             spaLogoThumbnail,
             spaLayerCaption:
               begin
@@ -1216,7 +1219,7 @@ end;
 function TigLayerPanelManager.GetPanelSnapshot(
   const APanelIndex: Integer): TBitmap32;
 var
-  LPanel : TigCustomLayerPanel;
+  LPanel : TigLayer;
 begin
   Result := nil;
 
@@ -1305,7 +1308,7 @@ begin
           end;
 
           if needToScroll then
-          Sleep(500);
+          Sleep(100);
         end;
       end;
     end;

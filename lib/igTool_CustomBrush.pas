@@ -309,7 +309,7 @@ begin
     // the viewport rendered incorrectly ...
     Layer.Changed;
 
-    Layer.UpdateLayerThumbnail;
+
   end;
 end;
 

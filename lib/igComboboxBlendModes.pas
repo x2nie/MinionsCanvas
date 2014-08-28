@@ -18,6 +18,7 @@ type
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
+    procedure AfterConstruction; override;
   published
     { Published declarations }
   end;
@@ -30,6 +31,17 @@ uses
 
 
 { TigComboBoxBlendMode }
+
+procedure TigComboBoxBlendMode.AfterConstruction;
+begin
+  inherited;
+  if not (csDesigning in self.ComponentState) then
+  begin
+    FAgent := TigAgent.Create(Self); //autodestroy
+    GetBlendModeList(Self.Items); //fill items
+  end;
+//ItemIndex := 0;
+end;
 
 procedure TigComboBoxBlendMode.Change;
 var TempNotifyEvent : TNotifyEvent;
@@ -54,9 +66,7 @@ end;
 constructor TigComboBoxBlendMode.Create(AOwner: TComponent);
 begin
   inherited;
-  FAgent := TigAgent.Create(Self); //autodestroy
-  GetBlendModeList(Self.Items); //fill items
-  ItemIndex := 0;
+
 
 end;
 

@@ -44,11 +44,11 @@ type
   protected
     //Events. Polymorpism.
     procedure MouseDown(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); override;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); override;
     procedure MouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-      Y: Integer; Layer: TigCustomLayerPanel); override;
+      Y: Integer; Layer: TigLayer); override;
     procedure MouseUp(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); override;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); override;
   public
 
   published 
@@ -63,7 +63,7 @@ implementation
 
 procedure TigToolBrushSimple.MouseDown(Sender: TigPaintBox;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer;
-  Layer: TigCustomLayerPanel);
+  Layer: TigLayer);
 var
   LRect  : TRect;
   LPoint : TPoint;
@@ -81,14 +81,14 @@ begin
     LRect.Right  := LPoint.X + 10;
     LRect.Bottom := LPoint.Y + 10;
 
-    Layer.LayerBitmap.FillRectS(LRect, $7F000000);
+    TigBItmapLayer(Layer).LayerBitmap.FillRectS(LRect, $7F000000);
     Layer.Changed(LRect);
 
   end;
 end;
 
 procedure TigToolBrushSimple.MouseMove(Sender: TigPaintBox; Shift: TShiftState;
-  X, Y: Integer; Layer: TigCustomLayerPanel);
+  X, Y: Integer; Layer: TigLayer);
 var
   LRect  : TRect;
   LPoint : TPoint;
@@ -102,7 +102,7 @@ begin
     LRect.Right  := LPoint.X + 10;
     LRect.Bottom := LPoint.Y + 10;
 
-    Layer.LayerBitmap.FillRectS(LRect, $7F000000);
+    TigBItmapLayer(Layer).LayerBitmap.FillRectS(LRect, $7F000000);
     Layer.Changed(LRect);
   end;
 
@@ -110,7 +110,7 @@ begin
 end;
 
 procedure TigToolBrushSimple.MouseUp(Sender: TigPaintBox; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+  Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
 begin
   if FLeftButtonDown then
   begin

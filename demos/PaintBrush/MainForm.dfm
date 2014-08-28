@@ -20,6 +20,11 @@ object frmMain: TfrmMain
     Width = 862
     Height = 402
     Align = alClient
+    Bitmap.ResamplerClassName = 'TNearestResampler'
+    BitmapAlign = baTopLeft
+    Scale = 1.000000000000000000
+    ScaleMode = smNormal
+    TabOrder = 0
   end
   object Panel1: TPanel
     Left = 0
@@ -55,7 +60,7 @@ object frmMain: TfrmMain
       Width = 134
       Height = 21
       Cursor = crHandPoint
-      Brush.Color = clBlack
+      Brush.Color = clAqua
       OnMouseDown = shpBrushColorMouseDown
     end
     object lblBlendMode: TLabel

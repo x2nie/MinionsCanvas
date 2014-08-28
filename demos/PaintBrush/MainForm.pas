@@ -216,7 +216,7 @@ begin
   LBmp := TBitmap32.Create;
   try
     LBmp.SetSize(scrlbrBrushSize.Position * 2 + 1, scrlbrBrushSize.Position * 2 + 1);
-    LBmp.Clear(clBlack32);
+    LBmp.Clear(color32(shpBrushColor.Brush.Color));
 
     MyFeatheredCircle(LBmp, LBmp.Width div 2, LBmp.Height div 2, scrlbrBrushSize.Position div 2, 12, 255);
     imgStrokePreview.Bitmap.Assign(LBmp);

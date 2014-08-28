@@ -91,8 +91,6 @@ type
     spl1: TSplitter;
     pmUndo: TPopupMenu;
     pmRedo: TPopupMenu;
-    btn2: TToolButton;
-    btn3: TToolButton;
     lyrs1: TigLayersListBox;
     igLayersListBox1: TigLayersListBox;
     igAgent1: TigAgent;
@@ -113,7 +111,6 @@ type
     procedure actRedoUpdate(Sender: TObject);
     procedure pmUndoPopup(Sender: TObject);
     procedure pmRedoPopup(Sender: TObject);
-    procedure btn3Click(Sender: TObject);
     procedure igAgent1SelectionChange(Sender: TObject);
     procedure cmbbxBlendModesChange(Sender: TObject);
     procedure ggbrLayerOpacityUserChange(Sender: TObject);
@@ -137,7 +134,7 @@ uses CHILDWIN, about,
   igTool_BrushSimple,
   igTool_PencilSimple;
 
-type TigCustomLayerPanelAccess = class(TigCustomLayerPanel);
+type TigCustomLayerPanelAccess = class(TigBitmapLayer);
   
 procedure TMainForm.CreateMDIChild(const Name: string);
 var
@@ -173,7 +170,7 @@ end;
 
 procedure TMainForm.btnLayer_NewClick(Sender: TObject);
 var
-  LLayerPanel : TigCustomLayerPanel;
+  LLayerPanel : TigBitmapLayer;
   LPanelIndex : Integer;
 var cmd : TigCmdLayer_New;
 begin
@@ -288,7 +285,7 @@ begin
     for i := ItemIndex downto 0 do
     begin
       m := TMenuItem.Create(pmUndo);
-      m.Caption := Strings[i];
+      m.Caption := 'Undo '+Strings[i];
       pmundo.Items.Add(m);
     end;
   end;
@@ -305,21 +302,14 @@ begin
     for i := ItemIndex +1 to Count -1 do
     begin
       m := TMenuItem.Create(pmRedo);
-      m.Caption := Strings[i];
+      m.Caption := 'Redo '+Strings[i];
       pmRedo.Items.Add(m);
     end;
   end;
 end;
 
-procedure TMainForm.btn3Click(Sender: TObject);
-begin
-  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
-  GIntegrator.ActivePaintBox.LayerList.SelectLayerPanel(0);
-
-end;
-
 procedure TMainForm.igAgent1SelectionChange(Sender: TObject);
-var LLayer : TigLayerPanel;
+var LLayer : TigBitmapLayer;
 begin
   if assigned(GIntegrator.ActivePaintBox) then
   begin
@@ -327,26 +317,27 @@ begin
     if assigned(LLayer) then
     begin
       lbName.Caption := llayer.DisplayName;
-      if LLayer is TigCustomLayerPanel then
+      if LLayer is TigBitmapLayer then
       begin
-        cmbbxBlendModes.ItemIndex :=  ord(TigCustomLayerPanelAccess(LLayer).LayerBlendMode);
-        ggbrLayerOpacity.Position :=  TigCustomLayerPanelAccess(LLayer).LayerOpacity;
+
+        cmbbxBlendModes.ItemIndex :=  ord(LLayer.LayerBlendMode);
+        ggbrLayerOpacity.Position :=  LLayer.LayerOpacity;
       end;
     end;
   end;
 end;
 
 procedure TMainForm.cmbbxBlendModesChange(Sender: TObject);
-var LLayer : TigLayerPanel;
+var LLayer : TigBitmapLayer;
 begin
   if assigned(GIntegrator.ActivePaintBox) then
   begin
     LLayer := GIntegrator.ActivePaintBox.LayerList.SelectedPanel;
     if assigned(LLayer) then
     begin
-      if LLayer is TigCustomLayerPanel then
+      if LLayer is TigBitmapLayer then
       begin
-        TigCustomLayerPanelAccess(LLayer).LayerBlendMode := TBlendMode32(cmbbxBlendModes.ItemIndex);
+        LLayer.LayerBlendMode := TBlendMode32(cmbbxBlendModes.ItemIndex);
       end;
     end;
   end;
@@ -354,16 +345,16 @@ begin
 end;
 
 procedure TMainForm.ggbrLayerOpacityUserChange(Sender: TObject);
-var LLayer : TigLayerPanel;
+var LLayer : TigBitmapLayer;
 begin
   if assigned(GIntegrator.ActivePaintBox) then
   begin
     LLayer := GIntegrator.ActivePaintBox.LayerList.SelectedPanel;
     if assigned(LLayer) then
     begin
-      if LLayer is TigCustomLayerPanel then
+      if LLayer is TigBitmapLayer then
       begin
-        TigCustomLayerPanelAccess(LLayer).LayerOpacity := ggbrLayerOpacity.Position;
+        LLayer.LayerOpacity := ggbrLayerOpacity.Position;
       end;
     end;
   end;
