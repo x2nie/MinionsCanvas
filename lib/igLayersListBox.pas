@@ -49,7 +49,7 @@ type
   private
   protected
     FAgent : TigAgent;                    //integrator's event listener
-    FLayerList : TigLayerPanelList;       //to compare between last & current 
+    FLayerList : TigLayerList;       //to compare between last & current 
     procedure ActivePaintBoxSwitched(Sender: TObject);
     procedure SoInvalidate(Sender: TObject; ALayer: TigLayer);
     procedure InvalidateEvent(Sender: TObject);

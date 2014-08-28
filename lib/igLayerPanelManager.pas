@@ -138,7 +138,7 @@ type
     FScrollThread     : TigScrollPanelThread;
 
 
-    procedure SetPanelList(const AValue: TigLayerPanelList);
+    procedure SetLayerList(const AValue: TigLayerList);
     procedure ScrollThreadStop;
 
     function GetPanelRect(const APanelIndex: Integer): TRect;
@@ -150,7 +150,7 @@ type
     // callbacks
     procedure ScrollHandler(Sender: TObject);
   protected
-    FPanelList      : TigLayerPanelList;
+    FPanelList      : TigLayerList;
     procedure PreparePanelSnapshotRendering(const AMouseX, AMouseY: Integer); virtual;
     procedure CheckLayout; virtual;
     procedure Scroll(Dy: Integer); virtual;
@@ -172,7 +172,7 @@ type
 
     procedure Resize; override;
 
-    property PanelList : TigLayerPanelList read FPanelList write SetPanelList;
+    property PanelList : TigLayerList read FPanelList write SetLayerList;
   published
     property OnMouseDown;
     property OnMouseMove;
@@ -718,7 +718,7 @@ begin
   end;
 end;
 
-procedure TigLayerPanelManager.SetPanelList(const AValue: TigLayerPanelList);
+procedure TigLayerPanelManager.SetLayerList(const AValue: TigLayerList);
 begin
   FPanelList := AValue;
   CheckLayout;
