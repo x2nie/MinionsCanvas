@@ -71,20 +71,20 @@ begin
   if Assigned(GIntegrator.ActivePaintBox) then
   begin
     //remove event
-    if Assigned(PanelList) and  (PanelList <> GIntegrator.ActivePaintBox.LayerList) then
-      PanelList.OnLayerChanged := nil;
+    if Assigned(LayerList) and  (LayerList <> GIntegrator.ActivePaintBox.LayerList) then
+      LayerList.OnLayerChanged := nil;
 
     //install event
-    Self.PanelList := GIntegrator.ActivePaintBox.LayerList;
-    PanelList.OnLayerChanged := SoInvalidate;
+    Self.LayerList := GIntegrator.ActivePaintBox.LayerList;
+    LayerList.OnLayerChanged := SoInvalidate;
   end
   else
   begin
     //remove event
-    //if Assigned(PanelList) and not (csDestroying in PanelList.code then
-      //PanelList.OnLayerChanged := nil;
+    //if Assigned(LayerList) and not (csDestroying in LayerList.code then
+      //LayerList.OnLayerChanged := nil;
 
-    self.PanelList := nil;
+    self.LayerList := nil;
   end;
 end;
 
