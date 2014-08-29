@@ -233,10 +233,15 @@ begin
 end;
 
 procedure TMainForm.actLayer_DeleteExecute(Sender: TObject);
+var cmd : TigCmdLayer_Delete;
 begin
   if not Assigned(GIntegrator.ActivePaintBox) then
     Exit;
-  GIntegrator.ActivePaintBox.LayerList.DeleteSelectedLayerPanel;
+    cmd := TigCmdLayer_Delete.Create(GIntegrator.ActivePaintBox.UndoRedo);
+    cmd.ChangingLayer(GIntegrator.ActivePaintBox.LayerList.SelectedPanel); //save
+    //GIntegrator.ActivePaintBox.LayerList.DeleteSelectedLayerPanel;
+    cmd.Play; //delete
+    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(cmd,'Delete Layer');
 end;
 
 procedure TMainForm.actUndoExecute(Sender: TObject);

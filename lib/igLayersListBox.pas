@@ -103,7 +103,7 @@ end;
 
 procedure TigLayersListBox.SoInvalidate(Sender: TObject;ALayer: TigLayer);
 begin
-  Invalidate;
+  //Invalidate;
 end;
 
 end.

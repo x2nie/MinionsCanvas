@@ -319,12 +319,14 @@ type
     FOriginalStream,
     FModifiedStream : TStream;
     FLayer: TigLayer;
+  protected
     procedure RestoreFromStream(AStream: TStream);
+    procedure SaveToStream(ALayer : TigLayer; AStream: TStream);
   public
     constructor Create(AOwner : TComponent); override;
     destructor Destroy; override;
-    procedure ChangedLayer(ALayer : TigLayer);
-    procedure ChangingLayer(ALayer : TigLayer);
+    procedure ChangedLayer(ALayer : TigLayer);  virtual;
+    procedure ChangingLayer(ALayer : TigLayer); virtual;
     procedure Play; override;
     procedure Revert; override;
     //class function Signature : string; override; //not localized string
@@ -334,6 +336,13 @@ type
 
   TigCmdLayer_New = class(TigCmdLayer_Modify)
   public
+    procedure Play; override;
+    procedure Revert; override;
+  end;
+
+  TigCmdLayer_Delete = class(TigCmdLayer_Modify)
+  public
+    procedure ChangingLayer(ALayer : TigLayer); override;
     procedure Play; override;
     procedure Revert; override;
   end;
@@ -983,21 +992,13 @@ begin
     (Manager.LastCommand is TigCmdLayer) and (TigCmdLayer(Manager.LastCommand).LayerIndex <> ALayer.Index)
     ) then
   begin
-    FLayerClass := TigLayerPanelClass(ALayer.ClassType);//TigLayerPanelClass(FindClass(ALayer.ClassName));//
-    FLayer := ALayer;
-    FLayerIndex := ALayer.Index;
-    FOriginalStream.WriteComponent(self);
+    SaveToStream(ALayer, FOriginalStream);
   end;
-//  DebugSave();
 end;
 
 procedure TigCmdLayer_Modify.ChangedLayer(ALayer: TigLayer);
 begin
-  FLayerClass := TigLayerPanelClass(ALayer.ClassType);//TigLayerPanelClass(FindClass(ALayer.ClassName));//
-  FLayer := ALayer;
-  FLayerIndex := ALayer.Index;
-  FModifiedStream.WriteComponent(self);
-//  DebugSave();
+  SaveToStream(ALayer, FModifiedStream);
 end;
 
 constructor TigCmdLayer_Modify.Create(AOwner: TComponent);
@@ -1020,25 +1021,6 @@ begin
   RestoreFromStream( FModifiedStream );
 end;
 
-{ TigCmdLayer_New }
-
-procedure TigCmdLayer_New.Play;
-begin
-  if FLayer = nil then
-  begin
-    //FLayer := TigNormalLayerPanel.Create( Self.PanelList, 300,300); //its work
-    FLayer := FLayerClass.Create(self.LayerList);
-    self.LayerList.Add(FLayer);
-  end;
-  inherited;
-end;
-
-procedure TigCmdLayer_New.Revert;
-begin
-  LayerList.DeleteLayerPanel(self.FLayerIndex);
-  FLayer := nil;
-end;
-
 procedure TigCmdLayer_Modify.RestoreFromStream(AStream: TStream);
 begin
   if AStream.Size > 0 then
@@ -1053,7 +1035,7 @@ begin
     FLayer.Changed; //update thumbnail
     
     // I dont know, but it required to refresh the paintobx
-    Self.Manager.LayerList.Insert(self.LayerIndex, FLayer);
+    //Self.Manager.LayerList.Insert(self.LayerIndex, FLayer);
 
   end;
 end;
@@ -1067,6 +1049,63 @@ begin
   else
     RestorePreviousState;
 
+end;
+
+procedure TigCmdLayer_Modify.SaveToStream(ALayer: TigLayer;
+  AStream: TStream);
+begin
+  FLayerClass := TigLayerPanelClass(ALayer.ClassType);//TigLayerPanelClass(FindClass(ALayer.ClassName));//
+  FLayer := ALayer;
+  FLayerIndex := ALayer.Index;
+  AStream.WriteComponent(self);
+end;
+
+{ TigCmdLayer_New }
+
+procedure TigCmdLayer_New.Play;
+begin
+  if FLayer = nil then
+  begin
+    //FLayer := TigNormalLayerPanel.Create( Self.PanelList, 300,300); //its work
+    FLayer := FLayerClass.Create(self.LayerList);
+    FLayer.IsDuplicated := true; //dont increment the layer name
+    self.LayerList.Insert(self.LayerIndex, FLayer);
+  end;
+  //inherited;
+  RestoreFromStream( FModifiedStream );
+end;
+
+procedure TigCmdLayer_New.Revert;
+begin
+  LayerList.DeleteLayerPanel(self.FLayerIndex);
+  FLayer := nil;
+end;
+
+
+
+{ TigCmdLayer_Delete }
+
+procedure TigCmdLayer_Delete.ChangingLayer(ALayer: TigLayer);
+begin
+  SaveToStream(ALayer, FOriginalStream);
+end;
+
+procedure TigCmdLayer_Delete.Play; //redo
+begin
+  LayerList.DeleteLayerPanel(self.FLayerIndex);
+  FLayer := nil;
+end;
+
+procedure TigCmdLayer_Delete.Revert; //undo
+begin
+  if FLayer = nil then
+  begin
+    //FLayer := TigNormalLayerPanel.Create( Self.PanelList, 300,300); //its work
+    FLayer := FLayerClass.Create(self.LayerList);
+    FLayer.IsDuplicated := true; //dont increment the layer name    
+    self.LayerList.Insert(self.LayerIndex, FLayer);
+  end;
+  RestoreFromStream(FOriginalStream);
 end;
 
 initialization
