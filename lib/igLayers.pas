@@ -77,6 +77,7 @@ type
   protected
     FLayerVisible          : Boolean;
     FLayerEnabled          : Boolean;               // indicate whether the layer is currently editable
+    FDuplicated            : Boolean;               // indicate whether this layer is duplicated from another one
     FSelected              : Boolean;
     FLayerThumb           : TBitmap32;
     FThumbValid            : Boolean;               // indicate thumbnail has been rebuild from layer
@@ -105,6 +106,7 @@ type
     property ChangedRect          : TRect                read FChangedRect;  //used by collection.update
     property LayerThumbnail       : TBitmap32            read GetLayerThumb;
     property IsSelected           : Boolean              read FSelected             write FSelected;
+    property IsDuplicated         : Boolean              read FDuplicated           write FDuplicated;
 
     //property OnChange             : TNotifyEvent         read FOnChange             write FOnChange;
     property OnPanelDblClick      : TNotifyEvent         read FOnPanelDblClick      write FOnPanelDblClick;
@@ -139,7 +141,6 @@ type
     FLayerProcessStage    : TigLayerProcessStage;
     FPixelFeature         : TigLayerPixelFeature;  // the pixel feature of the layer
     //FSelected             : Boolean;
-    FDuplicated           : Boolean;               // indicate whether this layer is duplicated from another one
     FMaskEnabled          : Boolean;               // indicate whether this layer has a mask
     FMaskLinked           : Boolean;               // indicate whether this layer is linked to a mask
     FLayerThumbEnabled    : Boolean;               // indicate whether this layer has a layer thumbnail
@@ -199,7 +200,6 @@ type
     property LogoThumbnail        : TBitmap32            read FLogoThumb;
     //property IsLayerEnabled        : Boolean                     read FLayerEnabled          write SetLayerEnabled;
     //property IsLayerVisible       : Boolean              read FLayerVisible         write SetLayerVisible;
-    property IsDuplicated         : Boolean              read FDuplicated;
     property IsMaskEnabled        : Boolean              read FMaskEnabled;
     property IsMaskLinked         : Boolean              read FMaskLinked           write SetMaskLinked;
     property IsLayerThumbEnabled  : Boolean              read FLayerThumbEnabled;
@@ -285,9 +285,9 @@ type
     destructor Destroy; override;
     procedure Update(Item: TCollectionItem); override;{ COLLECTION. }
 
-    procedure Add(APanel: TigLayer);
-    procedure SimpleAdd(APanel: TigBitmapLayer); 
-    procedure Insert(AIndex: Integer; APanel: TigLayer);
+    procedure Add(ALayer: TigLayer);
+    procedure SimpleAdd(ALayer: TigBitmapLayer); 
+    procedure Insert(AIndex: Integer; ALayer: TigLayer);
     procedure Move(ACurIndex, ANewIndex: Integer);
     procedure SelectLayerPanel(const AIndex: Integer);
     procedure DeleteSelectedLayerPanel;
@@ -1358,34 +1358,34 @@ begin
   end;
 end;
 
-procedure TigLayerList.Add(APanel: TigLayer);
+procedure TigLayerList.Add(ALayer: TigLayer);
 begin
-  if Assigned(APanel) then
+  if Assigned(ALayer) then
   begin
     //FItems.Add(APanel);
-    APanel.Collection := self;
+    ALayer.Collection := self;
 
 
     // we don't count background layers
-    if APanel is TigNormalLayerPanel then
+    if ALayer is TigNormalLayerPanel then
     begin
-      if not TigNormalLayerPanel(APanel).IsAsBackground then
+      if not TigNormalLayerPanel(ALayer).IsAsBackground then
       begin
-        FPanelTypeCounter.Increase(APanel.ClassName);
+        FPanelTypeCounter.Increase(ALayer.ClassName);
       end;
     end
     else
     begin
-      FPanelTypeCounter.Increase(APanel.ClassName);
+      FPanelTypeCounter.Increase(ALayer.ClassName);
     end;
 
     // first adding
-    if (Count = 1) and (APanel is TigBitmapLayer) then
+    if (Count = 1) and (ALayer is TigBitmapLayer) then
     begin
       //FLayerWidth  := TigBitmapLayer(APanel).FLayerBitmap.Width;
       //FLayerHeight := TigBitmapLayer(APanel).FLayerBitmap.Height;
 
-      FCombineResult.SetSizeFrom(TigBitmapLayer(APanel).FLayerBitmap);
+      FCombineResult.SetSizeFrom(TigBitmapLayer(ALayer).FLayerBitmap);
     end;
 
     BlendLayers;
@@ -1401,42 +1401,43 @@ end;
 // This procedure does the similar thing as the Add() procedure above,
 // but it won't blend layers, invoke callback functions, etc.
 // It simply adds a panel to a layer panel list.
-procedure TigLayerList.SimpleAdd(APanel: TigBitmapLayer);
+procedure TigLayerList.SimpleAdd(ALayer: TigBitmapLayer);
 begin
-  if Assigned(APanel) then
+  if Assigned(ALayer) then
   begin
     //FItems.Add(APanel);
-    APanel.Collection := Self;
+    ALayer.Collection := Self;
     
     // first adding
-    if (Count = 1) and (APanel is TigBitmapLayer) then
+    if (Count = 1) and (ALayer is TigBitmapLayer) then
     begin
-      FCombineResult.SetSizeFrom(TigBitmapLayer(APanel).FLayerBitmap);
+      FCombineResult.SetSizeFrom(TigBitmapLayer(ALayer).FLayerBitmap);
     end;
   end;
 end; 
 
 procedure TigLayerList.Insert(AIndex: Integer;
-  APanel: TigLayer);
+  ALayer: TigLayer);
 begin
-  if Assigned(APanel) then
+  if Assigned(ALayer) then
   begin
     AIndex := Clamp(AIndex, 0, Count);
     //FItems.Insert(AIndex, APanel);
-    APanel.Collection := Self;
-    APanel.Index := AIndex;
+    ALayer.Collection := Self;
+    ALayer.Index := AIndex;
 
     // we don't count background layers
-    if APanel is TigNormalLayerPanel then
+    if (not ALayer.IsDuplicated) then
+    if ALayer is TigNormalLayerPanel then
     begin
-      if not TigNormalLayerPanel(APanel).IsAsBackground then
+      if not TigNormalLayerPanel(ALayer).IsAsBackground then
       begin
-        FPanelTypeCounter.Increase(APanel.ClassName);
+        FPanelTypeCounter.Increase(ALayer.ClassName);
       end;
     end
     else
     begin
-      FPanelTypeCounter.Increase(APanel.ClassName);
+      FPanelTypeCounter.Increase(ALayer.ClassName);
     end;
     
     BlendLayers;
