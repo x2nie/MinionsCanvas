@@ -914,18 +914,18 @@ begin
   if Button = mbLeft then
   begin
     // prepare for moving a panel that under current mouse position
-    PreparePanelSnapshotRendering(X, Y);
+    //PreparePanelSnapshotRendering(X, Y);
 
     FMouseDownX    := X;
     FMouseDownY    := Y;
     FLastX         := X;
     FLastY         := Y;
     FIsPanelMoving := False;
+    LIndex := GetPanelIndexAtXY(X, Y);
 
     // dealing with double click on a panel
     if ssDouble	in Shift then
     begin
-      LIndex := GetPanelIndexAtXY(X, Y);
 
       if LIndex >= 0 then
       begin
@@ -974,6 +974,8 @@ begin
       // preventing from the Double-Click opens a dialog and
       // after the dialog is closed, the current panel is still
       // in Moving mode.
+      if LIndex >= 0 then
+        FLayerList.SelectLayerPanel(LIndex);
       FLeftButtonDown := True;
     end;
   end;
@@ -992,6 +994,8 @@ begin
     begin
       if not FIsPanelMoving then
       begin
+        // prepare for moving a panel that under current mouse position
+        PreparePanelSnapshotRendering(X, Y);
         FIsPanelMoving := Assigned(FPanelSnapshot);
       end;
     end;
@@ -1053,17 +1057,22 @@ begin
 
         LIndex := GetPanelIndexAtXY(LPos.X, LPos.Y);
 
-        FLayerList.Move(FMovingPanelIndex, LIndex);
-        //FLayerList.SelectLayerPanel(LIndex);
+        //FLayerList.Move(FMovingPanelIndex, LIndex);
+        //
 
         // If the layer order is changed, the external callbacks should to
         // take care of the refreshing of the GUI of layer manager,
         // otherwise, we should to refresh the view by ourselves.
-        {if ScrollSelectedPanelInViewport or
-           (FMovingPanelIndex = FLayerList.SelectedIndex) then
+        if //ScrollSelectedPanelInViewport or
+           (FMovingPanelIndex <> LIndex) then
         begin
-          //Invalidate;
-        end;}
+          FLayerList.Move(FMovingPanelIndex, LIndex);
+          //FLayerList.SelectLayerPanel(LIndex);
+        end
+        else
+        begin
+          Invalidate;
+        end;
       end
       else
       begin
