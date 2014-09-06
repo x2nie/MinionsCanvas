@@ -913,9 +913,6 @@ var
 begin
   if Button = mbLeft then
   begin
-    // prepare for moving a panel that under current mouse position
-    //PreparePanelSnapshotRendering(X, Y);
-
     FMouseDownX    := X;
     FMouseDownY    := Y;
     FLastX         := X;
@@ -1057,14 +1054,10 @@ begin
 
         LIndex := GetPanelIndexAtXY(LPos.X, LPos.Y);
 
-        //FLayerList.Move(FMovingPanelIndex, LIndex);
-        //
-
         // If the layer order is changed, the external callbacks should to
         // take care of the refreshing of the GUI of layer manager,
         // otherwise, we should to refresh the view by ourselves.
-        if //ScrollSelectedPanelInViewport or
-           (FMovingPanelIndex <> LIndex) then
+        if (FMovingPanelIndex <> LIndex) then
         begin
           FLayerList.Move(FMovingPanelIndex, LIndex);
           //FLayerList.SelectLayerPanel(LIndex);

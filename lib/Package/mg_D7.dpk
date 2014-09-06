@@ -37,6 +37,9 @@ contains
   igLayers in '..\igLayers.pas',
   igLayersListBox in '..\igLayersListBox.pas',
   igComboboxBlendModes in '..\igComboboxBlendModes.pas',
-  igReg in '..\igReg.pas';
+  igReg in '..\igReg.pas',
+  igSwatch_ListView in '..\igSwatch_ListView.pas',
+  igSwatch in '..\igSwatch.pas',
+  igGrid_ListView_Layers in '..\igGrid_ListView_Layers.pas';
 
 end.

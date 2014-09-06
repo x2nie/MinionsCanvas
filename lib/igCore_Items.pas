@@ -407,7 +407,10 @@ begin
   inherited;
   FClients := TList.Create;
   FCollection := TigCoreCollection.Create(Self, GetItemClass );
-///disabled as need FPC  FCollection.FOnChange := GridChangedHandler;
+  {$IFNDEF FPC}
+  ///disabled as need FPC
+  FCollection.FOnChange := GridChangedHandler;
+  {$ENDIF}
 end;
 
 destructor TigCoreList.Destroy;
