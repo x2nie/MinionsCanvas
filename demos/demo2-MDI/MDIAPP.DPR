@@ -4,7 +4,9 @@ uses
   Forms,
   MAIN in 'MAIN.PAS' {MainForm},
   CHILDWIN in 'CHILDWIN.PAS' {MDIChild},
-  about in 'about.pas' {AboutBox};
+  about in 'about.pas' {AboutBox},
+  igGrid in '..\..\lib\igGrid.pas',
+  igSwatch in '..\..\lib\igSwatch.pas';
 
 {$R *.RES}
 
