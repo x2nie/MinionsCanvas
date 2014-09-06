@@ -1,6 +1,6 @@
 object MainForm: TMainForm
-  Left = 126
-  Top = 163
+  Left = 284
+  Top = 80
   Width = 906
   Height = 549
   Caption = 'MDI Application'
@@ -21,12 +21,12 @@ object MainForm: TMainForm
   object spl1: TSplitter
     Left = 578
     Top = 30
-    Height = 454
+    Height = 446
     Align = alRight
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 484
+    Top = 476
     Width = 898
     Height = 19
     AutoHint = True
@@ -154,13 +154,13 @@ object MainForm: TMainForm
     Left = 581
     Top = 30
     Width = 317
-    Height = 454
+    Height = 446
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 2
     object tlbrLayers: TToolBar
       Left = 0
-      Top = 430
+      Top = 422
       Width = 317
       Height = 24
       Align = alBottom
@@ -303,7 +303,7 @@ object MainForm: TMainForm
       Left = 0
       Top = 45
       Width = 317
-      Height = 385
+      Height = 377
       Align = alClient
     end
   end
@@ -311,7 +311,7 @@ object MainForm: TMainForm
     Left = 341
     Top = 30
     Width = 237
-    Height = 454
+    Height = 446
     Align = alRight
   end
   object MainMenu1: TMainMenu
