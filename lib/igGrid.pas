@@ -378,7 +378,7 @@ begin
   if Assigned(FItemList) and FItemList.IsValidIndex(AIndex) then
   begin
       ABuffer.Textout(ARect.Left,ARect.Top, FItemList.Items[AIndex].DisplayName);
-      ABuffer.FrameRectS(ARect, clTrGray32);
+      ABuffer.FrameRectS(ARect, clGray32);
   end;
   //ancestor may display item's surface
 
@@ -425,13 +425,17 @@ end;
 
 procedure TigGrid.SetItemList(const Value: TigGridList);
 begin
+  //detach if any previouse
   if FItemList <> nil then
   begin
     FItemList.UnRegisterChanges(FChangeLink);
     FItemList.RemoveFreeNotification(Self);
   end;
-  
+
+  //assigning
   FItemList := Value;
+
+  //attach if any incoming
   if FItemList <> nil then
   begin
     FItemList.RegisterChanges(FChangeLink);
