@@ -160,7 +160,7 @@ uses
 type
   TLayerCollectionAccess = class(TLayerCollection);
   TLayerAccess           = class(TCustomLayer);
-  TGridBasedListAccess   = class(TigGridList);
+  TGridListAccess   = class(TigGridList);
 
 
 { TigGridListView }
@@ -329,7 +329,7 @@ begin
           LHoverIndex := LLayer.Index;
           if Assigned(FItemList) and FItemList.IsValidIndex(LHoverIndex) then
           begin
-            LItem       := TGridBasedListAccess(FItemList).Collection.Items[LHoverIndex] as TigGridItem;
+            LItem       := TGridListAccess(FItemList).Collection.Items[LHoverIndex] as TigGridItem;
             HintStr     := LItem.GetHint;
             HideTimeout := 5000;
           end
@@ -488,11 +488,16 @@ end;
 
 function TigGridListView.MatrixPosition(const AIndex: Integer): TFloatPoint;
 var
-  x, y : Integer;
+  x, y,w,h : Integer;
 begin
   x := 0;
   y := 0;
-  
+  with GetViewportRect do
+  begin
+    W := Right;
+    H := Bottom;
+  end;
+
   if Assigned(FItemList) and FItemList.IsValidIndex(AIndex) then
   begin
     case FGrowFlow of
@@ -500,14 +505,14 @@ begin
       XStretchInnerGrow,
       ZWidth2Bottom :
         begin
-          x := AIndex mod (Width div FThumbWidth);
-          y := Floor(AIndex  / (Width div FThumbWidth));
+          x := AIndex mod (W div FThumbWidth);
+          y := Floor(AIndex  / (W div FThumbWidth));
         end;
 
       NHeight2Right :
         begin
-          x := Floor(AIndex / (Height div FThumbHeight));
-          y := AIndex mod (Height div FThumbHeight);
+          x := Floor(AIndex / (H div FThumbHeight));
+          y := AIndex mod (H div FThumbHeight);
         end;
     end;
     

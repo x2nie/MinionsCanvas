@@ -41,8 +41,10 @@ type
       1: (AsInteger  : Integer);
       2: (BEMajor, BEMinor: SmallInt);// BigEndian
       3: (Minor, Major: Word);        // LitteEndian
-      4: (Words: array [0..1] of Word);
-      5: (Bytes: array [0..3] of Byte);
+      4: (Words : array [0..1] of Word);
+      5: (Bytes : array [0..3] of Byte);
+      6: (Chars : array [0..3] of Char); //such as SHPE
+
   end;
 
   TigFileHeader = record
