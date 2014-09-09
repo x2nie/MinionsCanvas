@@ -1,0 +1,43 @@
+package mg_Dsgn_D7;
+
+{$R *.res}
+{$R '..\igReg.dcr'}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'miniGlue Design Time Package'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  DesignIDE,
+  mg_D7,
+  GR32_D7,
+  vcl,
+  vclactnband,
+  vclx;
+
+contains
+  igReg in '..\igReg.pas',
+  igSwatch_Dsgn in '..\igSwatch_Dsgn.pas' {igSwatchListEditorForm};
+
+end.

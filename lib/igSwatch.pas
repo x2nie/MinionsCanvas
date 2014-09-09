@@ -52,6 +52,8 @@ type
     procedure SetColor(const Value: TColor);
   protected
     function GetEmpty: Boolean; override;
+    procedure AssignTo(Dest: TPersistent); override;
+    
   public
     constructor Create(Collection: TCollection); override;
     function CachedBitmap(const AWidth, AHeight: Integer): TBitmap32; override;
@@ -103,7 +105,7 @@ uses
 
 procedure Register;
 begin
-  RegisterComponents('miniGlue', [TigSwatchList, TigSwatchGrid]);
+//  RegisterComponents('miniGlue', [TigSwatchList, TigSwatchGrid]);
 end;
 
 var
@@ -159,6 +161,21 @@ end;
 function TigSwatchItem.GetEmpty: Boolean;
 begin
   Result := False; //nothing to countize. swatch always has surface
+end;
+
+procedure TigSwatchItem.AssignTo(Dest: TPersistent);
+begin
+  inherited;
+  {
+    Ancestor must call inherited, to get benefit of inheritance of "Assign()"
+  }
+  if Dest is TigSwatchItem then
+  begin
+    with TigSwatchItem(Dest) do
+    begin
+      Color := self.Color;
+    end;
+  end;
 end;
 
 { TigSwatchCollection }

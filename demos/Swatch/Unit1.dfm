@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 208
-  Top = 130
+  Left = 343
+  Top = 108
   Width = 918
   Height = 480
   Caption = 'Form1'
@@ -15,28 +15,6 @@ object Form1: TForm1
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object lst2: TigSwatchListView
-    Left = 152
-    Top = 216
-    Width = 192
-    Height = 192
-    Bitmap.ResamplerClassName = 'TKernelResampler'
-    Bitmap.Resampler.KernelClassName = 'TBoxKernel'
-    Bitmap.Resampler.KernelMode = kmDynamic
-    Bitmap.Resampler.TableSize = 32
-    BitmapAlign = baCustom
-    ParentShowHint = False
-    Scale = 1.000000000000000000
-    ScaleMode = smScale
-    ScrollBars.ShowHandleGrip = True
-    ScrollBars.Style = rbsDefault
-    ScrollBars.Size = 17
-    ShowHint = True
-    OverSize = 0
-    TabOrder = 0
-    SwatchList = swatch1
-    CellBorderStyle = borSwatch
-  end
   object btn1: TButton
     Left = 24
     Top = 224
@@ -49,7 +27,7 @@ object Form1: TForm1
   object swgrid1: TigSwatchGrid
     Left = 0
     Top = 0
-    Width = 902
+    Width = 910
     Height = 193
     Align = alTop
     Options.PaintBox32 = [pboWantArrowKeys, pboAutoFocus]
@@ -75,28 +53,6 @@ object Form1: TForm1
     Options.MultiSelect = False
     Options.ListMode = False
     SwatchList = swatch1
-  end
-  object lst1: TigSwatchListView
-    Left = 672
-    Top = 216
-    Width = 192
-    Height = 192
-    Bitmap.ResamplerClassName = 'TKernelResampler'
-    Bitmap.Resampler.KernelClassName = 'TBoxKernel'
-    Bitmap.Resampler.KernelMode = kmDynamic
-    Bitmap.Resampler.TableSize = 32
-    BitmapAlign = baCustom
-    ParentShowHint = False
-    Scale = 1.000000000000000000
-    ScaleMode = smScale
-    ScrollBars.ShowHandleGrip = True
-    ScrollBars.Style = rbsDefault
-    ScrollBars.Size = 17
-    ShowHint = True
-    OverSize = 0
-    TabOrder = 5
-    SwatchList = swatch1
-    CellBorderStyle = borSwatch
   end
   object swatch1: TigSwatchList
     Collection = <

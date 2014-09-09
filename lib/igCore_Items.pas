@@ -70,8 +70,10 @@ type
     procedure DefineProperties(Filer: TFiler); override;
     function Equals(AItem: TigCoreItem): Boolean; virtual;
 
+    procedure AssignTo(Dest: TPersistent); override;
+
     //These are used for undo/redo and another native stream format.
-    //Since TFiller cant load Pointer & Array of published properties.
+    //Since TFiller cant load such Pointer & Array of published properties.
     procedure ReadData(AStream: TStream); virtual; //LoadFromStream
     procedure WriteData(AStream: TStream); virtual; //SaveToStream
   public
@@ -160,6 +162,8 @@ type
   protected
     { Protected declarations }
     FCollection: TigCoreCollection;
+    procedure AssignTo(Dest: TPersistent); override;
+    
     procedure SetCollection(const Value: TigCoreCollection);
     procedure Changed; dynamic;
     function GetItem(Index: TigCoreIndex): TigCoreItem;
@@ -351,7 +355,8 @@ procedure TigCoreItem.SetDisplayName(const Value: string);
 begin
   FDisplayName := Value;
   //inherited; has no affect
-  GIntegrator.SelectionChanged;
+  Self.Changed(False);
+    //GIntegrator.SelectionChanged;
 end;
 
 { TigCoreCollection }
@@ -824,6 +829,27 @@ begin
   Result := Self.FSelections.IndexOf(AItem) > -1;
 end;
 
+procedure TigCoreList.AssignTo(Dest: TPersistent);
+begin
+{
+  inherited;
+  For now, since the AssignTo inherited method is directly came from TPersistent
+  it will error to call.
+
+  But, Ancestor must call inherited, to get benefit of inheritance of "Assign()"
+  }
+  if Dest is TigCoreList then
+  begin
+    with TigCoreList(Dest) do
+    begin
+      Collection.BeginUpdate;
+      Collection.Assign(self.Collection);
+      Collection.EndUpdate;
+    end;
+  end;
+
+end;
+
 { TigSelectionItem }
 
 function TigSelectionItem.GetItem(Index: Integer): TigCoreItem;
@@ -836,6 +862,25 @@ procedure TigSelectionItem.SetItem(Index: Integer;
   const Value: TigCoreItem);
 begin
   inherited Items[index] := Value;
+end;
+
+procedure TigCoreItem.AssignTo(Dest: TPersistent);
+begin
+  {
+  inherited;
+  For now, since the AssignTo inherited method is directly came from TPersistent
+  it will error to call.
+
+  But, Ancestor must call inherited, to get benefit of inheritance of "Assign()"
+  }
+  if Dest is TigCoreItem then
+  begin
+    with TigCoreItem(Dest) do
+    begin
+      DisplayName := Self.DisplayName;
+    end;
+  end;
+
 end;
 
 initialization

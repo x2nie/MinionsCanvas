@@ -1,7 +1,6 @@
 package mg_D7;
 
 {$R *.res}
-{$R '..\igReg.dcr'}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -24,6 +23,7 @@ package mg_D7;
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$DESCRIPTION 'miniGlue'}
+{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
@@ -37,9 +37,16 @@ contains
   igLayers in '..\igLayers.pas',
   igLayersListBox in '..\igLayersListBox.pas',
   igComboboxBlendModes in '..\igComboboxBlendModes.pas',
-  igReg in '..\igReg.pas',
   igSwatch_ListView in '..\igSwatch_ListView.pas',
   igSwatch in '..\igSwatch.pas',
-  igGrid_ListView_Layers in '..\igGrid_ListView_Layers.pas';
+  igGrid_ListView_Layers in '..\igGrid_ListView_Layers.pas',
+  igCore_rw in '..\igCore_rw.pas',
+  igMath in '..\igMath.pas',
+  igPaintFuncs in '..\igPaintFuncs.pas',
+  bivGrid in '..\bivGrid.pas',
+  igCore_Items in '..\igCore_Items.pas',
+  igSwatch_rwGPL in '..\igSwatch_rwGPL.pas',
+  igSwatch_rwACO in '..\igSwatch_rwACO.pas',
+  igSwatch_rwASE in '..\igSwatch_rwASE.pas';
 
 end.

@@ -10,13 +10,11 @@ uses
 type
   TForm1 = class(TForm)
     swatch1: TigSwatchList;
-    lst2: TigSwatchListView;
     btn1: TButton;
     dlgOpen1: TOpenDialog;
     swgrid1: TigSwatchGrid;
     btnClear: TButton;
     swgrid2: TigSwatchGrid;
-    lst1: TigSwatchListView;
     procedure btn1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
