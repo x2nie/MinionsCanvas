@@ -1,6 +1,7 @@
 http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577411_31265
 http://www.selapa.net/swatches/colors/fileformats.php
-http://www.selapa.net/swatches/colors/fileformats.php
+http://docs.gimp.org/2.6/C/gimp-concepts-palettes.html
+http://www.freedesktop.org/wiki/Specifications/OpenRaster/Draft/Palette/SwatchesFileFormatDraft/
 
 
 search dominant colors used in a picture:
