@@ -1,0 +1,33 @@
+#------------------------------------------------------------------------------
+VERSION = BWS.01
+#------------------------------------------------------------------------------
+!ifndef ROOT
+ROOT = $(MAKEDIR)\..
+!endif
+#------------------------------------------------------------------------------
+MAKE = $(ROOT)\bin\make.exe -$(MAKEFLAGS) -f$**
+DCC = $(ROOT)\bin\dcc32.exe $**
+BRCC = $(ROOT)\bin\brcc32.exe $**
+#------------------------------------------------------------------------------
+PROJECTS = ColorPicker_Demo.exe Demo.exe ImgView_Layers_Ex.exe \
+  ImgViewWidget32_Demo.exe GradLines_Ex.exe
+#------------------------------------------------------------------------------
+default: $(PROJECTS)
+#------------------------------------------------------------------------------
+
+ColorPicker_Demo.exe: ..\..\..\Alpha\code\trunk\demo\ColorPicker\ColorPicker_Demo.dpr
+  $(DCC)
+
+Demo.exe: Demo.dpr
+  $(DCC)
+
+ImgView_Layers_Ex.exe: ..\..\..\..\UI\Graph\graphics32-1-9-0-r1336\Examples\Vcl\Layers\ImgView_Layers_Ex\ImgView_Layers_Ex.dpr
+  $(DCC)
+
+ImgViewWidget32_Demo.exe: ..\..\..\Alpha\code\trunk\demo\ImgViewWidget\ImgViewWidget32_Demo.dpr
+  $(DCC)
+
+GradLines_Ex.exe: ..\..\..\Alpha\code\trunk\demo\GradLines_Ex\GradLines_Ex.dpr
+  $(DCC)
+
+
