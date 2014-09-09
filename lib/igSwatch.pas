@@ -83,7 +83,17 @@ type
     constructor Create(AOwner:TComponent); override;
   end;
 
-  
+  TigSwatchGrid = class(TigGrid)
+  private
+    function GetSwatchList: TigSwatchList;
+    procedure SetSwatchList(const Value: TigSwatchList);
+  protected
+    procedure DoCellPaint(ABuffer: TBitmap32; AIndex: Integer; ARect: TRect);  override; // called by Theme
+
+  published
+    property SwatchList : TigSwatchList read GetSwatchList write SetSwatchList;  
+  end;
+
 procedure Register;
   
 implementation
@@ -93,7 +103,7 @@ uses
 
 procedure Register;
 begin
-  RegisterComponents('miniGlue', [TigSwatchList]);
+  RegisterComponents('miniGlue', [TigSwatchList, TigSwatchGrid]);
 end;
 
 var
@@ -143,6 +153,7 @@ end;
 procedure TigSwatchItem.SetColor(const Value: TColor);
 begin
   FColor := Value;
+  Changed(False);
 end;
 
 function TigSwatchItem.GetEmpty: Boolean;
@@ -199,6 +210,29 @@ end;
 constructor TigSwatchCollection.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner,TigSwatchItem);
+end;
+
+{ TigSwatchGrid }
+
+procedure TigSwatchGrid.DoCellPaint(ABuffer: TBitmap32; AIndex: Integer;
+  ARect: TRect);
+begin
+  if Assigned(SwatchList) and SwatchList.IsValidIndex(AIndex) then
+  begin
+    //ABuffer.Textout(ARect.Left,ARect.Top, SwatchList[AIndex].DisplayName);
+    ABuffer.FillRectS(ARect, Color32( SwatchList[AIndex].Color) );
+    ABuffer.FrameRectS(ARect, clTrGray32 );
+  end;
+end;
+
+function TigSwatchGrid.GetSwatchList: TigSwatchList;
+begin
+  Result := ItemList as TigSwatchList;
+end;
+
+procedure TigSwatchGrid.SetSwatchList(const Value: TigSwatchList);
+begin
+  ItemList := Value;
 end;
 
 initialization

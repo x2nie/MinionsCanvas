@@ -1,6 +1,7 @@
 unit igSwatch_rwACO;
+
 (* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/LGPL 2.1/GPL 2.0
+ * Version: MPL 1.1 or LGPL 2.1 with linking exception
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -12,8 +13,15 @@ unit igSwatch_rwACO;
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Initial Developer of the Original Code are
+ * Alternatively, the contents of this file may be used under the terms of the
+ * Free Pascal modified version of the GNU Lesser General Public License
+ * Version 2.1 (the "FPC modified LGPL License"), in which case the provisions
+ * of this license are applicable instead of those above.
+ * Please see the file LICENSE.txt for additional information concerning this
+ * license.
  *
+ *
+ * The Initial Developer of this unit are
  * x2nie - Fathony Luthfillah  <x2nie@yahoo.com>
  *
  * Contributor(s):
@@ -24,17 +32,6 @@ unit igSwatch_rwACO;
  * forums : http://mxs.bergsoft.net/forums
  *
  *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
  * ***** END LICENSE BLOCK ***** *)
 
 interface

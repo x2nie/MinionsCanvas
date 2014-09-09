@@ -128,14 +128,29 @@ type
   end;
 
 
-  {TigCoreList}
+{ TigSelectionItem }
+
+  // useful for multi-select mode
+  TigSelectionItem = class(TObjectList)
+  private
+    function GetItem(Index: Integer): TigCoreItem;
+    procedure SetItem(Index: Integer; const Value: TigCoreItem);
+
+  public
+    property Items[Index: Integer]: TigCoreItem read GetItem write SetItem; default;
+  end;
+
+
+{ TigCoreList }
+
   {VCL component, usefull in designtime}
   TigCoreList = class(TComponent,IStreamPersist)
   private
     FClients: TList;
     FOnChange: TNotifyEvent;
     FFileName: TFilename;
-    FCurrentStreamFileName : TFileName; //for temporary
+    FCurrentStreamFileName : TFileName;
+    FSelections: TigSelectionItem; //for temporary
     function GetCount: Integer;
 
     procedure GridChangedHandler(Sender:TObject);
@@ -146,7 +161,7 @@ type
     { Protected declarations }
     FCollection: TigCoreCollection;
     procedure SetCollection(const Value: TigCoreCollection);
-    procedure Change; dynamic;
+    procedure Changed; dynamic;
     function GetItem(Index: TigCoreIndex): TigCoreItem;
     procedure SetItem(Index: TigCoreIndex; const Value: TigCoreItem);
 
@@ -178,6 +193,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
+    {collaborative viewer/modification}
     procedure RegisterChanges(Value: TigCoreChangeLink);
     procedure UnRegisterChanges(Value: TigCoreChangeLink);
 
@@ -199,24 +215,21 @@ type
 
     property FileName : TFilename read FFileName write FFileName;
     property Count: Integer read GetCount;
-    property Items[Index: TigCoreIndex]: TigCoreItem read GetItem write SetItem;
+    property Items[Index: TigCoreIndex]: TigCoreItem read GetItem write SetItem; default;
     property Last : TigCoreItem read GetLastItem;
     property First : TigCoreItem read GeFirstItem;
+  public
+    { selection }
+    procedure ClearSelection;
+    function IsSelected(AItem: TigCoreItem):Boolean;
+    property Selections: TigSelectionItem read FSelections;
+    //property ItemIndex : TigCoreIndex read FItemIndex write FItemIndex; //for display in property editor as combobox
   published
     { Published declarations }
     property Collection : TigCoreCollection read FCollection write SetCollection;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
-
-  TigSelectionItem = class(TObjectList)
-  private
-    function GetItem(Index: Integer): TigCoreItem;
-    procedure SetItem(Index: Integer; const Value: TigCoreItem);
-
-  public
-    property Items[Index: Integer]: TigCoreItem read GetItem write SetItem; default;
-  end;
 
 //============== CHUNK CLASSES =========================
 
@@ -386,7 +399,7 @@ end;
 
 { TigCoreList }
 
-procedure TigCoreList.Change;
+procedure TigCoreList.Changed;
 var
   I: Integer;
 begin
@@ -407,6 +420,7 @@ begin
   inherited;
   FClients := TList.Create;
   FCollection := TigCoreCollection.Create(Self, GetItemClass );
+  FSelections := TigSelectionItem.Create(False); 
   {$IFNDEF FPC}
   ///disabled as need FPC
   FCollection.FOnChange := GridChangedHandler;
@@ -419,6 +433,7 @@ begin
     UnRegisterChanges(TigCoreChangeLink(FClients.Last));
   FClients.Free;
   FClients := nil;
+  FSelections.Free;
   inherited;
 end;
 
@@ -451,7 +466,7 @@ end;
 
 procedure TigCoreList.GridChangedHandler(Sender: TObject);
 begin
-  Change;
+  Changed;
 end;
 
 class function TigCoreList.GetItemClass: TCollectionItemClass;
@@ -780,6 +795,7 @@ end;
 
 procedure TigCoreList.Clear;
 begin
+  FSelections.Clear;
   FCollection.Clear;
 end;
 
@@ -796,6 +812,16 @@ end;
 function TigCoreList.GetLastItem: TigCoreItem;
 begin
   Result := Items[Count -1]; //validation in self.getitem
+end;
+
+procedure TigCoreList.ClearSelection;
+begin
+  FSelections.Clear;
+end;
+
+function TigCoreList.IsSelected(AItem: TigCoreItem): Boolean;
+begin
+  Result := Self.FSelections.IndexOf(AItem) > -1;
 end;
 
 { TigSelectionItem }
