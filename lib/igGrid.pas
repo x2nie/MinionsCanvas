@@ -136,12 +136,15 @@ type
     property ItemList        : TigGridList   read GetGridBasedList write SetItemList;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     function IsSelected(AIndex: Integer): Boolean; override;   //useful for rendering multiselect
     procedure SetSelected(AIndex: Integer); override; //useful in multi-select mode
 
   published
     property Align;
     property Options;
+    property PopupMenu;
+    property OnChange;
   end; 
 
   
@@ -371,6 +374,12 @@ begin
   CellHeight:= 24;
 end;
 
+destructor TigGrid.Destroy;
+begin
+  FChangeLink.Destroy;
+  inherited;
+end;
+
 procedure TigGrid.DoCellPaint(ABuffer: TBitmap32; AIndex: Integer;
   ARect: TRect);
 begin
@@ -414,7 +423,7 @@ begin
         Self.Clear;
       end;
     InvalidateSize;}
-    Invalidate;
+    Changed;
   end;
 end;
 

@@ -38,6 +38,7 @@ requires
 
 contains
   igReg in '..\igReg.pas',
-  igSwatch_Dsgn in '..\igSwatch_Dsgn.pas' {igSwatchListEditorForm};
+  igSwatch_Dsgn in '..\igSwatch_Dsgn.pas' {igSwatchListEditorForm},
+  igSwatch_CollectionDsgn in '..\igSwatch_CollectionDsgn.pas' {igGridCollectionEditor};
 
 end.
