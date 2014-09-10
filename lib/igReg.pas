@@ -15,7 +15,7 @@ implementation
 uses
   igBase, igLayersListBox, igComboboxBlendModes,
   igCore_Items,
-  igSwatch, igSwatch_Dsgn, igSwatch_CollectionDsgn;
+  igSwatch, igSwatch_Dsgn;
 
 procedure Register();
 begin

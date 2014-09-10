@@ -1,10 +1,11 @@
-object igSwatchListEditorForm: TigSwatchListEditorForm
-  Left = 485
-  Top = 169
-  Width = 305
-  Height = 359
+object igGridCollectionEditor: TigGridCollectionEditor
+  Left = 373
+  Top = 275
+  Width = 234
+  Height = 250
+  BorderIcons = [biSystemMenu]
   BorderStyle = bsSizeToolWin
-  Caption = 'Swatch Editor'
+  Caption = 'igGridCollectionEditor'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,14 +13,17 @@ object igSwatchListEditorForm: TigSwatchListEditorForm
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
+  Position = poScreenCenter
   ShowHint = True
+  OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
     Top = 30
-    Width = 297
+    Width = 226
     Height = 3
     Cursor = crVSplit
     Align = alTop
@@ -27,7 +31,7 @@ object igSwatchListEditorForm: TigSwatchListEditorForm
   object ToolBar: TToolBar
     Left = 0
     Top = 0
-    Width = 297
+    Width = 226
     Height = 30
     BorderWidth = 1
     ButtonWidth = 40
@@ -83,68 +87,16 @@ object igSwatchListEditorForm: TigSwatchListEditorForm
       ImageIndex = 4
     end
   end
-  object pnl1: TPanel
-    Left = 0
-    Top = 292
-    Width = 297
-    Height = 33
-    Align = alBottom
-    BevelOuter = bvNone
-    TabOrder = 1
-    DesignSize = (
-      297
-      33)
-    object btnOKButton: TButton
-      Left = 145
-      Top = 6
-      Width = 64
-      Height = 23
-      Anchors = [akRight, akBottom]
-      Caption = 'OK'
-      Default = True
-      ModalResult = 1
-      TabOrder = 0
-    end
-    object btnCancel: TButton
-      Left = 220
-      Top = 6
-      Width = 65
-      Height = 23
-      Anchors = [akRight, akBottom]
-      Cancel = True
-      Caption = 'Cancel'
-      ModalResult = 2
-      TabOrder = 1
-    end
-  end
-  object pnl2: TPanel
-    Left = 0
-    Top = 33
-    Width = 297
-    Height = 10
-    Align = alTop
-    Alignment = taLeftJustify
-    BevelOuter = bvNone
-    Color = clInfoBk
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -9
-    Font.Name = 'Small Fonts'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 2
-    Visible = False
-  end
   object SwatchGrid: TigSwatchGrid
     Left = 0
-    Top = 43
-    Width = 297
-    Height = 249
+    Top = 33
+    Width = 226
+    Height = 183
     Align = alClient
     Options.PaintBox32 = [pboWantArrowKeys, pboAutoFocus]
     Options.MultiSelect = False
     Options.ListMode = False
-    SwatchList = SwatchList
+    OnChange = SwatchGridChange
   end
   object ImageList: TImageList
     Left = 184
@@ -420,46 +372,6 @@ object igSwatchListEditorForm: TigSwatchListEditorForm
       001F8001F81F00078FF18001F09F000FFFF98001C1C700FFFF75800183E301FF
       FF8F80018FF103FFFFFFFFFFFFFFFFFF00000000000000000000000000000000
       000000000000}
-  end
-  object PopupMenu: TPopupMenu
-    Images = ImageList
-    Left = 242
-    Top = 84
-    object mnLoad: TMenuItem
-      Caption = 'Load...'
-      ImageIndex = 0
-    end
-    object mnSave: TMenuItem
-      Caption = 'Save...'
-      ImageIndex = 1
-    end
-    object mnClear: TMenuItem
-      Caption = 'Clear'
-      ImageIndex = 2
-    end
-    object mnSeparator: TMenuItem
-      Caption = '-'
-    end
-    object mnCopy: TMenuItem
-      Caption = 'Copy'
-      ImageIndex = 3
-    end
-    object mnPaste: TMenuItem
-      Caption = 'Paste'
-      ImageIndex = 4
-    end
-    object mnSeparator2: TMenuItem
-      Caption = '-'
-    end
-    object mnInvert: TMenuItem
-      Caption = 'Invert'
-      ImageIndex = 5
-    end
-  end
-  object SwatchList: TigSwatchList
-    Collection = <>
-    Left = 80
-    Top = 88
   end
   object dlgOpen1: TOpenDialog
     Left = 88

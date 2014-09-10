@@ -1,53 +1,14 @@
 unit igSwatch_Dsgn;
 
-(* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1 or LGPL 2.1 with linking exception
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * Alternatively, the contents of this file may be used under the terms of the
- * Free Pascal modified version of the GNU Lesser General Public License
- * Version 2.1 (the "FPC modified LGPL License"), in which case the provisions
- * of this license are applicable instead of those above.
- * Please see the file LICENSE.txt for additional information concerning this
- * license.
- *
- * The Initial Developer of this unit are
- *   x2nie  < x2nie[at]yahoo[dot]com >
- *
- * Contributor(s):
- *
- * ***** END LICENSE BLOCK ***** *)
-
 interface
 
-{$I GR32.inc}
-
 uses
-{$IFDEF FPC}
-  LCLIntf, LCLType, RtlConsts, Buttons, LazIDEIntf, PropEdits,
-  ComponentEditors,
-{$ELSE}
-  Windows, ExtDlgs, ToolWin, Registry, ImgList, Consts, DesignIntf,
-  DesignEditors, VCLEditors,
-{$ENDIF}
-  Forms, Controls, ComCtrls, ExtCtrls, StdCtrls, Graphics, Dialogs, Menus,
-  SysUtils, Classes, Clipbrd, GR32,
-  igSwatch, igCore_Items, igGrid, GR32_Image, bivGrid
-
-  ;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, DesignIntf, DesignEditors, DesignWindows, GR32_Image, bivGrid,
+  igGrid, igSwatch, ExtCtrls, ComCtrls, ToolWin, ImgList;
 
 type
-
-  TigSwatchListEditorForm = class(TForm)
+  TigGridCollectionEditor = class(TDesignWindow)
     ImageList: TImageList;
     ToolBar: TToolBar;
     btnLoad: TToolButton;
@@ -56,34 +17,44 @@ type
     btn1: TToolButton;
     btnCopy: TToolButton;
     btnPaste: TToolButton;
-    PopupMenu: TPopupMenu;
-    mnLoad: TMenuItem;
-    mnSave: TMenuItem;
-    mnClear: TMenuItem;
-    mnSeparator: TMenuItem;
-    mnCopy: TMenuItem;
-    mnPaste: TMenuItem;
-    mnSeparator2: TMenuItem;
-    mnInvert: TMenuItem;
-    pnl1: TPanel;
-    btnOKButton: TButton;
-    btnCancel: TButton;
-    pnl2: TPanel;
-    SwatchList: TigSwatchList;
+    Splitter1: TSplitter;
     SwatchGrid: TigSwatchGrid;
     dlgOpen1: TOpenDialog;
     dlgSave1: TSaveDialog;
-    Splitter1: TSplitter;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
-    procedure ToolBarResize(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+    procedure SwatchGridChange(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    FCollectionPropertyName: string;
+    procedure SetCollectionPropertyName(const Value: string);
+  protected
+    procedure Activated; override;
   public
-    SwatchList1: TigSwatchList;
-    function Execute: Boolean;
+    Collection: TCollection;
+    //Component: TComponent;
+    SwatchList: TigSwatchList;
+    procedure UpdateListbox;
+    procedure SelectionChanged(const ADesigner: IDesigner; const ASelection: IDesignerSelections); override;
+
+
+    property CollectionPropertyName: string read FCollectionPropertyName
+      write SetCollectionPropertyName;
   end;
 
+  TigGridCollectionEditorClass = class of TigGridCollectionEditor;
+
+
+
+  TigGridCollectionProperty = class(TClassProperty)
+  public
+    procedure Edit; override;
+    function GetAttributes: TPropertyAttributes; override;
+  end;
+
+  
 
   TigSwatchListEditor = class(TComponentEditor)
   public
@@ -92,47 +63,217 @@ type
     function GetVerbCount: Integer; override;
   end;
 
+procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
+  ACollection: TCollection; const PropertyName: string);
+function ShowCollectionEditorClass(ADesigner: IDesigner;
+  CollectionEditorClass: TigGridCollectionEditorClass; AComponent: TComponent;
+  ACollection: TCollection; const PropertyName: string): TigGridCollectionEditor;
+
+var
+  igGridCollectionEditor: TigGridCollectionEditor;
 
 implementation
 
-uses
-  bivTheme_Standard,
-  igSwatch_rwACO, igSwatch_rwASE;
-  
 {$R *.dfm}
+uses
+  Registry, TypInfo, DesignConst, ComponentDesigner,
+  igSwatch_rwACO, igSwatch_rwASE;
 
+type
+  TAccessCollection = class(TCollection); // used for protected method access
+  TPersistentCracker = class(TPersistent);
+
+var
+  CollectionEditorsList: TList = nil;
+
+function ShowCollectionEditorClass(ADesigner: IDesigner;
+  CollectionEditorClass: TigGridCollectionEditorClass; AComponent: TComponent;
+  ACollection: TCollection; const PropertyName: string): TigGridCollectionEditor;
+var
+  I: Integer;
+begin
+  if CollectionEditorsList = nil then
+    CollectionEditorsList := TList.Create;
+  for I := 0 to CollectionEditorsList.Count-1 do
+  begin
+    Result := TigGridCollectionEditor(CollectionEditorsList[I]);
+    with Result do
+      if (Designer = ADesigner) and (SwatchList = AComponent)
+        and (Collection = ACollection)
+        and (CompareText(CollectionPropertyName, PropertyName) = 0) then
+      begin
+        Show;
+        BringToFront;
+        Exit;
+      end;
+  end;
+  Result := CollectionEditorClass.Create(Application);
+  with Result do
+  try
+    //Options := ColOptions;
+    Designer := ADesigner;
+    Collection := ACollection;
+    //FCollectionClassName := ACollection.ClassName;
+    SwatchList := TigSwatchList(AComponent);
+    SwatchGrid.SwatchList := SwatchList;
+    CollectionPropertyName := PropertyName;
+    UpdateListbox;
+    Show;
+  except
+    Free;
+  end;
+end;
+
+procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
+  ACollection: TCollection; const PropertyName: string);
+begin
+  ShowCollectionEditorClass(ADesigner, TigGridCollectionEditor, AComponent,
+    ACollection, PropertyName);
+end;
+
+{ TCollectionProperty }
+
+procedure TigGridCollectionProperty.Edit;
+var
+  Obj: TPersistent;
+begin
+  Obj := GetComponent(0);
+  while (Obj <> nil) and not (Obj is TComponent) do
+    Obj := TPersistentCracker(Obj).GetOwner;
+  ShowCollectionEditorClass(Designer, TigGridCollectionEditor,
+    TComponent(Obj), TCollection(GetOrdValue), GetName);
+
+end;
+
+function TigGridCollectionProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := [paDialog, paReadOnly, paVCL, paAutoUpdate];
+end;
+
+{ TigGridCollectionEditor }
+
+procedure TigGridCollectionEditor.SetCollectionPropertyName(
+  const Value: string);
+begin
+  if Value <> FCollectionPropertyName then
+  begin
+    FCollectionPropertyName := Value;
+    Caption := Format(sColEditCaption, [SwatchList.Name, DotSep, Value]);
+  end;
+end;
+
+procedure TigGridCollectionEditor.UpdateListbox;
+/// <summary>
+/// update the form to reflect the changes made in the component being edit
+/// </summary>
+begin
+  //
+end;
+
+procedure TigGridCollectionEditor.FormCreate(Sender: TObject);
+begin
+  CollectionEditorsList.Add(Self);
+end;
+
+procedure TigGridCollectionEditor.FormDestroy(Sender: TObject);
+begin
+  if CollectionEditorsList <> nil then
+    CollectionEditorsList.Remove(Self);
+end;
+
+procedure TigGridCollectionEditor.btnLoadClick(Sender: TObject);
+begin
+  dlgOpen1.Filter := TigSwatchList.ReadersFilter;
+  if dlgOpen1.Execute then
+  begin
+    SwatchList.BeginUpdate;
+    try
+      SwatchList.LoadFromFile(dlgOpen1.FileName);
+    finally
+      SwatchList.EndUpdate;
+      Designer.Modified;
+    end;
+  end;
+
+end;
+
+procedure TigGridCollectionEditor.btnClearClick(Sender: TObject);
+begin
+  SwatchList.Clear;
+end;
+
+procedure TigGridCollectionEditor.SelectionChanged(
+  const ADesigner: IDesigner; const ASelection: IDesignerSelections);
+var i : integer;
+  LOwnItem : Boolean;
+begin
+  LOwnItem := False;
+  //test first
+    for i := 0 to ASelection.Count-1 do
+    begin
+      if (ASelection[i] is TigSwatchItem)
+      and (TigSwatchItem(ASelection[i]).Collection = Self.Collection)then
+      begin
+        LOwnItem := True;
+        Break;
+      end;
+    end;
+  if not LOwnItem then Exit;
+
+  SwatchList.BeginUpdate;
+  try
+    SwatchList.Selections.Clear;
+    for i := 0 to ASelection.Count-1 do
+    begin
+      if ASelection[i] is TigSwatchItem then
+      begin
+        SwatchList.Selections.Add(ASelection[i]);
+      end;
+    end;
+  finally
+    SwatchList.EndUpdate;
+    SwatchGrid.Invalidate;
+  end;
+
+end;
+
+procedure TigGridCollectionEditor.SwatchGridChange(Sender: TObject);
+var
+  I: Integer;
+  List: IDesignerSelections;
+begin
+  if SwatchList.Selections.Count > 0 then
+  begin
+    List := CreateSelectionList;
+    for I := 0 to SwatchList.Selections.Count - 1 do
+      begin
+        List.Add(SwatchList.Selections.Items[I]);
+      end;
+    Designer.SetSelections(List);
+  end
+  else
+    Designer.SelectComponent(Collection);
+end;
+
+procedure TigGridCollectionEditor.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  Action := caFree;
+  Self.SwatchGrid.OnChange := nil;
+end;
 
 { TigSwatchListComponentEditor }
 
 procedure TigSwatchListEditor.ExecuteVerb(Index: Integer);
 var
   LSwatcs,LBackupSwatchs : TigSwatchList;
-  Form: TigSwatchListEditorForm;
 begin
-  LSwatcs := Component as TigSwatchList;
   if Index = 0 then
   begin
-    //LBackupSwatchs := TigSwatchList.Create(nil);
-    //LBackupSwatchs.Assign(LSwatcs); //backup
-    Form := TigSwatchListEditorForm.Create(nil);
-    try
-      //Form.SwatchList := LSwatcs;
-      //Form.SwatchGrid.SwatchList := LSwatcs;
-      Form.SwatchList.Assign(LSwatcs);
-      if Form.Execute then
-      begin
-        LSwatcs.Assign(Form.SwatchList);
-        Designer.Modified;
-      end
-      else
-      begin
-        //LSwatcs.Assign(LBackupSwatchs);
-        //Designer.Modified;
-      end;
-    finally
-      Form.Free;
-      //LBackupSwatchs.Free;
-    end;
+    LSwatcs := Component as TigSwatchList;
+
+    ShowCollectionEditorClass(Designer, TigGridCollectionEditor,
+      LSwatcs, LSwatcs.Collection, LSwatcs.Name);
   end;
 end;
 
@@ -146,42 +287,32 @@ begin
   Result := 1;
 end;
 
-function TigSwatchListEditorForm.Execute: Boolean;
+procedure TigGridCollectionEditor.Activated;
 begin
-  result := ShowModal = mrOk;
+  SwatchGridChange(Self);
 end;
 
-procedure TigSwatchListEditorForm.btnLoadClick(Sender: TObject);
+procedure DeInit;
+var i : Integer;
 begin
-  dlgOpen1.Filter := TigSwatchList.ReadersFilter;
-  if dlgOpen1.Execute then
+  if Assigned(CollectionEditorsList) then
   begin
-    SwatchList.BeginUpdate;
-    SwatchList.LoadFromFile(dlgOpen1.FileName);
-    SwatchList.EndUpdate;
+    for i := CollectionEditorsList.Count-1 downto 0 do
+    begin
+       with TigGridCollectionEditor(CollectionEditorsList[i]) do
+       begin
+         Close;
+         Free;
+       end;
+    end;
+    CollectionEditorsList.Free;
+    CollectionEditorsList := nil;
   end;
-
 end;
 
-procedure TigSwatchListEditorForm.btnClearClick(Sender: TObject);
-begin
-  SwatchList.Clear;
-end;
 
-procedure TigSwatchListEditorForm.ToolBarResize(Sender: TObject);
-begin
-  if ToolBar.Height < 30 then
-    ToolBar.Height :=30
-  else
-  begin
-    ToolBar.ShowCaptions := true; 
-  end;
+initialization
 
-end;
-
-procedure TigSwatchListEditorForm.FormCreate(Sender: TObject);
-begin
-  self.SwatchGrid.Theme := TbivTheme_Standard.Create(SwatchGrid);
-end;
-
+finalization
+   DeInit;
 end.
