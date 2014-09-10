@@ -963,7 +963,7 @@ begin
   //thumbnail cells
   with PaintStages.Add^ do
   begin
-    DsgnTime := False;
+    DsgnTime := True;
     RunTime := True;
     Stage := PST_DRAW_CELL;
   end;

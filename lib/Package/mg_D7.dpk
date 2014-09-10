@@ -47,6 +47,7 @@ contains
   igCore_Items in '..\igCore_Items.pas',
   igSwatch_rwGPL in '..\igSwatch_rwGPL.pas',
   igSwatch_rwACO in '..\igSwatch_rwACO.pas',
-  igSwatch_rwASE in '..\igSwatch_rwASE.pas';
+  igSwatch_rwASE in '..\igSwatch_rwASE.pas',
+  igGrid in '..\igGrid.pas';
 
 end.
