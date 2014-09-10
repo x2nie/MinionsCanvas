@@ -1,8 +1,9 @@
 object igGridCollectionEditor: TigGridCollectionEditor
-  Left = 348
-  Top = 265
+  Left = 373
+  Top = 275
   Width = 234
   Height = 250
+  BorderIcons = [biSystemMenu]
   BorderStyle = bsSizeToolWin
   Caption = 'igGridCollectionEditor'
   Color = clBtnFace
