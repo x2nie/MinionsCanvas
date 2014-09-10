@@ -225,6 +225,7 @@ type
   public
     { selection }
     procedure ClearSelection;
+    procedure SelectAll;
     function IsSelected(AItem: TigCoreItem):Boolean;
     property Selections: TigSelectionItem read FSelections;
     //property ItemIndex : TigCoreIndex read FItemIndex write FItemIndex; //for display in property editor as combobox
@@ -848,6 +849,19 @@ begin
     end;
   end;
 
+end;
+
+procedure TigCoreList.SelectAll;
+var i :Integer;
+begin
+  for i := 0 to Collection.Count-1 do
+  begin
+    with self.Selections do
+    begin
+      if IndexOf(Collection.Items[i]) < 0 then
+        Add(Collection.Items[i]);
+    end;
+  end;
 end;
 
 { TigSelectionItem }

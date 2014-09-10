@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, DesignIntf, DesignEditors, DesignWindows, GR32_Image, bivGrid,
-  igGrid, igSwatch, ExtCtrls, ComCtrls, ToolWin, ImgList;
+  igGrid, igSwatch, ExtCtrls, ComCtrls, ToolWin, ImgList, StdActns,
+  ActnList, Buttons;
 
 type
   TigGridCollectionEditor = class(TDesignWindow)
@@ -14,19 +15,32 @@ type
     btnLoad: TToolButton;
     btnSave: TToolButton;
     btnClear: TToolButton;
-    btn1: TToolButton;
     btnCopy: TToolButton;
     btnPaste: TToolButton;
     Splitter1: TSplitter;
     SwatchGrid: TigSwatchGrid;
-    dlgOpen1: TOpenDialog;
-    dlgSave1: TSaveDialog;
+    ActionList1: TActionList;
+    ToolButton1: TToolButton;
+    FileOpen1: TFileOpen;
+    FileSaveAs1: TFileSaveAs;
+    EditSelectAll1: TEditSelectAll;
+    EditDelete1: TEditDelete;
+    SpeedButton1: TSpeedButton;
+    StatusBar1: TStatusBar;
+    btnNew: TToolButton;
+    actNew: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure btnLoadClick(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
     procedure SwatchGridChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FileOpen1BeforeExecute(Sender: TObject);
+    procedure FileOpen1Accept(Sender: TObject);
+    procedure EditSelectAll1Execute(Sender: TObject);
+    procedure HasSelection(Sender: TObject);
+    procedure EditDelete1Execute(Sender: TObject);
+    procedure actNewExecute(Sender: TObject);
+    procedure HasAtLeastOneItem(Sender: TObject);
   private
     FCollectionPropertyName: string;
     procedure SetCollectionPropertyName(const Value: string);
@@ -38,6 +52,7 @@ type
     SwatchList: TigSwatchList;
     procedure UpdateListbox;
     procedure SelectionChanged(const ADesigner: IDesigner; const ASelection: IDesignerSelections); override;
+    procedure ItemDeleted(const ADesigner: IDesigner; Item: TPersistent); override;
 
 
     property CollectionPropertyName: string read FCollectionPropertyName
@@ -77,7 +92,7 @@ implementation
 {$R *.dfm}
 uses
   Registry, TypInfo, DesignConst, ComponentDesigner,
-  igSwatch_rwACO, igSwatch_rwASE;
+  igSwatch_rwACO, igSwatch_rwASE, igSwatch_rwGPL;
 
 type
   TAccessCollection = class(TCollection); // used for protected method access
@@ -181,22 +196,6 @@ begin
     CollectionEditorsList.Remove(Self);
 end;
 
-procedure TigGridCollectionEditor.btnLoadClick(Sender: TObject);
-begin
-  dlgOpen1.Filter := TigSwatchList.ReadersFilter;
-  if dlgOpen1.Execute then
-  begin
-    SwatchList.BeginUpdate;
-    try
-      SwatchList.LoadFromFile(dlgOpen1.FileName);
-    finally
-      SwatchList.EndUpdate;
-      Designer.Modified;
-    end;
-  end;
-
-end;
-
 procedure TigGridCollectionEditor.btnClearClick(Sender: TObject);
 begin
   SwatchList.Clear;
@@ -207,6 +206,8 @@ procedure TigGridCollectionEditor.SelectionChanged(
 var i : integer;
   LOwnItem : Boolean;
 begin
+  if TAccessCollection(Collection).UpdateCount > 0 then
+    Exit;
   LOwnItem := False;
   //test first
     for i := 0 to ASelection.Count-1 do
@@ -310,6 +311,82 @@ begin
   end;
 end;
 
+
+procedure TigGridCollectionEditor.FileOpen1BeforeExecute(Sender: TObject);
+begin
+  FileOpen1.Dialog.Filter := TigSwatchList.ReadersFilter;
+end;
+
+procedure TigGridCollectionEditor.FileOpen1Accept(Sender: TObject);
+var i :Integer;
+begin
+    SwatchList.BeginUpdate;
+    try
+      for i := 0 to FileOpen1.Dialog.Files.Count -1 do
+      begin
+        SwatchList.LoadFromFile(FileOpen1.Dialog.Files[i]);
+      end;
+    finally
+      SwatchList.EndUpdate;
+      //Designer.Modified;
+      self.SwatchGridChange(Self);
+    end;
+end;
+
+procedure TigGridCollectionEditor.EditSelectAll1Execute(Sender: TObject);
+begin
+  SwatchList.SelectAll;
+  SwatchGridChange(Self);
+end;
+
+procedure TigGridCollectionEditor.HasSelection(Sender: TObject);
+begin
+  TAction(Sender).Enabled := self.SwatchList.Selections.Count > 0;
+end;
+
+procedure TigGridCollectionEditor.EditDelete1Execute(Sender: TObject);
+var i :Integer;
+  LItem : TCollectionItem;
+begin
+  SwatchList.BeginUpdate;
+  try
+    {//Self.SetSelection(nil);
+    Designer.SelectComponent(Collection);
+    for i := SwatchList.Selections.Count-1 to 0 do
+    begin
+      LItem := SwatchList.Selections[i];
+      SwatchList.Selections.Extract(LItem);
+      //LItem.Free;
+    end;}
+    Designer.DeleteSelection(True);
+    SwatchList.ClearSelection;
+  finally
+    SwatchList.EndUpdate;
+  end;
+
+end;
+
+procedure TigGridCollectionEditor.actNewExecute(Sender: TObject);
+begin
+  SwatchList.BeginUpdate;
+  SwatchList.Selections.Clear;
+  SwatchList.Selections.Add( Collection.Add);
+  SwatchList.EndUpdate;
+  SwatchGridChange(Self);
+end;
+
+procedure TigGridCollectionEditor.HasAtLeastOneItem(Sender: TObject);
+begin
+  TAction(Sender).Enabled := Collection.Count > 0;
+end;
+
+procedure TigGridCollectionEditor.ItemDeleted(const ADesigner: IDesigner;
+  Item: TPersistent);
+begin
+  if SwatchList.Selections.IndexOf(Item) > 0 then
+    SwatchList.Selections.Remove(Item);
+
+end;
 
 initialization
 
