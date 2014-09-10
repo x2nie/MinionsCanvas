@@ -26,7 +26,8 @@ package mg_RS2010;
 
 requires
   rtl,
-  vcl;
+  vcl,
+  GR32_RS2010;
 
 contains
   igBase in '..\igBase.pas',
@@ -34,6 +35,9 @@ contains
   igLayerPanelManager in '..\igLayerPanelManager.pas',
   igLayers in '..\igLayers.pas',
   igLayersListBox in '..\igLayersListBox.pas',
-  igReg in '..\igReg.pas';
+  igReg in '..\igReg.pas',
+  igGrid_ListView_Layers in '..\igGrid_ListView_Layers.pas',
+  igSwatch in '..\igSwatch.pas',
+  igSwatch_ListView in '..\igSwatch_ListView.pas';
 
 end.
