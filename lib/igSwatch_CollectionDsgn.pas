@@ -45,10 +45,21 @@ type
 
   TigGridCollectionEditorClass = class of TigGridCollectionEditor;
 
+
+
   TigGridCollectionProperty = class(TClassProperty)
   public
     procedure Edit; override;
     function GetAttributes: TPropertyAttributes; override;
+  end;
+
+  
+
+  TigSwatchListEditor = class(TComponentEditor)
+  public
+    procedure ExecuteVerb(Index: Integer); override;
+    function GetVerb(Index: Integer): string; override;
+    function GetVerbCount: Integer; override;
   end;
 
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
@@ -63,7 +74,9 @@ var
 implementation
 
 {$R *.dfm}
-uses Registry, TypInfo, DesignConst, ComponentDesigner;
+uses
+  Registry, TypInfo, DesignConst, ComponentDesigner,
+  igSwatch_rwACO, igSwatch_rwASE;
 
 type
   TAccessCollection = class(TCollection); // used for protected method access
@@ -241,6 +254,31 @@ procedure TigGridCollectionEditor.FormClose(Sender: TObject;
 begin
   Action := caFree;
   Self.SwatchGrid.OnChange := nil;
+end;
+
+{ TigSwatchListComponentEditor }
+
+procedure TigSwatchListEditor.ExecuteVerb(Index: Integer);
+var
+  LSwatcs,LBackupSwatchs : TigSwatchList;
+begin
+  if Index = 0 then
+  begin
+    LSwatcs := Component as TigSwatchList;
+
+    ShowCollectionEditorClass(Designer, TigGridCollectionEditor,
+      LSwatcs, LSwatcs.Collection, LSwatcs.Name);
+  end;
+end;
+
+function TigSwatchListEditor.GetVerb(Index: Integer): string;
+begin
+  if Index = 0 then Result := 'Items Editor...';
+end;
+
+function TigSwatchListEditor.GetVerbCount: Integer;
+begin
+  Result := 1;
 end;
 
 initialization
