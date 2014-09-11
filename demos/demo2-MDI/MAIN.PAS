@@ -92,7 +92,6 @@ type
     pmUndo: TPopupMenu;
     pmRedo: TPopupMenu;
     lyrs1: TigLayersListBox;
-    igLayersListBox1: TigLayersListBox;
     igAgent1: TigAgent;
     lbName: TLabel;
     actUndo1: TMenuItem;
@@ -122,6 +121,8 @@ type
     procedure CreateMDIChild(const Name: string);
   public
     { Public declarations }
+    procedure UndoPopupClick(Sender : TObject);
+    procedure RedoPopupClick(Sender : TObject);
   end;
 
 var
@@ -312,9 +313,23 @@ begin
     begin
       m := TMenuItem.Create(pmUndo);
       m.Caption := 'Undo '+Strings[i];
+      m.Tag := i;
+      m.OnClick := UndoPopupClick; 
       pmundo.Items.Add(m);
     end;
   end;
+end;
+
+procedure TMainForm.UndoPopupClick(Sender: TObject);
+begin
+  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
+    GIntegrator.ActivePaintBox.UndoRedo.UndoTo(TMenuItem(Sender).Tag);
+end;
+
+procedure TMainForm.RedoPopupClick(Sender: TObject);
+begin
+  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
+    GIntegrator.ActivePaintBox.UndoRedo.RedoTo(TMenuItem(Sender).Tag);
 end;
 
 procedure TMainForm.pmRedoPopup(Sender: TObject);
@@ -329,6 +344,8 @@ begin
     begin
       m := TMenuItem.Create(pmRedo);
       m.Caption := 'Redo '+Strings[i];
+      m.Tag := i;
+      m.OnClick := RedoPopupClick;
       pmRedo.Items.Add(m);
     end;
   end;
@@ -385,5 +402,6 @@ begin
     end;
   end;
 end;
+
 
 end.
