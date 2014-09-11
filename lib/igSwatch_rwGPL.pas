@@ -90,6 +90,19 @@ begin
       inc(i);
     until s[1] = '#';
 
+    {
+    GIMP Palette
+    Name: Topographic
+    #
+    #   "Topographic" color map - M. Davis
+    #
+      0   0   0	#000000
+    }
+    while LStrList[i][1] = '#' do
+    begin
+      Inc(i);
+    end;
+
     if LStrList.Count > 0 then
     begin
       while i < LStrList.Count do

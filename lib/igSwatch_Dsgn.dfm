@@ -431,7 +431,9 @@ object igGridCollectionEditor: TigGridCollectionEditor
     object actNew: TAction
       Category = 'Edit'
       Caption = '&Add'
+      Hint = 'Add New'
       ImageIndex = 7
+      ShortCut = 45
       OnExecute = actNewExecute
     end
   end
