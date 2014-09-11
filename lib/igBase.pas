@@ -269,6 +269,8 @@ type
 
     procedure Undo;
     procedure Redo;
+    procedure UndoTo(ATargetIndex : Integer);
+    procedure RedoTo(ATargetIndex : Integer);
     procedure AddUndo(AUndo : TigCommand; AComment : string);
     function  LastCommand : TigCommand;
     //function AllocateUndo(AUndoMessage : string) : PigUndoStruct;
@@ -917,11 +919,35 @@ begin
   if not IsRedoAllowed then Exit;
 
   Inc(FItemIndex);
-  
+
   LIgCommand := TigCommand(FUndoList.Objects[FItemIndex]);
   LIgCommand.Play;
   GIntegrator.InvalidateListeners;
 end;
+
+
+procedure TigUndoRedoManager.RedoTo(ATargetIndex: Integer);
+var i : Integer;
+  LIgCommand : TigCommand;
+  LDone : Boolean; //something done
+begin
+  LDone := False;
+  for i := FItemIndex+1 to ATargetIndex do
+  begin
+    if not IsRedoAllowed then Break;
+
+    Inc(FItemIndex);
+
+    LIgCommand := TigCommand(FUndoList.Objects[FItemIndex]);
+    LIgCommand.Play;
+    LDone := True;
+  end;
+
+  if LDone then
+    GIntegrator.InvalidateListeners;
+
+end;
+
 
 procedure TigUndoRedoManager.Undo;
 var LIgCommand : TigCommand;
@@ -935,6 +961,30 @@ begin
   if FItemIndex < -1 then
     FItemIndex := -1;
   GIntegrator.InvalidateListeners;
+end;
+
+procedure TigUndoRedoManager.UndoTo(ATargetIndex: Integer);
+var i : Integer;
+  LIgCommand : TigCommand;
+  LDone : Boolean; //something done
+begin
+  LDone := False;
+  for i := FItemIndex downto ATargetIndex do
+  begin
+    if not IsUndoAllowed then Break;
+
+    LIgCommand := TigCommand(FUndoList.Objects[FItemIndex]);
+    LIgCommand.Revert;
+    LDone := True;
+
+    Dec(FItemIndex);
+    if FItemIndex < -1 then
+      FItemIndex := -1;
+  end;
+
+  if LDone then
+    GIntegrator.InvalidateListeners;
+
 end;
 
 { TigCommand }
