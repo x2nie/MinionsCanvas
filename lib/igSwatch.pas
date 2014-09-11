@@ -101,7 +101,8 @@ procedure Register;
 implementation
 
 uses
-  igCore_Items;//for registering class 
+  igCore_Items, //for registering class
+  igPaintFuncs;
 
 procedure Register;
 begin
@@ -237,7 +238,10 @@ begin
   if Assigned(SwatchList) and SwatchList.IsValidIndex(AIndex) then
   begin
     //ABuffer.Textout(ARect.Left,ARect.Top, SwatchList[AIndex].DisplayName);
-    ABuffer.FillRectS(ARect, Color32( SwatchList[AIndex].Color) );
+    if SwatchList[AIndex].Color = clNone then
+      DrawCheckerboardPattern(ABuffer, ARect, True )
+    else
+      ABuffer.FillRectS(ARect, Color32( SwatchList[AIndex].Color) );
     ABuffer.FrameRectS(ARect, clTrGray32 );
   end;
 end;
