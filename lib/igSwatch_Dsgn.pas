@@ -43,16 +43,19 @@ type
     procedure HasAtLeastOneItem(Sender: TObject);
   private
     FCollectionPropertyName: string;
+    FSwatchList: TigSwatchList;
     procedure SetCollectionPropertyName(const Value: string);
+    procedure SetSwatchList(const Value: TigSwatchList);
   protected
     procedure Activated; override;
   public
     Collection: TCollection;
     //Component: TComponent;
-    SwatchList: TigSwatchList;
+    property SwatchList: TigSwatchList read FSwatchList write SetSwatchList;
     procedure UpdateListbox;
     procedure SelectionChanged(const ADesigner: IDesigner; const ASelection: IDesignerSelections); override;
     procedure ItemDeleted(const ADesigner: IDesigner; Item: TPersistent); override;
+    procedure DesignerClosed(const ADesigner: IDesigner; AGoingDormant: Boolean); override;
 
 
     property CollectionPropertyName: string read FCollectionPropertyName
@@ -130,7 +133,7 @@ begin
     Collection := ACollection;
     //FCollectionClassName := ACollection.ClassName;
     SwatchList := TigSwatchList(AComponent);
-    SwatchGrid.SwatchList := SwatchList;
+
     CollectionPropertyName := PropertyName;
     UpdateListbox;
     Show;
@@ -385,6 +388,24 @@ procedure TigGridCollectionEditor.ItemDeleted(const ADesigner: IDesigner;
 begin
   if SwatchList.Selections.IndexOf(Item) > 0 then
     SwatchList.Selections.Remove(Item);
+
+end;
+
+procedure TigGridCollectionEditor.SetSwatchList(
+  const Value: TigSwatchList);
+begin
+  if FSwatchList <> Value then
+  begin
+    FSwatchList := Value;
+    SwatchGrid.SwatchList := FSwatchList;
+  end;
+end;
+
+procedure TigGridCollectionEditor.DesignerClosed(
+  const ADesigner: IDesigner; AGoingDormant: Boolean);
+begin
+  if Designer = ADesigner then
+    Close;
 
 end;
 
