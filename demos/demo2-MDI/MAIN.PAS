@@ -95,6 +95,9 @@ type
     igLayersListBox1: TigLayersListBox;
     igAgent1: TigAgent;
     lbName: TLabel;
+    actUndo1: TMenuItem;
+    actRedo1: TMenuItem;
+    N2: TMenuItem;
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure HelpAbout1Execute(Sender: TObject);
@@ -257,26 +260,44 @@ begin
 end;
 
 procedure TMainForm.actUndoUpdate(Sender: TObject);
-var c : string;
+var LCaption : string;
+  LEnabled : Boolean;
 begin
-  if not Assigned(GIntegrator.ActivePaintBox) then
-    c := 'no active paintbox'
-  else
+  LCaption := 'Undo';
+  LEnabled := False;
+  if Assigned(GIntegrator.ActivePaintBox) then
     with GIntegrator.ActivePaintBox.UndoRedo do
-      c := Format('@ %d   (%d of %d undos)',[ ItemIndex, ItemIndex +1, Count]);
 
-  //if self.Caption <> c then //avoid flicker
-    //self.Caption := c;
+      if IsUndoAllowed then
+      begin
+        LCaption := 'Undo '+Strings[ItemIndex];
+        LEnabled := True;
+      end;
 
-
-  actUndo.Enabled := Assigned(GIntegrator.ActivePaintBox) and
-    GIntegrator.ActivePaintBox.UndoRedo.IsUndoAllowed;
+  if actUndo.Caption <> LCaption then //avoid flicker
+    actUndo.Caption := LCaption;
+  actUndo.Enabled := LEnabled;
 end;
 
 procedure TMainForm.actRedoUpdate(Sender: TObject);
+var LCaption : string;
+  LEnabled : Boolean;
 begin
-  actRedo.Enabled := Assigned(GIntegrator.ActivePaintBox) and
-    GIntegrator.ActivePaintBox.UndoRedo.IsRedoAllowed;
+  LCaption := 'Redo';
+  LEnabled := False;
+  if Assigned(GIntegrator.ActivePaintBox) then
+    with GIntegrator.ActivePaintBox.UndoRedo do
+
+      if IsRedoAllowed then
+      begin
+        LCaption := 'Redo '+Strings[ItemIndex+1];
+        LEnabled := True;
+      end;
+
+  if actRedo.Caption <> LCaption then //avoid flicker
+    actRedo.Caption := LCaption;
+  actRedo.Enabled := LEnabled;
+
 end;
 
 procedure TMainForm.pmUndoPopup(Sender: TObject);

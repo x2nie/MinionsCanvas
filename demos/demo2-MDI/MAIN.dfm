@@ -1,6 +1,6 @@
 object MainForm: TMainForm
-  Left = 284
-  Top = 80
+  Left = 277
+  Top = 185
   Width = 906
   Height = 549
   Caption = 'MDI Application'
@@ -346,6 +346,15 @@ object MainForm: TMainForm
     object Edit1: TMenuItem
       Caption = '&Edit'
       Hint = 'Edit commands'
+      object actUndo1: TMenuItem
+        Action = actUndo
+      end
+      object actRedo1: TMenuItem
+        Action = actRedo
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
       object CutItem: TMenuItem
         Action = EditCut1
       end
@@ -520,7 +529,7 @@ object MainForm: TMainForm
     end
     object actUndo: TAction
       Category = 'Edit'
-      Caption = 'actUndo'
+      Caption = '&Undo'
       ImageIndex = 3
       ShortCut = 16474
       OnExecute = actUndoExecute
@@ -528,7 +537,7 @@ object MainForm: TMainForm
     end
     object actRedo: TAction
       Category = 'Edit'
-      Caption = 'actRedo'
+      Caption = '&Redo'
       ImageIndex = 4
       ShortCut = 16473
       OnExecute = actRedoExecute
