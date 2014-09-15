@@ -50,6 +50,7 @@ type
   TigCoreList = class; //later definition
   TigCoreListClass = class of TigCoreList;
   TigCoreIndex = type Integer; //used for display gradient in property editor
+  
   IgmItemListSupport = interface
     //used by property editor in design time
     //implement it in various component
@@ -57,6 +58,9 @@ type
     //function GetItemList: TigCoreList;
     function GetItemListClass: TigCoreListClass;
   end;
+
+
+{ TigCoreItem }
 
   TigCoreItem = class(TCollectionItem)
   private
@@ -85,33 +89,20 @@ type
   end;
   //TgmCoreItemClass = class of TigCoreItem;
 
+
+{ TigCoreCollection } 
+
   TigCoreCollection = class(TOwnedCollection)
   private
     FOnChange: TNotifyEvent;
     //FFileName: TFilename;
   protected
     procedure Update(Item: TCollectionItem); override;
-    
-
   public
     constructor Create(AOwner: TComponent); overload; virtual;
     constructor Create(AOwner: TComponent; GetItemClass: TCollectionItemClass);overload;virtual;
     function IsValidIndex(index : Integer):Boolean;virtual;
-
-
-    //property FileReaders : TigFileFormatsList read GetFileReaders;
-
-
-    //procedure LoadFromFile(const FileName: string); virtual;
-    //procedure LoadFromStream(AStream: TStream); virtual;
-    //procedure Move(CurIndex, NewIndex: Integer); virtual;
-    //procedure SaveToFile(const FileName: string); virtual;
-    //procedure SaveToStream(AStream: TStream); virtual;
-
-
     property OnChange             : TNotifyEvent    read FOnChange        write FOnChange;
-
-
   end;
   TigCoreCollectionClass = class of TigCoreCollection;
 

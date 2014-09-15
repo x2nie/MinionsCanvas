@@ -103,6 +103,8 @@ type
   
   {TigGridList}
   TigGridList = class(TigCoreList)
+  public
+    procedure ItemPaint(ABuffer: TBitmap32; AIndex: Integer; ARect: TRect);  virtual; // called by grid needed by Theme
   end;
 
 
@@ -147,6 +149,11 @@ type
     property OnChange;
   end; 
 
+  //universal grid viewer
+  TigGridBox = class(TigGrid)
+  published
+    property ItemList;
+  end;
   
   TigGridTheme = class(TbivTheme)
   protected
@@ -383,14 +390,11 @@ end;
 procedure TigGrid.DoCellPaint(ABuffer: TBitmap32; AIndex: Integer;
   ARect: TRect);
 begin
-  //demo:
-  if Assigned(FItemList) and FItemList.IsValidIndex(AIndex) then
+  if Assigned(FItemList) then
   begin
-      ABuffer.Textout(ARect.Left,ARect.Top, FItemList.Items[AIndex].DisplayName);
-      ABuffer.FrameRectS(ARect, clGray32);
+    FItemList.ItemPaint(ABuffer, AIndex, ARect);
+    //ancestor may display item's surface
   end;
-  //ancestor may display item's surface
-
 end;
 
 function TigGrid.GetCellCount: Integer;
@@ -475,6 +479,20 @@ procedure TigGridTheme.DoCellPaint(ABuffer: TBitmap32; AIndex: Integer;
 begin
   inherited;
 
+end;
+
+{ TigGridList }
+
+procedure TigGridList.ItemPaint(ABuffer: TBitmap32; AIndex: Integer;
+  ARect: TRect);
+begin
+    //demo:
+  if IsValidIndex(AIndex) then
+  begin
+      ABuffer.Textout(ARect.Left,ARect.Top, Items[AIndex].DisplayName);
+      ABuffer.FrameRectS(ARect, clGray32);
+  end;
+  //ancestor may display the real item's surface
 end;
 
 end.
