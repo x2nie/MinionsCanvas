@@ -40,7 +40,7 @@ uses
   Types, Classes, SysUtils, Graphics,
 { Graphics32 }
   GR32, GR32_LowLevel,
-{ GraphicsMagic }
+{ miniGlue }
   igGrid,  igCore_rw;
 
 type
@@ -76,6 +76,8 @@ type
     class function GetFileReaders : TigFileFormatsList; override;
     class function GetFileWriters : TigFileFormatsList; override;
 
+    procedure ItemPaint(ABuffer: TBitmap32; AIndex: Integer; ARect: TRect);  override; // called by grid needed by Theme
+
     property Items[Index: Integer]: TigSwatchItem read GetItem write SetItem; default;
     property Description : string read FDescription write FDescription;
   end;
@@ -89,9 +91,6 @@ type
   private
     function GetSwatchList: TigSwatchList;
     procedure SetSwatchList(const Value: TigSwatchList);
-  protected
-    procedure DoCellPaint(ABuffer: TBitmap32; AIndex: Integer; ARect: TRect);  override; // called by Theme
-
   published
     property SwatchList : TigSwatchList read GetSwatchList write SetSwatchList;  
   end;
@@ -217,6 +216,20 @@ begin
   result := TigSwatchItem;
 end;
 
+procedure TigSwatchList.ItemPaint(ABuffer: TBitmap32; AIndex: Integer;
+  ARect: TRect);
+begin
+  if IsValidIndex(AIndex) then
+  begin
+    //ABuffer.Textout(ARect.Left,ARect.Top, SwatchList[AIndex].DisplayName);
+    if Items[AIndex].Color = clNone then
+      DrawCheckerboardPattern(ABuffer, ARect, True )
+    else
+      ABuffer.FillRectS(ARect, Color32( Items[AIndex].Color) );
+    ABuffer.FrameRectS(ARect, clTrGray32 );
+  end;
+end;
+
 procedure TigSwatchList.SetItem(Index: Integer;
   const Value: TigSwatchItem);
 begin
@@ -232,19 +245,6 @@ end;
 
 { TigSwatchGrid }
 
-procedure TigSwatchGrid.DoCellPaint(ABuffer: TBitmap32; AIndex: Integer;
-  ARect: TRect);
-begin
-  if Assigned(SwatchList) and SwatchList.IsValidIndex(AIndex) then
-  begin
-    //ABuffer.Textout(ARect.Left,ARect.Top, SwatchList[AIndex].DisplayName);
-    if SwatchList[AIndex].Color = clNone then
-      DrawCheckerboardPattern(ABuffer, ARect, True )
-    else
-      ABuffer.FillRectS(ARect, Color32( SwatchList[AIndex].Color) );
-    ABuffer.FrameRectS(ARect, clTrGray32 );
-  end;
-end;
 
 function TigSwatchGrid.GetSwatchList: TigSwatchList;
 begin

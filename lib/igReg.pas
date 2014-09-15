@@ -14,13 +14,15 @@ procedure Register;
 implementation
 uses
   igBase, igLayersListBox, igComboboxBlendModes,
-  igCore_Items,
-  igSwatch, igSwatch_Dsgn;
+  igCore_Items, igGrid,
+  igSwatch, igSwatch_Dsgn,
+  igGradient;
 
 procedure Register();
 begin
   registerComponents('miniGlue',[TigPaintBox, TigAgent, TigLayersListBox, TigComboBoxBlendMode,
-    TigSwatchList, TigSwatchGrid]);
+    TigGridBox,TigSwatchList, TigSwatchGrid,
+    TigGradientList]);
   RegisterComponentEditor(TigSwatchList, TigSwatchListEditor);
   RegisterPropertyEditor(TypeInfo(TigCoreCollection), TigSwatchList, 'Collection', TigGridCollectionProperty);
 
