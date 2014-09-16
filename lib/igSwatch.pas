@@ -65,7 +65,7 @@ type
 
   TigSwatchList = class(TigGridList)
   private
-    FDescription: string;
+
     function GetItem(Index: Integer): TigSwatchItem;
     procedure SetItem(Index: Integer; const Value: TigSwatchItem);
   protected
@@ -79,7 +79,6 @@ type
     procedure ItemPaint(ABuffer: TBitmap32; AIndex: Integer; ARect: TRect);  override; // called by grid needed by Theme
 
     property Items[Index: Integer]: TigSwatchItem read GetItem write SetItem; default;
-    property Description : string read FDescription write FDescription;
   end;
 
   TigSwatchCollection = class(TigGridCollection)
