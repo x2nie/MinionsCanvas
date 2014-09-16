@@ -103,8 +103,11 @@ type
   
   {TigGridList}
   TigGridList = class(TigCoreList)
+  protected
+    FDescription: string;
   public
     procedure ItemPaint(ABuffer: TBitmap32; AIndex: Integer; ARect: TRect);  virtual; // called by grid needed by Theme
+    property Description : string read FDescription write FDescription;
   end;
 
 
