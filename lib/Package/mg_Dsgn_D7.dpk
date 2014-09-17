@@ -38,6 +38,6 @@ requires
 
 contains
   igReg in '..\igReg.pas',
-  igSwatch_Dsgn in '..\igSwatch_Dsgn.pas' {igGridCollectionEditor};
+  igGrid_Dsgn in '..\igGrid_Dsgn.pas' {igGridCollectionEditor};
 
 end.

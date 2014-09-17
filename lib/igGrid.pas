@@ -380,8 +380,8 @@ begin
   FChangeLink          := TigGridChangeLink.Create;
   FChangeLink.OnChange := ItemListChangedHandler;
   FMargin := Point(0,0);
-  CellWidth := 24;
-  CellHeight:= 24;
+  CellWidth := 32;
+  CellHeight:= 32;
 end;
 
 destructor TigGrid.Destroy;

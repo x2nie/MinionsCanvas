@@ -40,7 +40,7 @@ contains
   igLayersListBox in '..\igLayersListBox.pas',
   igComboboxBlendModes in '..\igComboboxBlendModes.pas',
   igSwatch_ListView in '..\igSwatch_ListView.pas',
-  igSwatch in '..\igSwatch.pas',
+  igPattern in '..\igPattern.pas',
   igGrid_ListView_Layers in '..\igGrid_ListView_Layers.pas',
   igCore_rw in '..\igCore_rw.pas',
   igMath in '..\igMath.pas',
@@ -51,6 +51,8 @@ contains
   igSwatch_rwACO in '..\igSwatch_rwACO.pas',
   igSwatch_rwASE in '..\igSwatch_rwASE.pas',
   igGrid in '..\igGrid.pas',
-  igGradient in '..\igGradient.pas';
+  igGradient in '..\igGradient.pas',
+  igSwatch in '..\igSwatch.pas',
+  igGradient_rwPhotoshopGRD in '..\igGradient_rwPhotoshopGRD.pas';
 
 end.
