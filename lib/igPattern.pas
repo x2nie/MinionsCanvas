@@ -1,4 +1,4 @@
-unit igSwatch;
+unit igPattern;
 (* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1 or LGPL 2.1 with linking exception
  *
@@ -45,7 +45,7 @@ uses
 
 type
 
-  TigSwatchItem = class(TigGridItem)
+  TigPatternItem = class(TigGridItem)
   private
     FColor: TColor;
 
@@ -63,35 +63,35 @@ type
     property DisplayName;
   end;
 
-  TigSwatchList = class(TigGridList)
+  TigPatternList = class(TigGridList)
   private
 
-    function GetItem(Index: Integer): TigSwatchItem;
-    procedure SetItem(Index: Integer; const Value: TigSwatchItem);
+    function GetItem(Index: Integer): TigPatternItem;
+    procedure SetItem(Index: Integer; const Value: TigPatternItem);
   protected
     class function GetItemClass : TCollectionItemClass; override;
   public
     //constructor Create(AOwner:TComponent); override;
-    function Add: TigSwatchItem; reintroduce;
+    function Add: TigPatternItem; reintroduce;
     class function GetFileReaders : TigFileFormatsList; override;
     class function GetFileWriters : TigFileFormatsList; override;
 
     procedure ItemPaint(ABuffer: TBitmap32; AIndex: Integer; ARect: TRect);  override; // called by grid needed by Theme
 
-    property Items[Index: Integer]: TigSwatchItem read GetItem write SetItem; default;
+    property Items[Index: Integer]: TigPatternItem read GetItem write SetItem; default;
   end;
 
-  TigSwatchCollection = class(TigGridCollection)
+  {TigPatternCollection = class(TigGridCollection)
   public
     constructor Create(AOwner:TComponent); override;
-  end;
+  end;}
 
-  TigSwatchGrid = class(TigGrid)
+  TigPatternGrid = class(TigGrid)
   private
-    function GetSwatchList: TigSwatchList;
-    procedure SetSwatchList(const Value: TigSwatchList);
+    function GetPatternList: TigPatternList;
+    procedure SetPatternList(const Value: TigPatternList);
   published
-    property SwatchList : TigSwatchList read GetSwatchList write SetSwatchList;  
+    property PatternList : TigPatternList read GetPatternList write SetPatternList;  
   end;
 
 procedure Register;
@@ -104,21 +104,21 @@ uses
 
 procedure Register;
 begin
-//  RegisterComponents('miniGlue', [TigSwatchList, TigSwatchGrid]);
+//  RegisterComponents('miniGlue', [TigPatternList, TigPatternGrid]);
 end;
 
 var
-  USwatchReaders, USwatchWriters : TigFileFormatsList;
+  UPatternReaders, UPatternWriters : TigFileFormatsList;
 
-{ TigSwatchItem }
+{ TigPatternItem }
 
-constructor TigSwatchItem.Create(Collection: TCollection);
+constructor TigPatternItem.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
   FColor := clWhite;
 end;
 
-function TigSwatchItem.CachedBitmap(const AWidth, AHeight: Integer): TBitmap32;
+function TigPatternItem.CachedBitmap(const AWidth, AHeight: Integer): TBitmap32;
 begin
   if not Assigned(FCachedBitmap) then
   begin
@@ -138,7 +138,7 @@ begin
   Result := FCachedBitmap;
 end;
 
-function TigSwatchItem.GetHint: string;
+function TigPatternItem.GetHint: string;
 var
   s : string;
 begin
@@ -151,76 +151,76 @@ begin
           GreenComponent(Color),BlueComponent(Color)]);
 end;
 
-procedure TigSwatchItem.SetColor(const Value: TColor);
+procedure TigPatternItem.SetColor(const Value: TColor);
 begin
   FColor := Value;
   Changed(False);
 end;
 
-function TigSwatchItem.GetEmpty: Boolean;
+function TigPatternItem.GetEmpty: Boolean;
 begin
   Result := False; //nothing to countize. swatch always has surface
 end;
 
-procedure TigSwatchItem.AssignTo(Dest: TPersistent);
+procedure TigPatternItem.AssignTo(Dest: TPersistent);
 begin
   inherited;
   {
     Ancestor must call inherited, to get benefit of inheritance of "Assign()"
   }
-  if Dest is TigSwatchItem then
+  if Dest is TigPatternItem then
   begin
-    with TigSwatchItem(Dest) do
+    with TigPatternItem(Dest) do
     begin
       Color := self.Color;
     end;
   end;
 end;
 
-{ TigSwatchCollection }
+{ TigPatternCollection }
 
 
-function TigSwatchList.Add: TigSwatchItem;
+function TigPatternList.Add: TigPatternItem;
 begin
-  Result := TigSwatchItem(inherited Add);
+  Result := TigPatternItem(inherited Add);
 end;
 
-class function TigSwatchList.GetFileReaders: TigFileFormatsList;
+class function TigPatternList.GetFileReaders: TigFileFormatsList;
 begin
-  if not Assigned(USwatchReaders) then
+  if not Assigned(UPatternReaders) then
   begin
-    USwatchReaders := TigFileFormatsList.Create;
+    UPatternReaders := TigFileFormatsList.Create;
   end;
 
-  Result := USwatchReaders;
+  Result := UPatternReaders;
 end;
 
-class function TigSwatchList.GetFileWriters: TigFileFormatsList;
+class function TigPatternList.GetFileWriters: TigFileFormatsList;
 begin
-  if not Assigned(USwatchWriters) then
+  if not Assigned(UPatternWriters) then
   begin
-    USwatchWriters := TigFileFormatsList.Create;
+    UPatternWriters := TigFileFormatsList.Create;
   end;
 
-  Result := USwatchWriters;
+  Result := UPatternWriters;
 end;
 
-function TigSwatchList.GetItem(Index: Integer): TigSwatchItem;
+function TigPatternList.GetItem(Index: Integer): TigPatternItem;
 begin
-  Result := TigSwatchItem(inherited GetItem(Index));
+  Result := TigPatternItem(inherited GetItem(Index));
 end;
 
-class function TigSwatchList.GetItemClass: TCollectionItemClass;
+class function TigPatternList.GetItemClass: TCollectionItemClass;
 begin
-  result := TigSwatchItem;
+  result := TigPatternItem;
 end;
 
-procedure TigSwatchList.ItemPaint(ABuffer: TBitmap32; AIndex: Integer;
+procedure TigPatternList.ItemPaint(ABuffer: TBitmap32; AIndex: Integer;
   ARect: TRect);
 begin
   if IsValidIndex(AIndex) then
   begin
-    //ABuffer.Textout(ARect.Left,ARect.Top, SwatchList[AIndex].DisplayName);
+    //ABuffer.Textout(ARect.Left,ARect.Top, PatternList[AIndex].DisplayName);
     if Items[AIndex].Color = clNone then
       DrawCheckerboardPattern(ABuffer, ARect, True )
     else
@@ -229,32 +229,32 @@ begin
   end;
 end;
 
-procedure TigSwatchList.SetItem(Index: Integer;
-  const Value: TigSwatchItem);
+procedure TigPatternList.SetItem(Index: Integer;
+  const Value: TigPatternItem);
 begin
   inherited SetItem(Index, Value);
 end;
 
-{ TigSwatchCollection }
+{ TigPatternCollection }
 
-constructor TigSwatchCollection.Create(AOwner: TComponent);
+{constructor TigPatternCollection.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner,TigSwatchItem);
+  inherited Create(AOwner,TigPatternItem);
+end;}
+
+{ TigPatternGrid }
+
+
+function TigPatternGrid.GetPatternList: TigPatternList;
+begin
+  Result := ItemList as TigPatternList;
 end;
 
-{ TigSwatchGrid }
-
-
-function TigSwatchGrid.GetSwatchList: TigSwatchList;
-begin
-  Result := ItemList as TigSwatchList;
-end;
-
-procedure TigSwatchGrid.SetSwatchList(const Value: TigSwatchList);
+procedure TigPatternGrid.SetPatternList(const Value: TigPatternList);
 begin
   ItemList := Value;
 end;
 
 initialization
-  RegisterCoreList(TigSwatchList);
+  RegisterCoreList(TigPatternList);
 end.

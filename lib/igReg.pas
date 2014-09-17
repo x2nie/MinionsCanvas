@@ -14,8 +14,8 @@ procedure Register;
 implementation
 uses
   igBase, igLayersListBox, igComboboxBlendModes,
-  igCore_Items, igGrid,
-  igSwatch, igSwatch_Dsgn,
+  igCore_Items, igGrid,  igGrid_Dsgn,
+  igSwatch, //igSwatch_Dsgn,
   igGradient;
 
 procedure Register();
@@ -23,8 +23,9 @@ begin
   registerComponents('miniGlue',[TigPaintBox, TigAgent, TigLayersListBox, TigComboBoxBlendMode,
     TigGridBox,TigSwatchList, TigSwatchGrid,
     TigGradientList]);
-  RegisterComponentEditor(TigSwatchList, TigSwatchListEditor);
-  RegisterPropertyEditor(TypeInfo(TigCoreCollection), TigSwatchList, 'Collection', TigGridCollectionProperty);
+  //RegisterComponentEditor(TigSwatchList, TigSwatchListEditor);
+  RegisterComponentEditor(TigGridList, TigCellItemListEditor);
+  //RegisterPropertyEditor(TypeInfo(TigCoreCollection), TigSwatchList, 'Collection', TigGridCollectionProperty);
 
 end;
 

@@ -47,7 +47,7 @@ type
 
   TigGradientStop = class(TCollectionItem)
   private
-    FMidPoint: TFloat;
+
     function GetColor: TColor;
     procedure SetColor(const Value: TColor);
     function IsOffsetStored: Boolean;
@@ -57,11 +57,12 @@ type
     procedure SetPercent(const Value: Single);
     function GetColor32: TColor32;
     procedure SetColor32(const Value: TColor32);
-    procedure SetOffset(const Value: TFloat);
+    procedure SetOffset(const Value: Double);
     function IsMidPointStored: Boolean;
     procedure SetMidPoint(const Value: TFloat);
   protected
-    FOffset: TFloat;
+    FOffset: Double;
+    FMidPoint: TFloat;
     FValue : Cardinal; //should be TColor
     procedure AssignTo(ADest: TPersistent); override;
   public
@@ -70,8 +71,9 @@ type
     property AsByte : Byte read GetByte write SetByte stored False;
     property AsPercent : Single read GetPercent write SetPercent stored False;
     property AsColor32 : TColor32 read GetColor32 write SetColor32 stored False;
+    property AsCardinal: Cardinal read FValue;
     property AsColor : TColor read GetColor write SetColor; //must be the last for correction in save
-    property Offset: TFloat read FOffset write SetOffset stored IsOffsetStored; //expected range between 0.0 and 1.0
+    property Offset: Double read FOffset write SetOffset stored IsOffsetStored; //expected range between 0.0 and 1.0
     property MidPoint: TFloat read FMidPoint write SetMidPoint stored IsMidPointStored; //expected range between 0.0 and 1.0
   end;
 
@@ -89,6 +91,10 @@ type
     function First: TigGradientStop;
     function Last: TigGradientStop;
 
+    procedure FillColorLookUpTable(var ColorLUT: array of TColor32); overload;
+    procedure FillColorLookUpTable(ColorLUT: PColor32Array; ACount: Integer); overload;
+    procedure FillColorLookUpTable(ColorLUT: TColor32LookupTable); overload;
+        
     property Items[Index: Integer]: TigGradientStop read GetItem write SetItem; default;
     property OnChange : TNotifyEvent read FOnChange write FOnChange;
   end;
@@ -100,6 +106,7 @@ type
     FRGBGradient: TigGradientStopCollection;
     FAlphaGradient: TigGradientStopCollection;
     FColorLUT: TColor32LookupTable;
+    FColorSpace: string;
     procedure StopGradientChanged(Sender : TObject);
     procedure SetAlphaGradient(const Value: TigGradientStopCollection);
     procedure SetRGBGradient(const Value: TigGradientStopCollection);
@@ -112,7 +119,7 @@ type
   public
     constructor Create(Collection: TCollection); override;
     procedure FillColorLookUpTable(var ColorLUT: array of TColor32); overload;
-    procedure FillColorLookUpTable(ColorLUT: PColor32Array; Count: Integer); overload;
+    procedure FillColorLookUpTable(ColorLUT: PColor32Array; ACount: Integer); overload;
     procedure FillColorLookUpTable(ColorLUT: TColor32LookupTable); overload;
     function ColorLUT: TColor32LookupTable; //included Fill with valid colors
     
@@ -122,6 +129,7 @@ type
     property RGBGradient : TigGradientStopCollection read FRGBGradient write SetRGBGradient;
     property AlphaGradient : TigGradientStopCollection read FAlphaGradient write SetAlphaGradient;
     property DisplayName;
+    property ColorSpace : string read FColorSpace write FColorSpace;
   end;
 
   TigGradientList = class(TigGridList)
@@ -133,7 +141,7 @@ type
     class function GetItemClass : TCollectionItemClass; override;
   public
     //constructor Create(AOwner:TComponent); override;
-    function Add: TigGradientItem;
+    function Add: TigGradientItem; reintroduce;
     class function GetFileReaders : TigFileFormatsList; override;
     class function GetFileWriters : TigFileFormatsList; override;
 
@@ -230,14 +238,14 @@ begin
       R := FloatRect(0,0, AWidth-1, AHeight-1 );
       PolygonTop := Rectangle(R);
 
-      LEdge       := Round(Sqrt(AWidth * AHeight) * 0.05);
+      LEdge       := Round(Sqrt(AWidth * AHeight) * 0.2);
       InflateRect(R, -LEdge, -LEdge);
       LinearGradFiller.StartPoint := R.TopLeft;
       LinearGradFiller.EndPoint := R.BottomRight;
-      //LinearGradFiller.WrapMode := TWrapMode(RgpWrapMode.ItemIndex);
+      LinearGradFiller.WrapMode := wmClamp;
 
       PolygonFS(FCachedBitmap, PolygonTop, LinearGradFiller);
-      FCachedBitmap.SaveToFile('D:\v\GR32\miniglue\trunk\units\'+DisplayName+'.bmp');
+      //FCachedBitmap.SaveToFile('D:\v\GR32\miniglue\trunk\units\'+DisplayName+'.bmp');
       //PolyLineFS(ImgView32.Bitmap, PolygonTop, clBlack32, True, 1);
     finally
       LinearGradFiller.Free;
@@ -380,6 +388,7 @@ begin
 
   if not FCachedBitmapValid then
   begin
+    //TODO: update the ordery if required
     FillColorLookUpTable(FColorLUT);
     FCachedBitmapValid := True;
   end;
@@ -402,76 +411,29 @@ begin
 end;
 
 procedure TigGradientItem.FillColorLookUpTable(ColorLUT: PColor32Array;
-  Count: Integer);
+  ACount: Integer);
 var
-  LutIndex, StopIndex, GradCount: Integer;
-  RecalculateScale: Boolean;
-  Fraction, LocalFraction, Delta, Scale: TFloat;
+  //LRGB,
+  LAlpha : TColor32LookupTable;
+  AlphaLUT: PColor32Array;
+  i,L : Integer;
 begin
-  GradCount := FRGBGradient.Count;
+  L := 4;
+  while (1 shl L) < ACount do
+    Inc(L);
+  LAlpha := TColor32LookupTable.Create(L);
+  
+  try
+    FRGBGradient.FillColorLookUpTable(ColorLUT,ACount);
+    FAlphaGradient.FillColorLookUpTable(LAlpha);
 
-  //check trivial case
-  if (GradCount < 2) or (Count < 2) then
-  begin
-    for LutIndex := 0 to Count - 1 do
-      ColorLUT^[LutIndex] := 0; //it shouldn't happen since there was auto-create items
-    Exit;
-  end;
-
-  // set first (start) and last (end) color
-  ColorLUT^[0] := FRGBGradient.First.AsColor32;// StartColor;
-  ColorLUT^[Count - 1] := FRGBGradient.Last.AsColor32; //EndColor;
-  Delta := 1 / Count;
-  Fraction := Delta;
-
-  LutIndex := 1;
-  while Fraction <= FRGBGradient[0].Offset do
-  begin
-    ColorLUT^[LutIndex] := ColorLUT^[0];
-    Fraction := Fraction + Delta;
-    Inc(LutIndex);
-  end;
-
-  Scale := 1;
-  StopIndex := 1;
-  RecalculateScale := True;
-  for LutIndex := LutIndex to Count - 2 do
-  begin
-    // eventually search next stop
-    while (Fraction > FRGBGradient[StopIndex].Offset) do
+    for i := 0 to ACount-1 do
     begin
-      Inc(StopIndex);
-      if (StopIndex >= GradCount) then
-        Break;
-      RecalculateScale := True;
+      //ColorLUT^[i] :=  (ColorLUT^[i] and $00FFFFFF) or ((LAlpha.Color32[i] and $FF) shl 24);
+      TColor32Entry(ColorLUT^[i]).A := LAlpha.Color32[i] and $FF;
     end;
-
-    // eventually fill remaining LUT
-    if StopIndex = GradCount then
-    begin
-      for StopIndex := LutIndex to Count - 2 do
-        ColorLUT^[StopIndex] := ColorLUT^[Count];
-      Break;
-    end;
-
-    // eventually recalculate scale
-    if RecalculateScale then
-      Scale := 1 / (FRGBGradient[StopIndex].Offset -
-        FRGBGradient[StopIndex - 1].Offset);
-
-    // calculate current color
-    LocalFraction := (Fraction - FRGBGradient[StopIndex - 1].Offset) * Scale;
-    if LocalFraction <= 0 then
-      ColorLUT^[LutIndex] := FRGBGradient[StopIndex - 1].AsColor32
-    else if LocalFraction >= 1 then
-      ColorLUT^[LutIndex] := FRGBGradient[StopIndex].AsColor32
-    else
-    begin
-      ColorLUT^[LutIndex] := CombineReg(FRGBGradient[StopIndex].AsColor32,
-        FRGBGradient[StopIndex - 1].AsColor32, Round($FF * LocalFraction));
-      EMMS;
-    end;
-    Fraction := Fraction + Delta;
+  finally
+    LAlpha.Free;
   end;
 end;
 
@@ -497,6 +459,8 @@ begin
     with TigGradientStop(ADest) do
     begin
       AsColor := Self.AsColor;
+      Offset  := Self.Offset;
+      MidPoint:= Self.MidPoint;
     end;
     Exit;
   end;
@@ -509,7 +473,7 @@ begin
   inherited;
   FMidPoint := 0.5;
   
-  FOffset := 0.5;
+  FOffset := 0;
 end;
 
 function TigGradientStop.GetByte: Byte;
@@ -524,7 +488,11 @@ end;
 
 function TigGradientStop.GetColor32: TColor32;
 begin
-  result := Color32(AsColor)
+  result := Color32(AsColor);
+  {Result := FValue;
+  case AsColor of  clDefault,clNone,clBackground:
+    result := Color32(AsColor);
+  end;}
 end;
 
 function TigGradientStop.GetPercent: Single;
@@ -539,12 +507,12 @@ end;
 
 function TigGradientStop.IsOffsetStored: Boolean;
 begin
-  Result := FOffset <> 0.5;
+  Result := FOffset <> 0;
 end;
 
 procedure TigGradientStop.SetByte(const Value: Byte);
 begin
-  FValue := Value + Value shl 8 + Value shl 16 + Value shl 24;
+  FValue := Value or Value shl 8 or Value shl 16;// or Value shl 24;
   Changed(False);
 end;
 
@@ -566,7 +534,7 @@ begin
   Changed(False);
 end;
 
-procedure TigGradientStop.SetOffset(const Value: TFloat);
+procedure TigGradientStop.SetOffset(const Value: Double);
 begin
   FOffset := Value;
   Changed(False);
@@ -588,6 +556,95 @@ end;
 constructor TigGradientStopCollection.Create(AOwner: TPersistent);
 begin
   inherited Create(AOwner, TigGradientStop);
+end;
+
+procedure TigGradientStopCollection.FillColorLookUpTable(
+  var ColorLUT: array of TColor32);
+begin
+{$WARNINGS OFF}
+  FillColorLookUpTable(@ColorLUT[0], Length(ColorLUT));
+{$WARNINGS ON}
+end;
+
+procedure TigGradientStopCollection.FillColorLookUpTable(
+  ColorLUT: PColor32Array; ACount: Integer);
+var
+  LutIndex, StopIndex, GradCount: Integer;
+  RecalculateScale: Boolean;
+  Fraction, LocalFraction, Delta, Scale: TFloat;
+begin
+  GradCount := Self.Count;
+
+  //check trivial case
+  if (GradCount < 2) or (ACount < 2) then
+  begin
+    for LutIndex := 0 to ACount - 1 do
+      ColorLUT^[LutIndex] := 0; //it shouldn't happen since there was auto-create items
+    Exit;
+  end;
+
+  // set first (start) and last (end) color
+  ColorLUT^[0] := First.AsColor32;// StartColor;
+  ColorLUT^[ACount - 1] := Last.AsColor32; //EndColor;
+  Delta := 1 / ACount;
+  Fraction := Delta;
+
+  LutIndex := 1;
+  while Fraction <= Items[0].Offset do
+  begin
+    ColorLUT^[LutIndex] := ColorLUT^[0];
+    Fraction := Fraction + Delta;
+    Inc(LutIndex);
+  end;
+
+  Scale := 1;
+  StopIndex := 1;
+  RecalculateScale := True;
+  for LutIndex := LutIndex to ACount - 2 do
+  begin
+    // eventually search next stop
+    while (Fraction > Items[StopIndex].Offset) do
+    begin
+      Inc(StopIndex);
+      if (StopIndex >= GradCount) then
+        Break;
+      RecalculateScale := True;
+    end;
+
+    // eventually fill remaining LUT
+    if StopIndex = GradCount then
+    begin
+      for StopIndex := LutIndex to ACount - 2 do
+        ColorLUT^[StopIndex] := ColorLUT^[ACount-1];
+      Break;
+    end;
+
+    // eventually recalculate scale
+    if RecalculateScale then
+      Scale := 1 / (Items[StopIndex].Offset -
+        Items[StopIndex - 1].Offset);
+
+    // calculate current color
+    LocalFraction := (Fraction - Items[StopIndex - 1].Offset) * Scale;
+    if LocalFraction <= 0 then
+      ColorLUT^[LutIndex] := Items[StopIndex - 1].AsColor32
+    else if LocalFraction >= 1 then
+      ColorLUT^[LutIndex] := Items[StopIndex].AsColor32
+    else
+    begin
+      ColorLUT^[LutIndex] := CombineReg(Items[StopIndex].AsColor32,
+        Items[StopIndex - 1].AsColor32, Round($FF * LocalFraction));
+      EMMS;
+    end;
+    Fraction := Fraction + Delta;
+  end;
+
+end;
+
+procedure TigGradientStopCollection.FillColorLookUpTable(
+  ColorLUT: TColor32LookupTable);
+begin
+  FillColorLookUpTable(ColorLUT.Color32Ptr, ColorLUT.Size);
 end;
 
 function TigGradientStopCollection.First: TigGradientStop;
