@@ -74,8 +74,8 @@ type
   private
     //FOnChange: TNotifyEvent;
     FChangedRect: TRect;
-    FUpdateCount: Integer;
   protected
+    FUpdateCount: Integer;
     FLayerVisible          : Boolean;
     FLayerEnabled          : Boolean;               // indicate whether the layer is currently editable
     FDuplicated            : Boolean;               // indicate whether this layer is duplicated from another one

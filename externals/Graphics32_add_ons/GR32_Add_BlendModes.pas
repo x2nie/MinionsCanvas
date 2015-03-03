@@ -363,7 +363,7 @@ implementation
 {$WARN UNSAFE_CODE OFF}
 
 uses
-  Math;
+  Math,RGBHSLUtils, GR32_Blend;
 
 var
   SqrtTable: array [0 .. 65535] of Byte;
@@ -2394,7 +2394,7 @@ begin
 
   bA := B shr 24 and $FF;
   bR := B shr 16 and $FF;
-  bG := B shr  8 and $FF;
+  bG := B shr  8 and $FF;            
   bB := B        and $FF;
 
   { Combine }
@@ -2556,8 +2556,8 @@ var
   rA, rR, rG, rB        : Byte;
   tR, tG, tB            : Integer;
   BlendR, BlendG, BlendB: Integer;
-  fH, fS, fL            : Single;
-  bH, bS, bL            : Single;
+  fH, fS, fL            ,
+  bH, bS, bL            : Integer;
   NewHSL                : TColor32;
 begin
   {Foreground Alpha and Master Alpha combined}
@@ -2581,17 +2581,47 @@ begin
   bB := B        and $FF;
 
   { Combine }
-  RGBToHSL(F, fH, fS, fL);        // Invert channel to HLS
+{  RGBToHSL(F, fH, fS, fL);        // Invert channel to HLS
   RGBToHSL(B, bH, bS, BL);        // Invert channel to HLS
 
   NewHSL := HSLToRGB(fH, fS, bL); // Combine HSL and invert it to RGB
+}
+  {Color mode:
+  The new HSL values consist of
+  F...hue of the blend image
+  F...saturation of the blend image
+  B...lumniance of the base image}
+
+{  RGBToHSL(F, fH, fS, fL);        // Invert channel to HLS
+  RGBToHSL(B, bH, bS, bL);        // Invert channel to HLS
+
+  NewHSL := HSLToRGB(fH, fS, bL); // Combine HSL and invert it to RGB
+
+{
+  RGBToHSV(F, fH, fS, fL);        // Invert channel to HSV
+  RGBToHSV(B, bH, bS, bL);        // Invert channel to HSV
+
+  NewHSL := HSVToRGB(fH, fS, bL); // Combine HSL and invert it to RGB
+}
+
+  RGBtoHSLRange(WinColor(F), fH, fS, fL);        // Invert channel to HLS
+  RGBtoHSLRange(WinColor(B), bH, bS, bL);        // Invert channel to HLS
+
+  NewHSL := Color32( HSLRangeToRGB(fH, fS, bL)); // Combine HSL and invert it to RGB
 
   BlendR := NewHSL shr 16 and $FF;
   BlendG := NewHSL shr  8 and $FF;
   BlendB := NewHSL        and $FF;
 
   { Blend }
-  rA := fA + bA - ba * fa div 255;
+  rA := fA + bA - ba * fa div 255;                                  
+
+  NewHSL := NewHSL and $FFFFFF or (fA shl 24);
+  //B := CombineReg(NewHSL,b, fA);
+  B := MergeReg(NewHSL,B);
+  B := NewHSL;
+  Exit;
+
 
   tR := bR - bR * fA div rA + (fR - (fR - BlendR) * bA div 255) * fA div rA;
   tG := bG - bG * fA div rA + (fG - (fG - BlendG) * bA div 255) * fA div rA;
