@@ -6,7 +6,8 @@ uses
  Windows, Graphics, Math, Scanlines;
 
 var //set these variables to your needs, e.g. 360, 255, 255
- MaxHue: integer = 239;
+ //MaxHue: integer = 239;
+ MaxHue: integer = 359;
  MaxSat: integer = 240;
  MaxLum: integer = 240;
 
