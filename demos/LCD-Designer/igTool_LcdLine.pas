@@ -1,4 +1,4 @@
-unit igTool_LcdPen;
+unit igTool_LcdLine;
 
 (* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1 or LGPL 2.1 with linking exception
@@ -37,12 +37,13 @@ uses
   igBase, igLayers;
 
 type
-  TigToolLcdPen = class(TigTool)
+  TigToolLcdLine = class(TigTool)
   private
     FMouseButtonDown : Boolean;
-    FLastDotIndex : TPoint;
+    FFirstDotIndex : TPoint;
     FLastDot : TRect;
     FLastColor : TColor32;
+    FTempBmp : TBitmap32;
   protected
     //Events. Polymorpism.
     procedure MouseDown(Sender: TigPaintBox; Button: TMouseButton;
@@ -52,7 +53,8 @@ type
     procedure MouseUp(Sender: TigPaintBox; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer; Layer: TigLayer); override;
   public
-
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   published 
 
   end;
@@ -66,7 +68,19 @@ uses
   Math, igLiquidCrystal;
 { TigToolBrushSimple }
 
-procedure TigToolLcdPen.MouseDown(Sender: TigPaintBox;
+constructor TigToolLcdLine.Create(AOwner: TComponent);
+begin
+  inherited;
+  FTempBmp := TBitmap32.Create;
+end;
+
+destructor TigToolLcdLine.Destroy;
+begin
+  FTempBmp.Free;
+  inherited;
+end;
+
+procedure TigToolLcdLine.MouseDown(Sender: TigPaintBox;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer;
   Layer: TigLayer);
 var
@@ -80,24 +94,27 @@ begin
     LBmpXY := Sender.ControlToBitmap( Point(X, Y) );
     LLayer := TigLiquidCrystal(Layer);
 
-    //FLastDot := MakeRect(-1,-1,-1,-1);//impossible LCD coordinate. to make first MouseMove runnable
-    FLastDot := LLayer.BlockCoordinateLocation(LBmpXY.X, LBmpXY.Y);
+    FTempBmp.Assign(LLayer.BitPlane);
 
+    //Allow invalid point for later use in mousemove to draw stright line from this
+    FLastDot := LLayer.BlockCoordinateLocation(LBmpXY.X, LBmpXY.Y, True);
+    if Button=mbLeft then
+      FLastColor := clWhite32
+    else
+      FLastColor := 0;
 
-    if not EqualRect(FLastDot, GInvalidRect) then
+    FFirstDotIndex := LLayer.DotIndex(FLastDot);
+
+    //dont allow invalid point, since we actually modify pixel
+    LRect := LLayer.BlockCoordinateLocation(LBmpXY.X, LBmpXY.Y, False);
+    if not EqualRect(LRect, GInvalidRect) then
     begin
       {}
-      if Button=mbLeft then
-        FLastColor := clWhite32
-      else
-        FLastColor := 0;
 
-      FLastDotIndex := LLayer.DotIndex(FLastDot);
+      LLayer.BitPlane.PixelS[FFirstDotIndex.X, FFirstDotIndex.Y] :=  FLastColor;
 
-      LLayer.BitPlane.PixelS[FLastDotIndex.X, FLastDotIndex.Y] :=  FLastColor;
-
-      LRect.TopLeft     := FLastDotIndex;
-      LRect.BottomRight := FLastDotIndex;
+      LRect.TopLeft     := FFirstDotIndex;
+      LRect.BottomRight := FFirstDotIndex;
       InflateRect(LRect, 1,1);
       LLayer.BitPlane.Changed(LRect);
       Layer.Changed(LLayer.AreaChanged);
@@ -107,18 +124,18 @@ begin
   end;
 end;
 
-procedure TigToolLcdPen.MouseMove(Sender: TigPaintBox; Shift: TShiftState;
+procedure TigToolLcdLine.MouseMove(Sender: TigPaintBox; Shift: TShiftState;
   X, Y: Integer; Layer: TigLayer);
 var
   LDot  : TRect;
-  LPoint,P2 : TPoint;
+  LPoint,LLastDotIndex : TPoint;
   LLayer : TigLiquidCrystal;
 begin
   if Layer is TigLiquidCrystal then
   begin
     LPoint := Sender.ControlToBitmap( Point(X, Y) );
     LLayer := TigLiquidCrystal(Layer);
-    LDot := LLayer.BlockCoordinateLocation(LPoint.X, LPoint.Y);
+    LDot := LLayer.BlockCoordinateLocation(LPoint.X, LPoint.Y, True);
     //Application.MainForm.Caption := format('mouse X:%d,  Y:%d    cx:%d, cy:%d',[X,Y, LPoint.X, LPoint.Y]);
     with LDot do Application.MainForm.Caption := format('X:%d,  Y:%d    cx:%d, cy:%d',[Left, Top, Right, Bottom]);
   end
@@ -131,7 +148,7 @@ begin
 
 
     LLayer := TigLiquidCrystal(Layer);
-    LDot := LLayer.BlockCoordinateLocation(LPoint.X, LPoint.Y);
+    LDot := LLayer.BlockCoordinateLocation(LPoint.X, LPoint.Y, True);
 
     //don't bother more if we are in the same dot
     if not EqualRect(LDot, FLastDot) and not EqualRect(LDot, GInvalidRect) then
@@ -144,25 +161,34 @@ begin
       InflateRect(LRect,1,1);}
 
 
-      FLastDotIndex := LLayer.DotIndex(FLastDot);
-      P2 := LLayer.DotIndex(LDot);
+      //FFirstDotIndex := LLayer.DotIndex(FLastDot);
+      LLastDotIndex := LLayer.DotIndex(LDot);
 
+      with LLayer.BitPlane do
+      begin
+        BeginUpdate;
+        Assign(FTempBmp);
+        EndUpdate;
+      end;
+      
 
       //LLayer.BitPlane.LineS( P2.X, P2.Y, FLastDotIndex.X, FLastDotIndex.Y,FLastColor);
+
+      LLayer.BitPlane.PixelS[LLastDotIndex.X, LLastDotIndex.Y] :=  FLastColor;
       LLayer.BitPlane.Canvas.Pen.Color := WinColor(FLastColor);
-      LLayer.BitPlane.Canvas.MoveTo( FLastDotIndex.X, FLastDotIndex.Y);
-      LLayer.BitPlane.Canvas.LineTo( P2.X, P2.Y);
+      LLayer.BitPlane.Canvas.MoveTo( FFirstDotIndex.X, FFirstDotIndex.Y);
+      LLayer.BitPlane.Canvas.LineTo( LLastDotIndex.X, LLastDotIndex.Y);
       
-      FLastDotIndex := P2;
+      //FFirstDotIndex := LLastDotIndex;
       Layer.Changed(LLayer.AreaChanged);
-      FLastDot := LDot;
+      //FLastDot := LDot;
     end;
   end;
 
 
 end;
 
-procedure TigToolLcdPen.MouseUp(Sender: TigPaintBox; Button: TMouseButton;
+procedure TigToolLcdLine.MouseUp(Sender: TigPaintBox; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
 var cmd : TigCmdLayer_Modify;  
 begin

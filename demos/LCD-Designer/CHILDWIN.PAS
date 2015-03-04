@@ -3,14 +3,18 @@ unit CHILDWIN;
 interface
 
 uses Windows, Classes, Graphics, Forms, Controls, StdCtrls, GR32_Image,
-  igBase;
+  igBase, GR32_RangeBars, ExtCtrls;
 
 type
   TMDIChild = class(TForm)
     img1: TigPaintBox;
+    pnlZoom: TPanel;
+    gbrZoom: TGaugeBar;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure gbrZoomMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     { Private declarations }
   public
@@ -68,6 +72,13 @@ begin
   img1.LayerList.CombineResult.SetSizeFrom(LLayerPanel.LayerBitmap);
   img1.LayerList.LayerPanels[0].LayerBitmap.SetSizeFrom(LLayerPanel.LayerBitmap);
   img1.LayerList.Add(LLayerPanel);
+end;
+
+procedure TMDIChild.gbrZoomMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+const zoomLevel : array[0..9] of Single = (0.1, 0.25, 0.50, 0.75, 1.0, 2.0, 3.0, 4.0, 6.0, 8.0);   
+begin
+  img1.Scale := zoomLevel[ gbrZoom.Position];
 end;
 
 end.

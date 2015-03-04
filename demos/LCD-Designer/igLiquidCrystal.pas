@@ -44,7 +44,8 @@ type
   public
     constructor Create(AOwner: TigLayerList); override;
     destructor Destroy; override;
-    function BlockCoordinateLocation(X,Y: Integer) : TRect; // result.topleft = char, result.bottomright = dots
+    function BlockCoordinateLocation(X,Y: Integer;
+      AllowOutsideRange:Boolean = False) : TRect; // result.topleft = char, result.bottomright = dots
     function DotIndex(CoordinateLocation : TRect) : TPoint; // whole dot together
     property AreaChanged : TRect read FAreaChanged; //using LayerBitmap coordinate
   published
@@ -73,6 +74,9 @@ type
     property Margin : TPoint read FMargin write FMargin;  // LCD Padding into first char's pixel
   end;
 
+var
+  GInvalidRect : TRect = (Left: -1; Top: -1; Right: -1; Bottom: -1); // signal as impossible LCD range ;
+
 
 implementation
 
@@ -89,13 +93,13 @@ var x,y : Integer;
   R : TRect;
 begin
   IntersectRect(R, Area, BitPlane.BoundsRect);
-  for y := R.Top to R.Bottom do
-  for x := R.Left to R.Right do
+  for y := R.Top to R.Bottom-1 do
+  for x := R.Left to R.Right-1 do
   begin
     PaintDotCoordinate(X,Y, DotColor(X,Y) );
   end;
 
-  with R do Application.MainForm.Caption := format('BitPlan Area: X:%d,  Y:%d    cx:%d, cy:%d',[Left, Top, Right, Bottom]);
+  //with R do Application.MainForm.Caption := format('BitPlan Area: X:%d,  Y:%d    cx:%d, cy:%d',[Left, Top, Right, Bottom]);
 
   //LayerBitmap.Draw(BitPlane.BoundsRect, BitPlane.BoundsRect, BitPlane);
 
@@ -105,27 +109,56 @@ begin
 
 end;
 
-function TigLiquidCrystal.BlockCoordinateLocation(X, Y: Integer): TRect;
+function TigLiquidCrystal.BlockCoordinateLocation(X, Y: Integer;
+  AllowOutsideRange:Boolean = False): TRect;
 var
   //P : TPoint;
   i,
   lc,lr, //lcd
   cc,cr,
   dotX,dotY : integer;
+  R : TRect;
 begin
+
+
   //P := img1.ControlToBitmap(Point(X,Y));
   Dec(X, Margin.X);
   Dec(Y, Margin.Y);
+
+  //test is valid coordinate
+  if not AllowOutsideRange then
+  begin
+    R := MakeRect(0,0, FACharPixel.X * FABlockSize.X, FACharPixel.Y * FABlockSize.Y);
+    if not PtInRect(R, Point(X,Y)) then
+    begin
+      Result := GInvalidRect;
+      Exit;
+    end;
+  end;
+
+
   //LCD Col/Row
     //lc := P.X div (DOT_PX * (CHAR_COLS+1) );
   Result.Left := X div FACharPixel.X;
-  Result.Top := Y div FACharPixel.Y;
+  Result.Top  := Y div FACharPixel.Y;
 
   //Char Col/Row
   //dotX := (P.X - lc*FACharPixel.X) div DOT_PX;
   //dotY := (P.Y - lr*FACharPixel.Y) div DOT_PY;
-  Result.Right := (X mod FACharPixel.X) div DotSize.X ;
-  Result.Bottom := (Y mod FACharPixel.Y) div DotSize.Y;
+  Result.Right  := ((X mod FACharPixel.X) {-FGapSize.X}) div DotSize.X ;
+  Result.Bottom := ((Y mod FACharPixel.Y) {-FGapSize.Y}) div DotSize.Y;
+
+  if not AllowOutsideRange
+  and not (
+    (Result.Left in [0..FBlocksSize.X -1])
+    and (Result.Top in [0..FBlocksSize.Y -1])
+    and (Result.Right in [0..FABlockSize.X -1])
+    and (Result.Bottom in [0..FABlockSize.Y -1])
+  ) then
+  begin
+    Result := GInvalidRect;
+  end;  
+
 
   {if (P.X > 0) and (lc < LCD_COLS) and (dotX < CHAR_COLS )
   and (P.Y > 0) and (lr < LCD_ROWS) and (dotY < CHAR_ROWS ) then
@@ -150,12 +183,12 @@ begin
   inherited;
   FBitPlane := TBitmap32.Create;
   FBitPlane.OnAreaChanged := BitPlaneAreaChanged;
-  FBlocksSize := Point(16,2);
+  FBlocksSize := Point(3,3);// Point(16,2);
   FABlockSize := Point(5,8);
   FDotSize := Point(9,11);
   FDotPadding := Point(1,1);
-  FGapSize := Point(7,7);
-  FMargin := Point(100,110);
+  FGapSize := Point(5,5);
+  FMargin := Point(30,30);
   FBacklightColor := $FF9FEF02;
   FBitOnColor := $FF387800;
   FBitOffColor:= $FF87DA0C;
@@ -224,7 +257,9 @@ begin
     else
       C := BitOnColor;}
     C := DotColor(X,Y);
-    PaintDotRect(P.X + DotSize.X * X , P.Y + DotSize.Y * Y , C);
+    PaintDotRect(
+      P.X + DotSize.X * X ,
+      P.Y + DotSize.Y * Y , C);
   end;
 end;
 
