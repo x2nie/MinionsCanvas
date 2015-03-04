@@ -103,6 +103,7 @@ type
     gbrZoom: TGaugeBar;
     btnLine: TToolButton;
     actTool_LcdLine: TAction;
+    dlgSave1: TSaveDialog;
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure HelpAbout1Execute(Sender: TObject);
@@ -124,6 +125,7 @@ type
     procedure ggbrLayerOpacityUserChange(Sender: TObject);
     procedure actTool_LcdPenExecute(Sender: TObject);
     procedure actTool_LcdLineExecute(Sender: TObject);
+    procedure FileSave1Execute(Sender: TObject);
   private
     { Private declarations }
     procedure CreateMDIChild(const Name: string);
@@ -155,13 +157,13 @@ var
 begin
   { create a new MDI child window }
   Child := TMDIChild.Create(Application);
-  Child.Caption := Name;
+  Child.Caption := ExtractFileName(Name);
   if FileExists(Name) then Child.LoadDocument(Name);
 end;
 
 procedure TMainForm.FileNew1Execute(Sender: TObject);
 begin
-  CreateMDIChild('NONAME' + IntToStr(MDIChildCount + 1));
+  CreateMDIChild(NONAME + IntToStr(MDIChildCount + 1));
 end;
 
 procedure TMainForm.FileOpen1Execute(Sender: TObject);
@@ -429,5 +431,16 @@ end;
 
 
 
+
+procedure TMainForm.FileSave1Execute(Sender: TObject);
+var P : TPicture;
+begin
+  p := TPicture.Create;
+  //p.SaveToFile();
+  if assigned(GIntegrator.ActivePaintBox) and dlgSave1.Execute then
+  begin
+    GIntegrator.ActivePaintBox.Bitmap.SaveToFile( dlgSave1.FileName );
+  end;
+end;
 
 end.
