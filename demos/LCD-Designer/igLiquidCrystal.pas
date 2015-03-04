@@ -249,7 +249,7 @@ procedure TigLiquidCrystal.LoadFromFile(AFileName: string);
 var bmp : TBitmap32;
   X,Y : Integer;
   firstCharX, firstCharY : Integer;
-  CellH, CellW : Integer;
+  H, W : Integer;
   CharW, CharH : Integer;
   firstC,C : TColor32;
 begin
@@ -285,32 +285,80 @@ begin
 
   //find cell dimension
 
-  CellH := 1;
-  for y := firstCharY to bmp.Height-1 do
+  H := 1;
+  for y := firstCharY+1 to bmp.Height-1 do
   begin
-    if c = BacklightColor then
-    begin
-      Break;
-    end;
     C := bmp.Pixel[firstCharX,y];
-    Inc(CellH);
-  end;
-  FDotSize.Y := CellH;
-
-  CellW :=1;
-  C := firstC;
-  for x := firstCharX to bmp.Width-1 do
-  begin
     if c = BacklightColor then
     begin
       Break;
     end;
-    C := bmp.Pixel[x,firstCharY];
-    Inc(CellW);
+    Inc(H);
   end;
-  FDotSize.X := CellW;
+  FDotSize.Y := H;
+
+  W :=1;
+  for x := firstCharX+1 to bmp.Width-1 do
+  begin
+    C := bmp.Pixel[x,firstCharY];
+    if c = BacklightColor then
+    begin
+      Break;
+    end;
+    Inc(W);
+  end;
+  FDotSize.X := W;
+
+  //find padding
+  H := 1;
+  for y := firstCharY+1 + FDotSize.Y to bmp.Height-1 do
+  begin
+    C := bmp.Pixel[firstCharX,y];
+    if c <> BacklightColor then
+    begin
+      Break;
+    end;
+    Inc(H);
+  end;
+  FDotPadding.Y := H;
+  inc(FDotSize.Y, H);
+
+  W :=1;
+  for x := firstCharX+1 + FDotSize.X to bmp.Width-1 do
+  begin
+    C := bmp.Pixel[x,firstCharY];
+    if c <> BacklightColor then
+    begin
+      Break;
+    end;
+    Inc(W);
+  end;
+  FDotPadding.X := W;
+  inc(FDotSize.X, W);
+
+  //find ABlockSize
+  W := 1;
+  while W < bmp.Width do
+  begin
+    X := FMargin.X + FDotSize.X * W +1;
+    if bmp.Pixel[x,firstCharY] = BacklightColor then
+      Break;
+    Inc(W);
+  end;
+  FABlockSize.X := W;
+
+  W := 1;
+  while W < bmp.Height do
+  begin
+    Y := FMargin.Y + FDotSize.Y * W +1;
+    if bmp.Pixel[firstCharX, Y] = BacklightColor then
+      Break;
+    Inc(W);
+  end;
+  FABlockSize.Y := W;
 
   EndUpdate;
+  RecalculateSize;
   Self.RebuildLCD;
   TigLayerList( Self.Collection).Update(nil); //rebuild all
 end;
