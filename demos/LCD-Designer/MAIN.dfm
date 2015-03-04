@@ -451,11 +451,14 @@ object MainForm: TMainForm
       Hint = 'Save|Save current file'
       ImageIndex = 8
       ShortCut = 16467
+      OnExecute = FileSave1Execute
+      OnUpdate = EnabledWhenMDIavailabled
     end
     object FileSaveAs1: TAction
       Category = 'File'
       Caption = 'Save &As...'
       Hint = 'Save As|Save current file with different name'
+      OnUpdate = EnabledWhenMDIavailabled
     end
     object FileExit1: TAction
       Category = 'File'
@@ -1664,6 +1667,10 @@ object MainForm: TMainForm
   object igAgent1: TigAgent
     OnSelectionChange = igAgent1SelectionChange
     Left = 136
+    Top = 200
+  end
+  object dlgSave1: TSaveDialog
+    Left = 168
     Top = 200
   end
 end

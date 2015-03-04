@@ -2,7 +2,8 @@ unit CHILDWIN;
 
 interface
 
-uses Windows, Classes, Graphics, Forms, Controls, StdCtrls, GR32_Image,
+uses Windows, Classes, Graphics, Forms, Controls, StdCtrls, SysUtils,
+  GR32_Image,
   igBase, GR32_RangeBars, ExtCtrls;
 
 type
@@ -21,8 +22,13 @@ type
     { Public declarations }
     //property DocumentName : string read DocumentName
     procedure LoadDocument(AFileName : string);
+    //maybe the FileName or just caption
+    procedure SetDocumentTitle(ATitle : string);
   end;
 
+const
+  NONAME = 'Untitled';
+    
 implementation
 
 uses
@@ -42,19 +48,23 @@ begin
 end;
 
 procedure TMDIChild.LoadDocument(AFileName: string);
-var P : TPicture;
+var LLayerPanel : TigLiquidCrystal;
+  i : Integer;
 begin
-  p := TPicture.Create;
-  p.LoadFromFile(AFileName);
-  with TigNormalLayerPanel(img1.LayerList.LayerPanels[0]) do
-  begin
+  if not FileExists(AFileName) then
+    Exit;
 
-    //LayerBitmap.LoadFromFile(AFileName);
-    LayerBitmap.Assign(p);
-    img1.Bitmap.SetSizeFrom(LayerBitmap);
-    img1.LayerList.CombineResult.SetSizeFrom(img1.Bitmap);
-    Changed;
+  for i := 0 to img1.LayerList.Count -1 do
+  begin
+    if img1.LayerList.LayerPanels[i] is TigLiquidCrystal then
+    begin
+      LLayerPanel := img1.LayerList.LayerPanels[i] as TigLiquidCrystal;
+      LLayerPanel.LoadFromFile(AFileName);
+
+      Break;
+    end;
   end;
+
 end;
 
 procedure TMDIChild.FormCreate(Sender: TObject);
@@ -79,6 +89,21 @@ procedure TMDIChild.gbrZoomMouseUp(Sender: TObject; Button: TMouseButton;
 const zoomLevel : array[0..9] of Single = (0.1, 0.25, 0.50, 0.75, 1.0, 2.0, 3.0, 4.0, 6.0, 8.0);   
 begin
   img1.Scale := zoomLevel[ gbrZoom.Position];
+end;
+
+procedure TMDIChild.SetDocumentTitle(ATitle: string);
+begin
+ { if Copy(ATitle,1, Length(NONAME)) = NONAME then
+  begin
+    Caption := ATitle;
+  end
+  else
+  begin
+    if FileExists(ATitle) then
+      LoadDocument(ATitle);
+
+    Caption := ExtractFileName(ATitle);
+  end;}
 end;
 
 end.

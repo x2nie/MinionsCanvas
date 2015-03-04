@@ -47,7 +47,10 @@ type
     function BlockCoordinateLocation(X,Y: Integer;
       AllowOutsideRange:Boolean = False) : TRect; // result.topleft = char, result.bottomright = dots
     function DotIndex(CoordinateLocation : TRect) : TPoint; // whole dot together
+    procedure LoadFromFile(AFileName : string);
+
     property AreaChanged : TRect read FAreaChanged; //using LayerBitmap coordinate
+
   published
     property BitPlane : TBitmap32 read FBitPlane write SetBitPlane;
     property BacklightColor : TColor32 read FBacklightColor write FBacklightColor;
@@ -183,7 +186,7 @@ begin
   inherited;
   FBitPlane := TBitmap32.Create;
   FBitPlane.OnAreaChanged := BitPlaneAreaChanged;
-  FBlocksSize := Point(3,3);// Point(16,2);
+  FBlocksSize := Point(16,2);
   FABlockSize := Point(5,8);
   FDotSize := Point(9,11);
   FDotPadding := Point(1,1);
@@ -240,6 +243,76 @@ begin
   Result.Right := Result.Left + FDotSize.X - FDotPadding.X;
   Result.Bottom := Result.Top + FDotSize.Y - FDotPadding.Y;
 
+end;
+
+procedure TigLiquidCrystal.LoadFromFile(AFileName: string);
+var bmp : TBitmap32;
+  X,Y : Integer;
+  firstCharX, firstCharY : Integer;
+  CellH, CellW : Integer;
+  CharW, CharH : Integer;
+  firstC,C : TColor32;
+begin
+  bmp := TBitmap32.Create;
+  bmp.LoadFromFile(AFileName);
+
+  BeginUpdate;
+
+  BacklightColor := bmp.Pixel[0,0];
+  C := $1;// clNone;
+
+  //find first point
+  for y := 0 to bmp.Height-1 do
+  begin
+    for x := 0 to bmp.Width div 4 -1 do
+    begin
+      C := bmp.Pixel[x,y];
+      if c <> BacklightColor then
+      begin
+        firstCharX := X;
+        firstCharY := Y;
+        Break;
+      end;
+
+    end;
+    if c <> BacklightColor then
+    Break;
+  end;
+  Margin := Point(firstCharX, firstCharY);
+
+
+  firstC := C;
+
+  //find cell dimension
+
+  CellH := 1;
+  for y := firstCharY to bmp.Height-1 do
+  begin
+    if c = BacklightColor then
+    begin
+      Break;
+    end;
+    C := bmp.Pixel[firstCharX,y];
+    Inc(CellH);
+  end;
+  FDotSize.Y := CellH;
+
+  CellW :=1;
+  C := firstC;
+  for x := firstCharX to bmp.Width-1 do
+  begin
+    if c = BacklightColor then
+    begin
+      Break;
+    end;
+    C := bmp.Pixel[x,firstCharY];
+    Inc(CellW);
+  end;
+  FDotSize.X := CellW;
+
+  EndUpdate;
+  Self.RebuildLCD;
+  TigLayerList( Self.Collection).Update(nil); //rebuild all
 end;
 
 procedure TigLiquidCrystal.PaintBlock(ACol, ARow: Integer);
