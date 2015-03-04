@@ -99,6 +99,10 @@ type
     N2: TMenuItem;
     btnLCD: TToolButton;
     actTool_LcdPen: TAction;
+    pnlZoom: TPanel;
+    gbrZoom: TGaugeBar;
+    btnLine: TToolButton;
+    actTool_LcdLine: TAction;
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure HelpAbout1Execute(Sender: TObject);
@@ -119,6 +123,7 @@ type
     procedure cmbbxBlendModesChange(Sender: TObject);
     procedure ggbrLayerOpacityUserChange(Sender: TObject);
     procedure actTool_LcdPenExecute(Sender: TObject);
+    procedure actTool_LcdLineExecute(Sender: TObject);
   private
     { Private declarations }
     procedure CreateMDIChild(const Name: string);
@@ -140,7 +145,7 @@ uses CHILDWIN, about,
   igComboboxBlendModes, igLayers,
   igTool_BrushSimple,
   igTool_PencilSimple,
-  igTool_LcdPen;
+  igTool_LcdPen, igTool_LcdLine;
 
 type TigCustomLayerPanelAccess = class(TigBitmapLayer);
   
@@ -233,7 +238,11 @@ procedure TMainForm.actTool_LcdPenExecute(Sender: TObject);
 begin
   //set a drawing tool for mouse operation's response.
   actTool_LcdPen.Checked := GIntegrator.ActivateTool(TigToolLcdPen);
+end;
 
+procedure TMainForm.actTool_LcdLineExecute(Sender: TObject);
+begin
+  actTool_LcdLine.Checked := GIntegrator.ActivateTool(TigToolLcdLine);
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -242,7 +251,8 @@ begin
   GetBlendModeList(cmbbxBlendModes.Items);
   self.actTool_PencilExecute(self);
   self.actTool_BrushExecute(self);
-  Self.actTool_LcdPenExecute(Self);
+  Self.actTool_LcdLineExecute(Self);
+
 end;
 
 procedure TMainForm.EnabledWhenMDIavailabled(Sender: TObject);
@@ -416,6 +426,8 @@ begin
     end;
   end;
 end;
+
+
 
 
 end.

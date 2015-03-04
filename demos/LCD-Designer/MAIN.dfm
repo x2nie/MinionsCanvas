@@ -14,6 +14,7 @@ object MainForm: TMainForm
   Menu = MainMenu1
   OldCreateOrder = False
   Position = poDefault
+  WindowState = wsMaximized
   WindowMenu = Window1
   OnCreate = FormCreate
   PixelsPerInch = 96
@@ -132,8 +133,13 @@ object MainForm: TMainForm
       Top = 0
       Action = actTool_LcdPen
     end
-    object btn1: TToolButton
+    object btnLine: TToolButton
       Left = 305
+      Top = 0
+      Action = actTool_LcdLine
+    end
+    object btn1: TToolButton
+      Left = 328
       Top = 0
       Width = 8
       Caption = 'btn1'
@@ -141,14 +147,14 @@ object MainForm: TMainForm
       Style = tbsSeparator
     end
     object btnUndo: TToolButton
-      Left = 313
+      Left = 336
       Top = 0
       Action = actUndo
       DropdownMenu = pmUndo
       Style = tbsDropDown
     end
     object btnRedo: TToolButton
-      Left = 349
+      Left = 372
       Top = 0
       Action = actRedo
       DropdownMenu = pmRedo
@@ -210,7 +216,7 @@ object MainForm: TMainForm
     end
     object tlbrBlendModes: TToolBar
       Left = 0
-      Top = 21
+      Top = 46
       Width = 317
       Height = 24
       ButtonHeight = 21
@@ -250,7 +256,7 @@ object MainForm: TMainForm
     end
     object tlbrLayerOpacity: TToolBar
       Left = 0
-      Top = 0
+      Top = 25
       Width = 317
       Height = 21
       AutoSize = True
@@ -306,10 +312,29 @@ object MainForm: TMainForm
     end
     object lyrs1: TigLayersListBox
       Left = 0
-      Top = 45
+      Top = 70
       Width = 317
-      Height = 377
+      Height = 352
       Align = alClient
+    end
+    object pnlZoom: TPanel
+      Left = 0
+      Top = 0
+      Width = 317
+      Height = 25
+      Align = alTop
+      BevelOuter = bvNone
+      TabOrder = 4
+      object gbrZoom: TGaugeBar
+        Left = 48
+        Top = 0
+        Width = 193
+        Height = 16
+        Backgnd = bgPattern
+        ShowHandleGrip = True
+        Style = rbsMac
+        Position = 0
+      end
     end
   end
   object MainMenu1: TMainMenu
@@ -551,12 +576,20 @@ object MainForm: TMainForm
       OnExecute = actTool_LcdPenExecute
       OnUpdate = EnabledWhenMDIavailabled
     end
+    object actTool_LcdLine: TAction
+      Category = 'Tool'
+      Caption = 'actTool_LcdLine'
+      GroupIndex = 122
+      ImageIndex = 26
+      OnExecute = actTool_LcdLineExecute
+      OnUpdate = EnabledWhenMDIavailabled
+    end
   end
   object ImageList1: TImageList
     Left = 104
     Top = 200
     Bitmap = {
-      494C01011A001E00040010001000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C01011B001E00040010001000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000008000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1588,11 +1621,11 @@ object MainForm: TMainForm
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      00000000000000000000000000000000FFFFE40800000000FFFFFFF000000000
-      FFFFFFE000000000FFFFFFC100000000FFFFFF8300000000FFF7FF0700000000
-      C1F7FE0F00000000C3FBFC1F00000000C7FBF83F00000000CBFBF07F00000000
-      DCF7E0FF00000000FF0FC1FF00000000FFFF83FF00000000FFFF07FF00000000
-      FFFF0FFF00000000FFFF9FFF00000000FFFFFFFFC01FE4088001FFFBE02FFFF0
+      00000000000000000000000000000000FFFFE408FFFF0000FFFFFFF0FFFF0000
+      FFFFFFE0FFF30000FFFFFFC1FFE70000FFFFFF83FFCF0000FFF7FF07FF9F0000
+      C1F7FE0FFF3F0000C3FBFC1FFE7F0000C7FBF83FFCFF0000CBFBF07FF9FF0000
+      DCF7E0FFF3FF0000FF0FC1FFE7FF0000FFFF83FFCFFF0000FFFF07FFDFFF0000
+      FFFF0FFFFFFF0000FFFF9FFFFFFF0000FFFFFFFFC01FE4088001FFFBE02FFFF0
       8001FFF1FFE3FFE08001F00FFF31FFC18001E007FFF0FF838001E007FFF0FF07
       8001E007FFF0FE0F8001E007FFE1FC1F8001E007FFC3F83F8001E007FF83F07F
       8001E007FE07E0FF8001E007FC0FC1FF8001F00FF03F83FF8001FFFFE0FF07FF
