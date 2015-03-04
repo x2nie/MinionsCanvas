@@ -61,6 +61,11 @@ begin
       LLayerPanel := img1.LayerList.LayerPanels[i] as TigLiquidCrystal;
       LLayerPanel.LoadFromFile(AFileName);
 
+      img1.Bitmap.SetSizeFrom(LLayerPanel.LayerBitmap);
+      img1.LayerList.CombineResult.SetSizeFrom(LLayerPanel.LayerBitmap);
+      img1.LayerList.LayerPanels[0].LayerBitmap.SetSizeFrom(LLayerPanel.LayerBitmap);
+      img1.LayerList.Update(nil); //rebuild all
+
       Break;
     end;
   end;
