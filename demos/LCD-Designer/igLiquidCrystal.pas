@@ -252,6 +252,7 @@ var bmp : TBitmap32;
   H, W : Integer;
   CharW, CharH : Integer;
   firstC,C : TColor32;
+  P : TPoint;
 begin
   bmp := TBitmap32.Create;
   bmp.LoadFromFile(AFileName);
@@ -357,10 +358,85 @@ begin
   end;
   FABlockSize.Y := W;
 
-  EndUpdate;
+  //find gap
+  H := 1;
+  for y := firstCharY + FABlockSize.Y * FDotSize.Y  + 1 to bmp.Height-1 do
+  begin
+    C := bmp.Pixel[firstCharX,y];
+    if c <> BacklightColor then
+    begin
+      Break;
+    end;
+    Inc(H);
+  end;
+  FGapSize.Y := H;
+
+  W :=1;
+  for x := firstCharX + FABlockSize.X * FDotSize.X +1 to bmp.Width-1 do
+  begin
+    C := bmp.Pixel[x,firstCharY];
+    if c <> BacklightColor then
+    begin
+      Break;
+    end;
+    Inc(W);
+  end;
+  FGapSize.X := W;
+
+  //find LCD cols & rows
+  W := 1;
+  repeat
+    X := FMargin.X + (FABlockSize.X * FDotSize.X + FGapSize.X )* W +1;
+    if (X < bmp.Width) and (bmp.Pixel[x,firstCharY] = BacklightColor) then
+      Break;
+    Inc(W);
+  until X >= bmp.Width;
+  FBlocksSize.X := W;
+
+
+  W := 1;
+  repeat
+    Y := FMargin.Y + (FABlockSize.Y * FDotSize.Y + FGapSize.Y )* W +1;
+    if (Y < bmp.Height) and (bmp.Pixel[firstCharX,Y] = BacklightColor) then
+      Break;
+    Inc(W);
+  until Y >= bmp.Height;
+  FBlocksSize.Y := W;
+
+  Self.EndUpdate;
   RecalculateSize;
+  
+  //Parse
+  FBitPlane.BeginUpdate;
+
+  FBitOffColor := firstC;
+  for H := 0 to FBlocksSize.Y-1 do
+  for W := 0 to FBlocksSize.X-1 do
+  begin
+    P := BlockStartPixelLocation(W,H);
+    for Y := 0 to FABlockSize.Y-1 do
+    for X := 0 to FABlockSize.X-1 do
+    begin
+      C := bmp.Pixel[
+        P.X + X * FDotSize.X,
+        P.Y + Y * FDotSize.Y];
+      if C =  FBitOffColor then
+        C := 0
+      else
+      begin
+        FBitOnColor := C;
+        C := $FF;
+      end;
+      with DotIndex( MakeRect(W,H,X,Y)) do
+        BitPlane[X,Y] := C;
+    end;
+  end;
+
+  FBitPlane.EndUpdate;
+  bmp.Free;
+
   Self.RebuildLCD;
-  TigLayerList( Self.Collection).Update(nil); //rebuild all
+  //TigLayerList( Self.Collection).Update(nil); //rebuild all
 end;
 
 procedure TigLiquidCrystal.PaintBlock(ACol, ARow: Integer);
