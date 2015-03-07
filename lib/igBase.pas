@@ -543,8 +543,7 @@ end;
 procedure TigIntegrator.Notification(AComponent: TComponent;
   Operation: TOperation);
 var
-  LTool : TigTool;
-  i : Integer;
+  LTool : TigTool; 
 begin
   inherited;
   if Operation = opRemove then
@@ -816,6 +815,7 @@ begin
     Bitmap.SetSize(300,300);
     Bitmap.Clear($00000000);
 
+    {
     // create background layer
     LLayerPanel :=  TigNormalLayerPanel.Create(FLayerList);
     LLayerPanel.IsAsBackground := True;
@@ -825,6 +825,7 @@ begin
     //TigNormalLayerPanel(LLayerPanel).IsAsBackground := True;
 
     FLayerList.Add(LLayerPanel);
+    }
   end;  
 end;
 

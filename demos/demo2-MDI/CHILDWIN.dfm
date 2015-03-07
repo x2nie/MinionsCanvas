@@ -13,13 +13,14 @@ object MDIChild: TMDIChild
   Visible = True
   OnActivate = FormActivate
   OnClose = FormClose
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object img1: TigPaintBox
     Left = 0
     Top = 0
     Width = 298
-    Height = 325
+    Height = 318
     Align = alClient
     Bitmap.ResamplerClassName = 'TNearestResampler'
     BitmapAlign = baCenter

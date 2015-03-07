@@ -85,7 +85,8 @@ begin
       //LPanelIndex := GIntegrator.ActivePaintBox.LayerList.SelectedIndex + 1;
   img1.Bitmap.SetSizeFrom(LLayerPanel.LayerBitmap);
   img1.LayerList.CombineResult.SetSizeFrom(LLayerPanel.LayerBitmap);
-  img1.LayerList.LayerPanels[0].LayerBitmap.SetSizeFrom(LLayerPanel.LayerBitmap);
+  if img1.LayerList.Count > 0 then
+    img1.LayerList.LayerPanels[0].LayerBitmap.SetSizeFrom(LLayerPanel.LayerBitmap);
   img1.LayerList.Add(LLayerPanel);
 end;
 
