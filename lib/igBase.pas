@@ -424,6 +424,9 @@ begin
     LTool := GIntegrator.LoadTool(AToolClass);
     Assert(Assigned(LTool)); //error should be a programatic wrong logic.
 
+    if Assigned(ActivePaintBox) then
+      ActivePaintBox.Cursor := LTool.Cursor;
+
     Result := Self.IsToolSwitched(LTool); //ask the new tool to be active
   end;
 end;
@@ -593,6 +596,8 @@ begin
     begin
       SetActiveUndoRedo(FActivePaintBox.FUndoRedo);
       Value.FreeNotification(Self); //tell paintobx to report when she were destroying
+      if Assigned(ActiveTool) then
+        Value.Cursor := ActiveTool.Cursor;
     end
     else
       SetActiveUndoRedo(nil);
