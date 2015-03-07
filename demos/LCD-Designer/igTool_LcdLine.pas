@@ -75,6 +75,7 @@ uses
 constructor TigToolLcdLine.Create(AOwner: TComponent);
 begin
   inherited;
+  Cursor := crCross;
   FTempBmp := TBitmap32.Create;
 end;
 
