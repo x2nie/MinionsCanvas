@@ -29,7 +29,6 @@ type
 
     procedure BitPlaneAreaChanged(Sender: TObject; const Area: TRect;
       const Info: Cardinal);
-    function DotPixelRect(X, Y: Integer): TRect;
     function DotColor(X, Y: Integer): TColor32;
 
 
@@ -44,11 +43,12 @@ type
   public
     constructor Create(AOwner: TigLayerList); override;
     destructor Destroy; override;
+    function DotPixelRect(X, Y: Integer): TRect;
     function BlockCoordinateLocation(X,Y: Integer;
       AllowOutsideRange:Boolean = False) : TRect; // result.topleft = char, result.bottomright = dots
     function DotIndex(CoordinateLocation : TRect) : TPoint; // whole dot together
     procedure LoadFromFile(AFileName : string);
-
+    procedure RebuildDots(BitPlanRect: TRect);
     property AreaChanged : TRect read FAreaChanged; //using LayerBitmap coordinate
 
   published
@@ -80,6 +80,8 @@ type
 var
   GInvalidRect : TRect = (Left: -1; Top: -1; Right: -1; Bottom: -1); // signal as impossible LCD range ;
 
+//it's important for updating a rect
+procedure CorrectRect(var R : TRect);
 
 implementation
 
@@ -87,17 +89,41 @@ uses
   Forms, //for debug : application.mainform
   SysUtils;
 
+procedure CorrectRect(var R : TRect);
+var i : Integer;
+begin
+  if R.Right < R.Left then
+  begin
+    i := R.Right;
+    R.Right := R.Left;
+    R.Left := i;
+  end;
+  if R.Bottom < R.Top then
+  begin
+    i := R.Bottom;
+    R.Bottom := R.Top;
+    R.Top := i;
+  end;
+
+end;
+
 { TigLiquidCrystal }
 
 
 procedure TigLiquidCrystal.BitPlaneAreaChanged(Sender: TObject;
   const Area: TRect; const Info: Cardinal);
 var x,y : Integer;
-  R : TRect;
+  R,LBound : TRect;
 begin
-  IntersectRect(R, Area, BitPlane.BoundsRect);
-  for y := R.Top to R.Bottom-1 do
-  for x := R.Left to R.Right-1 do
+  R := Area;
+  if IsRectEmpty(R) then
+  begin
+    CorrectRect(R);
+  end;
+  LBound := MakeRect(0,0, BitPlane.Width-1, BitPlane.Height-1);
+  IntersectRect(R, R, LBound {wrong=BitPlane.BoundsRect});
+  for y := R.Top to R.Bottom do
+  for x := R.Left to R.Right do
   begin
     PaintDotCoordinate(X,Y, DotColor(X,Y) );
   end;
@@ -228,20 +254,26 @@ begin
   end;
 end;
 
+
+
 function TigLiquidCrystal.DotPixelRect(X, Y: Integer): TRect ; //whole dot index, not per char
 var LRow,LCol, LDotX, LDotY : Integer;
   P : TPoint;
+  LDot : TRect;
 begin
   LCol := X div FABlockSize.X;
   LRow := Y div FABlockSize.Y;
 
   LDotX:= X mod FABlockSize.X;
   LDotY:= Y mod FABlockSize.Y;
+  //LDot := BlockCoordinateLocation(X,Y,True);
   
   P := BlockStartPixelLocation(LCol, LRow);
   Result.TopLeft := Point(P.X + DotSize.X * LDotX , P.Y + DotSize.Y * LDotY);
-  Result.Right := Result.Left + FDotSize.X - FDotPadding.X;
-  Result.Bottom := Result.Top + FDotSize.Y - FDotPadding.Y;
+
+
+  Result.Right := Result.Left + FDotSize.X {- FDotPadding.X};
+  Result.Bottom := Result.Top + FDotSize.Y {- FDotPadding.Y};
 
 end;
 
@@ -485,6 +517,32 @@ begin
     X+ FDotSize.X - FDotPadding.X ,
     Y+ FDotSize.Y - FDotPadding.Y,
     C);
+end;
+
+procedure TigLiquidCrystal.RebuildDots(BitPlanRect: TRect);
+var x,y : Integer;
+  R,LBound : TRect;
+begin
+  R := BitPlanRect;
+  if IsRectEmpty(R) then
+  begin
+    CorrectRect(R);
+  end;
+  LBound := MakeRect(0,0, BitPlane.Width-1, BitPlane.Height-1);
+  IntersectRect(R, R, LBound {wrong=BitPlane.BoundsRect});
+  for y := R.Top to R.Bottom do
+  for x := R.Left to R.Right do
+  begin
+    PaintDotCoordinate(X,Y, DotColor(X,Y) );
+  end;
+
+  //with R do Application.MainForm.Caption := format('BitPlan Area: X:%d,  Y:%d    cx:%d, cy:%d',[Left, Top, Right, Bottom]);
+
+  //LayerBitmap.Draw(BitPlane.BoundsRect, BitPlane.BoundsRect, BitPlane);
+
+  FAreaChanged.TopLeft := DotPixelRect(R.Left, R.Top).TopLeft;
+  FAreaChanged.BottomRight := DotPixelRect(R.Right, R.Bottom).BottomRight;
+
 end;
 
 procedure TigLiquidCrystal.RebuildLCD;

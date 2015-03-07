@@ -44,6 +44,8 @@ type
     FMouseButtonDown : Boolean;
     FFirstDotIndex : TPoint;
     FLastDot : TRect;
+    //used when current rect is smaller than previous rect, for also update prior rect
+    FLastBitPlanPaintedRect: TRect;
     FLastColor : TColor32;
     FTempBmp : TBitmap32;
   protected
@@ -122,18 +124,20 @@ begin
       LRect.BottomRight := FFirstDotIndex;
       InflateRect(LRect, 1,1);
       LLayer.BitPlane.Changed(LRect);
-      //Layer.Changed(LLayer.AreaChanged);
-      Layer.Changed(LRect);
+      Layer.Changed(LLayer.AreaChanged);
+      //Layer.Changed(LRect);
       //MouseMove(Sender, Shift, X,Y, Layer);
     end;
   end;
 end;
 
+
+
 procedure TigToolLcdLine.MouseMove(Sender: TigPaintBox; Shift: TShiftState;
   X, Y: Integer; Layer: TigLayer);
 var
-  LDot  : TRect;
-  LPoint,LLastDotIndex : TPoint;
+  LDot, R,R2  : TRect;
+  P,P2,LPoint,LLastDotIndex : TPoint;
   LLayer : TigLiquidCrystal;
 begin
   if Layer is TigLiquidCrystal then
@@ -141,8 +145,13 @@ begin
     LPoint := Sender.ControlToBitmap( Point(X, Y) );
     LLayer := TigLiquidCrystal(Layer);
     LDot := LLayer.BlockCoordinateLocation(LPoint.X, LPoint.Y, True);
+    LLastDotIndex := LLayer.DotIndex(LDot);
+
     //Application.MainForm.Caption := format('mouse X:%d,  Y:%d    cx:%d, cy:%d',[X,Y, LPoint.X, LPoint.Y]);
-    with LDot do Application.MainForm.Caption := format('X:%d,  Y:%d    cx:%d, cy:%d',[Left, Top, Right, Bottom]);
+    //with LDot, LLastDotIndex do Application.MainForm.Caption := format('X:%d,  Y:%d    cx:%d, cy:%d  DI.x:%d, DI.y:%d',[Left, Top, Right, Bottom, X,Y]);
+    with LLastDotIndex do
+      R := LLayer.DotPixelRect(X, Y);
+    Application.MainForm.Caption := format('(%d, %d)   %d, %d, %d, %d',[LPoint.X,LPoint.Y,  r.Left, r.Right, r.Top, r.Bottom]);
   end
   else Application.MainForm.Caption := 'non lcd';
 
@@ -176,17 +185,41 @@ begin
         EndUpdate;
       end;
       
+      R := MakeRect(FFirstDotIndex.X, FFirstDotIndex.Y, LLastDotIndex.X, LLastDotIndex.Y);
+      {if IsRectEmpty(R) then
+      begin
+        // CorrectRect(R);
+        LPoint := R.TopLeft;
+        R.TopLeft := R.BottomRight;
+        R.BottomRight := LPoint;
 
-      //LLayer.BitPlane.LineS( P2.X, P2.Y, FLastDotIndex.X, FLastDotIndex.Y,FLastColor);
+      end;}
+      with R do
+        LLayer.BitPlane.LineS( Left, Top, Right, Bottom ,FLastColor,True);
 
+      {
       LLayer.BitPlane.PixelS[LLastDotIndex.X, LLastDotIndex.Y] :=  FLastColor;
       LLayer.BitPlane.Canvas.Pen.Color := WinColor(FLastColor);
       LLayer.BitPlane.Canvas.MoveTo( FFirstDotIndex.X, FFirstDotIndex.Y);
       LLayer.BitPlane.Canvas.LineTo( LLastDotIndex.X, LLastDotIndex.Y);
-      
+      }
       //FFirstDotIndex := LLastDotIndex;
+      {
+      R1 := LLayer.AreaChanged;
+      if IsRectEmpty(R1) then
+         CorrectRect(R1);
+
+      UnionRect(R,R1, FLastBitPlanPaintedRect);
+      Layer.Changed(R);
+      FLastBitPlanPaintedRect := R1;
+      }
+      if IsRectEmpty(R) then
+         CorrectRect(R);
+      UnionRect(R2,R, FLastBitPlanPaintedRect);
+      LLayer.RebuildDots(R2);
       Layer.Changed(LLayer.AreaChanged);
-      //FLastDot := LDot;
+      FLastBitPlanPaintedRect := R;
+      FLastDot := LDot;
     end;
   end;
 
@@ -201,7 +234,7 @@ begin
     FMouseButtonDown := False;
 
     FCmd.ChangedLayer(Layer);
-    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(FCmd,'LCD Pencil paint');
+    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(FCmd,'LCD Line paint');
     GIntegrator.InvalidateListeners;
 
   end;
