@@ -39,6 +39,8 @@ uses
 type
   TigToolLcdLine = class(TigTool)
   private
+    FCmd : TigCmdLayer_Modify;
+  
     FMouseButtonDown : Boolean;
     FFirstDotIndex : TPoint;
     FLastDot : TRect;
@@ -90,6 +92,9 @@ var
 begin
   if (Layer is TigLiquidCrystal) and (Button in [mbLeft,mbRight]) then
   begin
+    FCmd := TigCmdLayer_Modify.Create(GIntegrator.ActivePaintBox.UndoRedo);
+    FCmd.ChangingLayer(Layer);
+  
     FMouseButtonDown := True;
     LBmpXY := Sender.ControlToBitmap( Point(X, Y) );
     LLayer := TigLiquidCrystal(Layer);
@@ -117,8 +122,8 @@ begin
       LRect.BottomRight := FFirstDotIndex;
       InflateRect(LRect, 1,1);
       LLayer.BitPlane.Changed(LRect);
-      Layer.Changed(LLayer.AreaChanged);
-      //Layer.Changed(LRect);
+      //Layer.Changed(LLayer.AreaChanged);
+      Layer.Changed(LRect);
       //MouseMove(Sender, Shift, X,Y, Layer);
     end;
   end;
@@ -190,17 +195,15 @@ end;
 
 procedure TigToolLcdLine.MouseUp(Sender: TigPaintBox; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
-var cmd : TigCmdLayer_Modify;  
 begin
   if FMouseButtonDown then
   begin
     FMouseButtonDown := False;
 
-    cmd := TigCmdLayer_Modify.Create(GIntegrator.ActivePaintBox.UndoRedo);
-    cmd.ChangedLayer(Layer);
-    
-    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(cmd,'LCD Pencil paint');
+    FCmd.ChangedLayer(Layer);
+    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(FCmd,'LCD Pencil paint');
     GIntegrator.InvalidateListeners;
+
   end;
 end;
 

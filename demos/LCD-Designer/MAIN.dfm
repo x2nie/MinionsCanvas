@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 319
+  Left = 0
   Top = 159
-  Width = 1047
+  Width = 1024
   Height = 549
   Caption = 'MDI Application'
   Color = clAppWorkSpace
@@ -20,7 +20,7 @@ object MainForm: TMainForm
   PixelsPerInch = 96
   TextHeight = 13
   object spl1: TSplitter
-    Left = 719
+    Left = 696
     Top = 30
     Height = 446
     Align = alRight
@@ -28,7 +28,7 @@ object MainForm: TMainForm
   object StatusBar: TStatusBar
     Left = 0
     Top = 476
-    Width = 1039
+    Width = 1016
     Height = 19
     AutoHint = True
     Panels = <>
@@ -37,7 +37,7 @@ object MainForm: TMainForm
   object ToolBar2: TToolBar
     Left = 0
     Top = 0
-    Width = 1039
+    Width = 1016
     Height = 30
     BorderWidth = 1
     Color = clBtnFace
@@ -162,7 +162,7 @@ object MainForm: TMainForm
     end
   end
   object pnlLayer: TPanel
-    Left = 722
+    Left = 699
     Top = 30
     Width = 317
     Height = 446
