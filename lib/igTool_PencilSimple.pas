@@ -41,6 +41,7 @@ type
   private
     FLeftButtonDown : Boolean;
     FLastPoint : TPoint;
+    FCmd : TigCmdLayer_Modify;
   protected
     //Events. Polymorpism.
     procedure MouseDown(Sender: TigPaintBox; Button: TMouseButton;
@@ -71,6 +72,9 @@ var
 begin
   if Button = mbLeft then
   begin
+    FCmd := TigCmdLayer_Modify.Create(GIntegrator.ActivePaintBox.UndoRedo);
+    FCmd.ChangingLayer(Layer);
+  
     FLeftButtonDown := True;
     FLastPoint := Sender.ControlToBitmap( Point(X, Y) );
 
@@ -118,11 +122,10 @@ begin
   begin
     FLeftButtonDown := False;
 
-    cmd := TigCmdLayer_Modify.Create(GIntegrator.ActivePaintBox.UndoRedo);
-    cmd.ChangedLayer(Layer);
-    
-    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(cmd,'Pencil paint');
+    FCmd.ChangedLayer(Layer);
+    GIntegrator.ActivePaintBox.UndoRedo.AddUndo(FCmd,'Pencil paint');
     GIntegrator.InvalidateListeners;
+
   end;
 end;
 
