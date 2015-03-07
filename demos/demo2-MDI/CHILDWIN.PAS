@@ -2,7 +2,7 @@ unit CHILDWIN;
 
 interface
 
-uses Windows, Classes, Graphics, Forms, Controls, StdCtrls, GR32_Image,
+uses Windows, Classes, Graphics, Forms, Controls, StdCtrls, GR32, GR32_Image,
   igBase;
 
 type
@@ -10,6 +10,7 @@ type
     img1: TigPaintBox;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormActivate(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -49,6 +50,21 @@ begin
     img1.LayerList.CombineResult.SetSizeFrom(img1.Bitmap);
     Changed;
   end;
+end;
+
+procedure TMDIChild.FormCreate(Sender: TObject);
+var
+  LLayerPanel :  TigNormalLayerPanel;
+begin
+    LLayerPanel :=  TigNormalLayerPanel.Create(nil);
+    LLayerPanel.IsAsBackground := True;
+    LLayerPanel.LayerBitmap.SetSize(  img1.Bitmap.Width, img1.Bitmap.Height);
+    LLayerPanel.LayerBitmap.Clear(clWhite32);
+    //LLayerPanel.UpdateLayerThumbnail;
+    //TigNormalLayerPanel(LLayerPanel).IsAsBackground := True;
+
+    img1.LayerList.Add(LLayerPanel);
+
 end;
 
 end.
