@@ -27,8 +27,7 @@ type
     procedure SetGapSize(const Value: TPoint);
     procedure SetDotSize(const Value: TPoint);
 
-    procedure BitPlaneAreaChanged(Sender: TObject; const Area: TRect;
-      const Info: Cardinal);
+    //procedure BitPlaneAreaChanged(Sender: TObject; const Area: TRect; const Info: Cardinal);
     function DotColor(X, Y: Integer): TColor32;
 
 
@@ -110,7 +109,7 @@ end;
 { TigLiquidCrystal }
 
 
-procedure TigLiquidCrystal.BitPlaneAreaChanged(Sender: TObject;
+{procedure TigLiquidCrystal.BitPlaneAreaChanged(Sender: TObject;
   const Area: TRect; const Info: Cardinal);
 var x,y : Integer;
   R,LBound : TRect;
@@ -121,7 +120,7 @@ begin
     CorrectRect(R);
   end;
   LBound := MakeRect(0,0, BitPlane.Width-1, BitPlane.Height-1);
-  IntersectRect(R, R, LBound {wrong=BitPlane.BoundsRect});
+  IntersectRect(R, R, LBound); //wrong=BitPlane.BoundsRect);
   for y := R.Top to R.Bottom do
   for x := R.Left to R.Right do
   begin
@@ -136,7 +135,7 @@ begin
   FAreaChanged.BottomRight := DotPixelRect(R.Right, R.Bottom).BottomRight;
 
 
-end;
+end;}
 
 function TigLiquidCrystal.BlockCoordinateLocation(X, Y: Integer;
   AllowOutsideRange:Boolean = False): TRect;
@@ -157,7 +156,8 @@ begin
   //test is valid coordinate
   if not AllowOutsideRange then
   begin
-    R := MakeRect(0,0, FACharPixel.X * FABlockSize.X, FACharPixel.Y * FABlockSize.Y);
+    R := MakeRect(0,0, FACharPixel.X * FBlocksSize.X, FACharPixel.Y * FBlocksSize.Y);
+    //R := MakeRect(0,0, BitPlane.Width-1, BitPlane.Height-1);
     if not PtInRect(R, Point(X,Y)) then
     begin
       Result := GInvalidRect;
@@ -211,7 +211,7 @@ constructor TigLiquidCrystal.Create(AOwner: TigLayerList);
 begin
   inherited;
   FBitPlane := TBitmap32.Create;
-  FBitPlane.OnAreaChanged := BitPlaneAreaChanged;
+  //FBitPlane.OnAreaChanged := BitPlaneAreaChanged;
   FBlocksSize := Point(16,2);
   FABlockSize := Point(5,8);
   FDotSize := Point(9,11);
@@ -520,16 +520,27 @@ begin
 end;
 
 procedure TigLiquidCrystal.RebuildDots(BitPlanRect: TRect);
+  procedure MyIntersectRect(out Dst: TRect; const R1, R2: TRect);
+  begin
+    if R1.Left >= R2.Left then Dst.Left := R1.Left else Dst.Left := R2.Left;
+    if R1.Right <= R2.Right then Dst.Right := R1.Right else Dst.Right := R2.Right;
+    if R1.Top >= R2.Top then Dst.Top := R1.Top else Dst.Top := R2.Top;
+    if R1.Bottom <= R2.Bottom then Dst.Bottom := R1.Bottom else Dst.Bottom := R2.Bottom;
+    //Result := (Dst.Right >= Dst.Left) and (Dst.Bottom >= Dst.Top);
+    //if not Result then Dst := ZERO_RECT;
+  end;
+
 var x,y : Integer;
   R,LBound : TRect;
+
 begin
   R := BitPlanRect;
   if IsRectEmpty(R) then
-  begin
     CorrectRect(R);
-  end;
   LBound := MakeRect(0,0, BitPlane.Width-1, BitPlane.Height-1);
-  IntersectRect(R, R, LBound {wrong=BitPlane.BoundsRect});
+  MyIntersectRect(R, R, LBound {wrong=BitPlane.BoundsRect});
+  {if IsRectEmpty(R) then
+    CorrectRect(R);}
   for y := R.Top to R.Bottom do
   for x := R.Left to R.Right do
   begin
