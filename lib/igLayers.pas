@@ -1181,7 +1181,7 @@ var
   LLayerRow    : PColor32Array;
   LMaskRow     : PColor32Array;
 begin
-{$RANGECHECKS OFF}
+{.$RANGECHECKS OFF}
 
   LMaskRow := nil;
   if EqualRect(ARect, EMPTY_RECT) then
@@ -1299,7 +1299,7 @@ begin
     FOnLayerCombined(Self, LRect);
   end;
 
-{$RANGECHECKS ON}
+{.$RANGECHECKS ON}
 end;
 
 procedure TigLayerList.DeleteVisibleLayerPanels;
