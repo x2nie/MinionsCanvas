@@ -123,11 +123,14 @@ begin
       LRect.TopLeft     := FFirstDotIndex;
       LRect.BottomRight := FFirstDotIndex;
       InflateRect(LRect, 1,1);
-      LLayer.BitPlane.Changed(LRect);
+      //LLayer.BitPlane.Changed(LRect);
+      LLayer.RebuildDots(LRect);
       Layer.Changed(LLayer.AreaChanged);
       //Layer.Changed(LRect);
       //MouseMove(Sender, Shift, X,Y, Layer);
-    end;
+    end
+    else
+      Application.MainForm.Caption := 'outside lcd range!';
   end;
 end;
 
@@ -135,6 +138,20 @@ end;
 
 procedure TigToolLcdLine.MouseMove(Sender: TigPaintBox; Shift: TShiftState;
   X, Y: Integer; Layer: TigLayer);
+  procedure MyUnionRect(out Rect: TRect; const R1, R2: TRect);
+  begin
+    Rect := R1;
+    if not IsRectEmpty(R2) then
+    begin
+      if R2.Left < R1.Left then Rect.Left := R2.Left;
+      if R2.Top < R1.Top then Rect.Top := R2.Top;
+      if R2.Right > R1.Right then Rect.Right := R2.Right;
+      if R2.Bottom > R1.Bottom then Rect.Bottom := R2.Bottom;
+    end;
+    //Result := not IsRectEmpty(Rect);
+    //if not Result then Rect := ZERO_RECT;
+  end;
+
 var
   LDot, R,R2  : TRect;
   P,P2,LPoint,LLastDotIndex : TPoint;
@@ -148,10 +165,8 @@ begin
     LLastDotIndex := LLayer.DotIndex(LDot);
 
     //Application.MainForm.Caption := format('mouse X:%d,  Y:%d    cx:%d, cy:%d',[X,Y, LPoint.X, LPoint.Y]);
-    //with LDot, LLastDotIndex do Application.MainForm.Caption := format('X:%d,  Y:%d    cx:%d, cy:%d  DI.x:%d, DI.y:%d',[Left, Top, Right, Bottom, X,Y]);
-    with LLastDotIndex do
-      R := LLayer.DotPixelRect(X, Y);
-    Application.MainForm.Caption := format('(%d, %d)   %d, %d, %d, %d',[LPoint.X,LPoint.Y,  r.Left, r.Right, r.Top, r.Bottom]);
+    with LDot, LLastDotIndex do Application.MainForm.Caption := format('X:%d,  Y:%d    cx:%d, cy:%d  DI.x:%d, DI.y:%d',[Left, Top, Right, Bottom, X,Y]);
+    //with LLastDotIndex do  R := LLayer.DotPixelRect(X, Y);    Application.MainForm.Caption := format('(%d, %d)   %d, %d, %d, %d',[LPoint.X,LPoint.Y,  r.Left, r.Right, r.Top, r.Bottom]);
   end
   else Application.MainForm.Caption := 'non lcd';
 
@@ -215,8 +230,10 @@ begin
       }
       if IsRectEmpty(R) then
          CorrectRect(R);
-      UnionRect(R2,R, FLastBitPlanPaintedRect);
+      MyUnionRect(R2,R, FLastBitPlanPaintedRect);
+
       LLayer.RebuildDots(R2);
+      
       Layer.Changed(LLayer.AreaChanged);
       FLastBitPlanPaintedRect := R;
       FLastDot := LDot;
