@@ -8,7 +8,7 @@ uses
   igGrid in '..\..\lib\igGrid.pas',
   igSwatch in '..\..\lib\igSwatch.pas',
   igLiquidCrystal in 'igLiquidCrystal.pas',
-  igTool_LcdLine in 'igTool_LcdLine.pas';
+  igTool_LcdFloodfill in 'igTool_LcdFloodfill.pas';
 
 {$R *.RES}
 
