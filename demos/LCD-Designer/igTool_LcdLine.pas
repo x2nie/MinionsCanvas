@@ -119,11 +119,13 @@ begin
     begin
       {}
 
+      LLayer.BitPlane.BeginUpdate;//prevent redraw
       LLayer.BitPlane.PixelS[FFirstDotIndex.X, FFirstDotIndex.Y] :=  FLastColor;
+      LLayer.BitPlane.EndUpdate;
 
       LRect.TopLeft     := FFirstDotIndex;
       LRect.BottomRight := FFirstDotIndex;
-      InflateRect(LRect, 1,1);
+      //InflateRect(LRect, 1,1);
       //LLayer.BitPlane.Changed(LRect);
       LLayer.RebuildDots(LRect);
       Layer.Changed(LLayer.AreaChanged);
@@ -210,8 +212,10 @@ begin
         R.BottomRight := LPoint;
 
       end;}
+      LLayer.BitPlane.BeginUpdate;
       with R do
         LLayer.BitPlane.LineS( Left, Top, Right, Bottom ,FLastColor,True);
+      LLayer.BitPlane.EndUpdate;
 
       {
       LLayer.BitPlane.PixelS[LLastDotIndex.X, LLastDotIndex.Y] :=  FLastColor;

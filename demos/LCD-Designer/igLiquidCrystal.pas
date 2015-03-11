@@ -27,7 +27,7 @@ type
     procedure SetGapSize(const Value: TPoint);
     procedure SetDotSize(const Value: TPoint);
 
-    //procedure BitPlaneAreaChanged(Sender: TObject; const Area: TRect; const Info: Cardinal);
+    procedure BitPlaneAreaChanged(Sender: TObject; const Area: TRect; const Info: Cardinal);
     function DotColor(X, Y: Integer): TColor32;
 
 
@@ -109,12 +109,18 @@ end;
 { TigLiquidCrystal }
 
 
-{procedure TigLiquidCrystal.BitPlaneAreaChanged(Sender: TObject;
+procedure TigLiquidCrystal.BitPlaneAreaChanged(Sender: TObject;
   const Area: TRect; const Info: Cardinal);
 var x,y : Integer;
   R,LBound : TRect;
 begin
-  R := Area;
+
+  if FUpdateCount = 0 then
+  begin
+    RebuildDots(Area);
+  end;
+
+  {R := Area;
   if IsRectEmpty(R) then
   begin
     CorrectRect(R);
@@ -132,10 +138,10 @@ begin
   //LayerBitmap.Draw(BitPlane.BoundsRect, BitPlane.BoundsRect, BitPlane);
 
   FAreaChanged.TopLeft := DotPixelRect(R.Left, R.Top).TopLeft;
-  FAreaChanged.BottomRight := DotPixelRect(R.Right, R.Bottom).BottomRight;
+  FAreaChanged.BottomRight := DotPixelRect(R.Right, R.Bottom).BottomRight;}
 
 
-end;}
+end;
 
 function TigLiquidCrystal.BlockCoordinateLocation(X, Y: Integer;
   AllowOutsideRange:Boolean = False): TRect;
@@ -211,7 +217,7 @@ constructor TigLiquidCrystal.Create(AOwner: TigLayerList);
 begin
   inherited;
   FBitPlane := TBitmap32.Create;
-  //FBitPlane.OnAreaChanged := BitPlaneAreaChanged;
+  FBitPlane.OnAreaChanged := BitPlaneAreaChanged;
   FBlocksSize := Point(16,2);
   FABlockSize := Point(5,8);
   FDotSize := Point(9,11);
