@@ -23,7 +23,7 @@ object MDIChild: TMDIChild
     Width = 461
     Height = 482
     Align = alClient
-    Bitmap.ResamplerClassName = 'TNearestResampler'
+    Bitmap.ResamplerClassName = 'TDraftResampler'
     BitmapAlign = baCenter
     RepaintMode = rmOptimizer
     Scale = 1.000000000000000000
