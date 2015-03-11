@@ -104,6 +104,9 @@ type
     btnLine: TToolButton;
     actTool_LcdLine: TAction;
     dlgSave1: TSaveDialog;
+    actLCD_invert: TAction;
+    btnInvert: TToolButton;
+    ToolButton14: TToolButton;
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure HelpAbout1Execute(Sender: TObject);
@@ -126,6 +129,7 @@ type
     procedure actTool_LcdPenExecute(Sender: TObject);
     procedure actTool_LcdLineExecute(Sender: TObject);
     procedure FileSave1Execute(Sender: TObject);
+    procedure actLCD_invertExecute(Sender: TObject);
   private
     { Private declarations }
     procedure CreateMDIChild(const Name: string);
@@ -144,7 +148,8 @@ implementation
 
 uses CHILDWIN, about,
   GR32_Add_BlendModes,
-  igComboboxBlendModes, igLayers,
+  igComboboxBlendModes,
+  igLayers, igLiquidCrystal,
   igTool_BrushSimple,
   igTool_PencilSimple,
   igTool_LcdPen, igTool_LcdLine;
@@ -440,6 +445,22 @@ begin
   if assigned(GIntegrator.ActivePaintBox) and dlgSave1.Execute then
   begin
     GIntegrator.ActivePaintBox.Bitmap.SaveToFile( dlgSave1.FileName );
+  end;
+end;
+
+procedure TMainForm.actLCD_invertExecute(Sender: TObject);
+var i : Integer;
+begin
+  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
+  with GIntegrator.ActivePaintBox.LayerList do
+  begin
+    for i := 0 to Count -1 do
+      if LayerPanels[i] is TigLiquidCrystal then
+      begin
+        TigLiquidCrystal(LayerPanels[i]).Invert;
+        TigLiquidCrystal(LayerPanels[i]).Changed;
+        Break;
+      end;
   end;
 end;
 

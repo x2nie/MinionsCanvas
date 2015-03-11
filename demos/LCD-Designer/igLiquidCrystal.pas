@@ -48,6 +48,9 @@ type
     function DotIndex(CoordinateLocation : TRect) : TPoint; // whole dot together
     procedure LoadFromFile(AFileName : string);
     procedure RebuildDots(BitPlanRect: TRect);
+
+    procedure Invert;
+
     property AreaChanged : TRect read FAreaChanged; //using LayerBitmap coordinate
 
   published
@@ -111,8 +114,8 @@ end;
 
 procedure TigLiquidCrystal.BitPlaneAreaChanged(Sender: TObject;
   const Area: TRect; const Info: Cardinal);
-var x,y : Integer;
-  R,LBound : TRect;
+//var x,y : Integer;
+  //R,LBound : TRect;
 begin
 
   if FUpdateCount = 0 then
@@ -281,6 +284,25 @@ begin
   Result.Right := Result.Left + FDotSize.X {- FDotPadding.X};
   Result.Bottom := Result.Top + FDotSize.Y {- FDotPadding.Y};
 
+end;
+
+procedure TigLiquidCrystal.Invert;
+var i : Integer;
+  P : PColor32;
+begin
+  with BitPlane do
+  begin
+    BeginUpdate;
+    P := @Bits[0];
+    for i := 0 to Width * Height-1 do
+    begin
+      P^ := not P^;
+      Inc(P);
+    end;
+    EndUpdate;
+    RebuildDots(BoundsRect);
+  end;
+  Changed;
 end;
 
 procedure TigLiquidCrystal.LoadFromFile(AFileName: string);
