@@ -1,6 +1,6 @@
 object MainForm: TMainForm
-  Left = 0
-  Top = 159
+  Left = 160
+  Top = 165
   Width = 1024
   Height = 549
   Caption = 'MDI Application'
@@ -14,6 +14,7 @@ object MainForm: TMainForm
   Menu = MainMenu1
   OldCreateOrder = False
   Position = poDefault
+  ShowHint = True
   WindowState = wsMaximized
   WindowMenu = Window1
   OnCreate = FormCreate
@@ -146,15 +147,28 @@ object MainForm: TMainForm
       ImageIndex = 24
       Style = tbsSeparator
     end
-    object btnUndo: TToolButton
+    object btnInvert: TToolButton
       Left = 336
+      Top = 0
+      Action = actLCD_invert
+    end
+    object ToolButton14: TToolButton
+      Left = 359
+      Top = 0
+      Width = 8
+      Caption = 'ToolButton14'
+      ImageIndex = 5
+      Style = tbsSeparator
+    end
+    object btnUndo: TToolButton
+      Left = 367
       Top = 0
       Action = actUndo
       DropdownMenu = pmUndo
       Style = tbsDropDown
     end
     object btnRedo: TToolButton
-      Left = 372
+      Left = 403
       Top = 0
       Action = actRedo
       DropdownMenu = pmRedo
@@ -587,12 +601,18 @@ object MainForm: TMainForm
       OnExecute = actTool_LcdLineExecute
       OnUpdate = EnabledWhenMDIavailabled
     end
+    object actLCD_invert: TAction
+      Category = 'Tool'
+      Caption = 'actLCD_invert'
+      OnExecute = actLCD_invertExecute
+      OnUpdate = EnabledWhenMDIavailabled
+    end
   end
   object ImageList1: TImageList
     Left = 104
     Top = 200
     Bitmap = {
-      494C01011B001E00040010001000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C01011B001E00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000008000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1652,7 +1672,8 @@ object MainForm: TMainForm
       F6CFFE008000FFFFF6B7FE000000FFFFF6B7FE000000FFFFF8B780000000FFF7
       FE8F80000001C1F7FE3F80000003C3FBFF7F80000003C7FBFE3F80010003CBFB
       FEBF80030003DCF7FC9F80070003FF0FFDDF807F0003FFFFFDDF80FF8007FFFF
-      FDDF81FFF87FFFFFFFFFFFFFFFFFFFFF}
+      FDDF81FFF87FFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000
+      000000000000}
   end
   object pmUndo: TPopupMenu
     OnPopup = pmUndoPopup
