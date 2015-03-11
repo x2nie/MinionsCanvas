@@ -50,6 +50,7 @@ type
     procedure RebuildDots(BitPlanRect: TRect);
 
     procedure Invert;
+    procedure SwapColor;// needed when load from bitmap and is wrong parsed
 
     property AreaChanged : TRect read FAreaChanged; //using LayerBitmap coordinate
 
@@ -485,7 +486,7 @@ begin
       else
       begin
         FBitOnColor := C;
-        C := $FF;
+        C := clWhite32;
       end;
       with DotIndex( MakeRect(W,H,X,Y)) do
         BitPlane[X,Y] := C;
@@ -495,7 +496,8 @@ begin
   FBitPlane.EndUpdate;
   bmp.Free;
 
-  Self.RebuildLCD;
+  //Self.RebuildLCD;
+  RebuildDots(BitPlane.BoundsRect);
   //TigLayerList( Self.Collection).Update(nil); //rebuild all
 end;
 
@@ -548,7 +550,7 @@ begin
 end;
 
 procedure TigLiquidCrystal.RebuildDots(BitPlanRect: TRect);
-  procedure MyIntersectRect(out Dst: TRect; const R1, R2: TRect);
+  {procedure MyIntersectRect(out Dst: TRect; const R1, R2: TRect);
   begin
     if R1.Left >= R2.Left then Dst.Left := R1.Left else Dst.Left := R2.Left;
     if R1.Right <= R2.Right then Dst.Right := R1.Right else Dst.Right := R2.Right;
@@ -556,6 +558,10 @@ procedure TigLiquidCrystal.RebuildDots(BitPlanRect: TRect);
     if R1.Bottom <= R2.Bottom then Dst.Bottom := R1.Bottom else Dst.Bottom := R2.Bottom;
     //Result := (Dst.Right >= Dst.Left) and (Dst.Bottom >= Dst.Top);
     //if not Result then Dst := ZERO_RECT;
+  end;}
+  function IsRectInvalid(const R: TRect): Boolean;
+  begin
+    Result := (R.Right < R.Left) or (R.Bottom < R.Top);
   end;
 
 var x,y : Integer;
@@ -565,8 +571,9 @@ begin
   R := BitPlanRect;
   if IsRectEmpty(R) then
     CorrectRect(R);
+    //exit;
   LBound := MakeRect(0,0, BitPlane.Width-1, BitPlane.Height-1);
-  MyIntersectRect(R, R, LBound {wrong=BitPlane.BoundsRect});
+  IntersectRect(R, R, LBound {wrong=BitPlane.BoundsRect});
   {if IsRectEmpty(R) then
     CorrectRect(R);}
   for y := R.Top to R.Bottom do
@@ -646,5 +653,17 @@ begin
 end;
 
 
+
+procedure TigLiquidCrystal.SwapColor;
+var C : TColor32;
+begin
+  //BeginUpdate;
+  C := FBitOnColor;
+  FBitOnColor := BitOffColor;
+  FBitOffColor := C;
+  //EndUpdate;
+  Invert;
+  
+end;
 
 end.

@@ -1,6 +1,6 @@
 object MainForm: TMainForm
-  Left = 160
-  Top = 165
+  Left = 171
+  Top = 249
   Width = 1024
   Height = 549
   Caption = 'MDI Application'
@@ -139,8 +139,13 @@ object MainForm: TMainForm
       Top = 0
       Action = actTool_LcdLine
     end
-    object btn1: TToolButton
+    object btnFloodFill: TToolButton
       Left = 328
+      Top = 0
+      Action = actTool_LcdFloodfill
+    end
+    object btn1: TToolButton
+      Left = 351
       Top = 0
       Width = 8
       Caption = 'btn1'
@@ -148,12 +153,17 @@ object MainForm: TMainForm
       Style = tbsSeparator
     end
     object btnInvert: TToolButton
-      Left = 336
+      Left = 359
       Top = 0
       Action = actLCD_invert
     end
+    object btnSwapCOlor: TToolButton
+      Left = 382
+      Top = 0
+      Action = actLCD_SwapColor
+    end
     object ToolButton14: TToolButton
-      Left = 359
+      Left = 405
       Top = 0
       Width = 8
       Caption = 'ToolButton14'
@@ -161,14 +171,14 @@ object MainForm: TMainForm
       Style = tbsSeparator
     end
     object btnUndo: TToolButton
-      Left = 367
+      Left = 413
       Top = 0
       Action = actUndo
       DropdownMenu = pmUndo
       Style = tbsDropDown
     end
     object btnRedo: TToolButton
-      Left = 403
+      Left = 449
       Top = 0
       Action = actRedo
       DropdownMenu = pmRedo
@@ -601,10 +611,24 @@ object MainForm: TMainForm
       OnExecute = actTool_LcdLineExecute
       OnUpdate = EnabledWhenMDIavailabled
     end
+    object actTool_LcdFloodfill: TAction
+      Category = 'Tool'
+      Caption = 'actLCD_Floodfill'
+      GroupIndex = 122
+      ImageIndex = 10
+      OnExecute = actTool_LcdFloodfillExecute
+      OnUpdate = EnabledWhenMDIavailabled
+    end
     object actLCD_invert: TAction
       Category = 'Tool'
       Caption = 'actLCD_invert'
       OnExecute = actLCD_invertExecute
+      OnUpdate = EnabledWhenMDIavailabled
+    end
+    object actLCD_SwapColor: TAction
+      Category = 'Tool'
+      Caption = 'actLCD_SwapColor'
+      OnExecute = actLCD_SwapColorExecute
       OnUpdate = EnabledWhenMDIavailabled
     end
   end

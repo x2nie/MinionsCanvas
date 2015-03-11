@@ -107,6 +107,10 @@ type
     actLCD_invert: TAction;
     btnInvert: TToolButton;
     ToolButton14: TToolButton;
+    actLCD_SwapColor: TAction;
+    btnSwapCOlor: TToolButton;
+    actTool_LcdFloodfill: TAction;
+    btnFloodFill: TToolButton;
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure HelpAbout1Execute(Sender: TObject);
@@ -130,6 +134,8 @@ type
     procedure actTool_LcdLineExecute(Sender: TObject);
     procedure FileSave1Execute(Sender: TObject);
     procedure actLCD_invertExecute(Sender: TObject);
+    procedure actLCD_SwapColorExecute(Sender: TObject);
+    procedure actTool_LcdFloodfillExecute(Sender: TObject);
   private
     { Private declarations }
     procedure CreateMDIChild(const Name: string);
@@ -152,7 +158,7 @@ uses CHILDWIN, about,
   igLayers, igLiquidCrystal,
   igTool_BrushSimple,
   igTool_PencilSimple,
-  igTool_LcdPen, igTool_LcdLine;
+  igTool_LcdPen, igTool_LcdLine, igTool_LcdFloodfill;
 
 type TigCustomLayerPanelAccess = class(TigBitmapLayer);
   
@@ -462,6 +468,27 @@ begin
         Break;
       end;
   end;
+end;
+
+procedure TMainForm.actLCD_SwapColorExecute(Sender: TObject);
+var i : Integer;
+begin
+  if not Assigned(GIntegrator.ActivePaintBox) then Exit;
+  with GIntegrator.ActivePaintBox.LayerList do
+  begin
+    for i := 0 to Count -1 do
+      if LayerPanels[i] is TigLiquidCrystal then
+      begin
+        TigLiquidCrystal(LayerPanels[i]).SwapColor;
+        //TigLiquidCrystal(LayerPanels[i]).Changed;
+        Break;
+      end;
+  end;
+end;
+
+procedure TMainForm.actTool_LcdFloodfillExecute(Sender: TObject);
+begin
+  actTool_LcdFloodfill.Checked := GIntegrator.ActivateTool(TigToolLcdFloodfill);
 end;
 
 end.
