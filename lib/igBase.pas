@@ -69,9 +69,9 @@ type
 
   TigChangingEvent = procedure(Sender: TObject; const Info : string) of object;
   TigMouseEvent = procedure(Sender: TigPaintBox; Button: TMouseButton;
-    Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer) of object;
+    Shift: TShiftState; X, Y: Integer; Layer: TigLayer) of object;
   TigMouseMoveEvent = procedure(Sender: TigPaintBox; Shift: TShiftState;
-    X, Y: Integer; Layer: TigBitmapLayer) of object;
+    X, Y: Integer; Layer: TigLayer) of object;
 
 
   TigIntegrator = class(TComponent)     // Event Organizer. hidden component
@@ -99,11 +99,11 @@ type
   protected
     procedure ActivePaintBoxSwitched;
     procedure DoMouseDown(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
     procedure DoMouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-      Y: Integer; Layer: TigBitmapLayer);
+      Y: Integer; Layer: TigLayer);
     procedure DoMouseUp(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure RegisterListener(AAgent: TigAgent);
 
@@ -148,7 +148,7 @@ type
   private
     FLayerList: TLayerCollection;
     FUndoRedo: TigUndoRedoManager;
-    FSelectedLayer: TigBitmapLayer;
+    FSelectedLayer: TigLayer;
     procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
     function GetLayerList: TLayerCollection;
 
@@ -163,7 +163,7 @@ type
 
     //property LayerList : TLayerCollection read FLayerList;
     property LayerList : TLayerCollection read GetLayerList; //deprecated, use Layers instead
-    property SelectedLayer : TigBitmapLayer read FSelectedLayer write FSelectedLayer;
+    property SelectedLayer : TigLayer read FSelectedLayer write FSelectedLayer;
 
     property UndoRedo : TigUndoRedoManager read FUndoRedo; 
   published
@@ -228,11 +228,11 @@ type
 
     //Events used internally. Descendant may NOT inherits. call by integrator
     procedure DoMouseDown(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer); //virtual;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); //virtual;
     procedure DoMouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-      Y: Integer; Layer: TigBitmapLayer); //virtual;
+      Y: Integer; Layer: TigLayer); //virtual;
     procedure DoMouseUp(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer); //virtual;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); //virtual;
     procedure DoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState); //virtual;
     procedure DoKeyPress(Sender: TObject; var Key: Char); //virtual;
     procedure DoKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState); //virtual;
@@ -471,7 +471,7 @@ end;
 
 procedure TigIntegrator.DoMouseDown(Sender: TigPaintBox;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer;
-  Layer: TigBitmapLayer);
+  Layer: TigLayer);
 begin
   if Assigned(FActiveTool) then
     FActiveTool.DoMouseDown(Sender, Button, Shift, X,Y, Layer);
@@ -479,7 +479,7 @@ end;
 
 
 procedure TigIntegrator.DoMouseMove(Sender: TigPaintBox;
-  Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
+  Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
 begin
   if Assigned(FActiveTool) then
     FActiveTool.DoMouseMove(Sender, Shift, X,Y, Layer);
@@ -487,7 +487,7 @@ end;
 
 procedure TigIntegrator.DoMouseUp(Sender: TigPaintBox;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer;
-  Layer: TigBitmapLayer);
+  Layer: TigLayer);
 begin
   if Assigned(FActiveTool) then
     FActiveTool.DoMouseUp(Sender, Button, Shift, X,Y, Layer);
@@ -667,7 +667,7 @@ begin
 end;
 
 procedure TigTool.DoMouseDown(Sender: TigPaintBox; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
+  Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
 begin
   if Assigned(FOnBeforeMouseDown) then
     FOnBeforeMouseDown(Sender, Button, Shift, X, Y, Layer);
@@ -679,7 +679,7 @@ begin
 end;
 
 procedure TigTool.DoMouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-  Y: Integer; Layer: TigBitmapLayer);
+  Y: Integer; Layer: TigLayer);
 begin
   if Assigned(FOnBeforeMouseMove) then
     FOnBeforeMouseMove(Sender, Shift, X, Y, Layer);
@@ -691,7 +691,7 @@ begin
 end;
 
 procedure TigTool.DoMouseUp(Sender: TigPaintBox; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; Layer: TigBitmapLayer);
+  Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
 begin
   if Assigned(FOnBeforeMouseUp) then
     FOnBeforeMouseUp(Sender, Button, Shift, X, Y, Layer);
@@ -855,7 +855,7 @@ end;
 procedure TigPaintBox.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  ///GIntegrator.DoMouseMove(Self, Shift, X, Y, FLayerList.SelectedPanel);
+  GIntegrator.DoMouseMove(Self, Shift, X, Y, self.FSelectedLayer {FLayerList.SelectedPanel});///
 end;
 
 procedure TigPaintBox.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
