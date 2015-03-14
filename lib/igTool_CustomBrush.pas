@@ -66,13 +66,13 @@ type
 
     //Events. Polymorpism.
     procedure MouseDown(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); override;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); override;
 
     procedure MouseMove(Sender: TigPaintBox; Shift: TShiftState; X,
-      Y: Integer; Layer: TigCustomLayerPanel); override;
+      Y: Integer; Layer: TigLayer); override;
       
     procedure MouseUp(Sender: TigPaintBox; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel); override;
+      Shift: TShiftState; X, Y: Integer; Layer: TigLayer); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -245,24 +245,26 @@ end;
 
 procedure TigCustomBrush.MouseDown(Sender: TigPaintBox;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer;
-  Layer: TigCustomLayerPanel);
+  Layer: TigLayer);
 var
   LRect  : TRect;
   LPoint : TPoint;
+  LLayer : TigBitmapLayer;
 begin
   LPoint := Sender.ControlToBitmap( Point(X, Y) );
 
 { Mouse left button down }
 
-  if Button = mbLeft then
+  if (Layer is TigBitmapLayer) and (Button = mbLeft) then
   begin
+    LLayer := TigBitmapLayer(Layer);
     Felozox          := LPoint.X;
     Felozoy          := LPoint.Y;
     FPrevStrokePoint := LPoint;
     Ftavolsag        := 0; // For BrushLine function
 
-    SetSourceBitmap(Layer.LayerBitmap);
-    Paint(Layer.LayerBitmap, LPoint.X, LPoint.Y);
+    SetSourceBitmap(LLayer.LayerBitmap);
+    Paint(LLayer.LayerBitmap, LPoint.X, LPoint.Y);
 
     LRect := GetPaintRect(LPoint.X, LPoint.Y);
     Layer.Changed(LRect);
@@ -272,23 +274,27 @@ begin
 end;
 
 procedure TigCustomBrush.MouseMove(Sender: TigPaintBox; Shift: TShiftState;
-  X, Y: Integer; Layer: TigCustomLayerPanel);
+  X, Y: Integer; Layer: TigLayer);
 var
   LPoint          : TPoint;
   LLastStrokeArea : TRect;
   LBrushArea      : TRect;
+  LLayer : TigBitmapLayer;
+  
 begin
   LPoint := Sender.ControlToBitmap( Point(X, Y) );
   
-  if FLeftButtonDown then
+  if FLeftButtonDown and (Layer is TigBitmapLayer)then
   begin
+    LLayer := TigBitmapLayer(Layer);
+  
     // get refresh area
     LLastStrokeArea := GetPaintRect(FPrevStrokePoint.X, FPrevStrokePoint.Y);
     LBrushArea      := GetPaintRect(LPoint.X, LPoint.Y);
     LBrushArea      := AddRects(LLastStrokeArea, LBrushArea);
 
     BrushLine(FPrevStrokePoint.X, FPrevStrokePoint.Y, LPoint.X, LPoint.Y,
-              FStrokeInterval, Layer.LayerBitmap);
+              FStrokeInterval, LLayer.LayerBitmap);
 
     Layer.Changed(LBrushArea);
 
@@ -297,7 +303,7 @@ begin
 end;
 
 procedure TigCustomBrush.MouseUp(Sender: TigPaintBox; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer; Layer: TigCustomLayerPanel);
+  Shift: TShiftState; X, Y: Integer; Layer: TigLayer);
 begin
   if FLeftButtonDown then
   begin

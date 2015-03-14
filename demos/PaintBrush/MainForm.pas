@@ -35,7 +35,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls,
   GR32_Image, GR32,
-  igBase, igTool_PaintBrush;
+  igBase, igLayers, igTool_PaintBrush;
 
 type
   TfrmMain = class(TForm)
@@ -234,11 +234,15 @@ begin
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
+var LLayer : TigBitmapLayer;
 begin
   //set a drawing tool for mouse operation's response.
   FBrushTool := TigPaintBrush.Create(Self); //autodestroy
   GIntegrator.ActivateTool(FBrushTool);
 
+  LLayer := TigBitmapLayer.Create(self.pntbxDrawingArea.Layers);
+  LLayer.LayerBitmap.SetSizeFrom(self.pntbxDrawingArea.Bitmap);
+  pntbxDrawingArea.SelectedLayer := LLayer;
   SetPaintingStroke;
 
   cmbbxBlendMode.Items     := BlendModeList;
@@ -276,8 +280,8 @@ end;
 
 procedure TfrmMain.btnResetBackgroundClick(Sender: TObject);
 begin
-  pntbxDrawingArea.LayerList.SelectedPanel.LayerBitmap.Clear(clWhite32);
-  pntbxDrawingArea.LayerList.SelectedPanel.Changed;
+  TigBitmapLayer( pntbxDrawingArea.SelectedLayer).LayerBitmap.Clear(clWhite32);
+  pntbxDrawingArea.SelectedLayer.Changed;
 end;
 
 end.
