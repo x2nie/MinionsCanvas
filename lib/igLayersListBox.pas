@@ -40,7 +40,7 @@ uses
 { Delphi }
   Types, Windows, Controls, Classes,
 { Graphics32 }
-  GR32, GR32_Image, GR32_RangeBars,
+  GR32, GR32_Image, GR32_Layers, GR32_RangeBars,
 { miniGlue lib }
   igBase, igLayers, igLayerPanelManager;
 
@@ -49,7 +49,7 @@ type
   private
   protected
     FAgent : TigAgent;                    //integrator's event listener
-    FLayerList : TigLayerList;       //to compare between last & current 
+    FLayerList : TLayerCollection;       //to compare between last & current 
     procedure ActivePaintBoxSwitched(Sender: TObject);
     procedure SoInvalidate(Sender: TObject; ALayer: TigLayer);
     procedure InvalidateEvent(Sender: TObject);
