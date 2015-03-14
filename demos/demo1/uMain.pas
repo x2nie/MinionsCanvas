@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, igBase, StdCtrls, GR32_Image;
+  Dialogs, igBase, StdCtrls, GR32, GR32_Image;
 
 type
   TForm1 = class(TForm)
@@ -23,13 +23,34 @@ var
 
 implementation
 uses
-  igTool_BrushSimple;
+  igLayers, igTool_BrushSimple;
 {$R *.dfm}
 
 procedure TForm1.FormCreate(Sender: TObject);
-begin
+var LLayerPanel : TigNormalLayerPanel;
+begin //
   //set a drawing tool for mouse operation's response.
   GIntegrator.ActivateTool(TigToolBrushSimple);
+
+  LLayerPanel := TigNormalLayerPanel.Create(imgWorkArea.LayerList);
+  LLayerPanel.BeginUpdate;
+      //with img1.Bitmap do
+    with imgWorkArea do
+      LLayerPanel.LayerBitmap.SetSize(Width,height);
+      //LLayerPanel.LayerBitmap.Clear($FF000000 or Cardinal(Random($FFFFFF)));
+    LLayerPanel.LayerBitmap.Clear(clBlue32);
+      //LLayerPanel.UpdateLayerThumbnail;
+
+  LLayerPanel.EndUpdate;
+
+      //LPanelIndex := GIntegrator.ActivePaintBox.LayerList.SelectedIndex + 1;
+  imgWorkArea.Bitmap.SetSizeFrom(LLayerPanel.LayerBitmap);
+  //imgWorkArea.LayerList.CombineResult.SetSizeFrom(LLayerPanel.LayerBitmap);
+  //if imgWorkArea.LayerList.Count > 0 then
+    //imgWorkArea.LayerList.LayerPanels[0].LayerBitmap.SetSizeFrom(LLayerPanel.LayerBitmap);
+
+  /// imgWorkArea.LayerList.Add(LLayerPanel);
+
 end;
 
 end.
