@@ -39,9 +39,9 @@ uses
 { Delphi }
   Types, Windows, Controls, Classes,
 { Graphics32 }
-  GR32, GR32_Image, GR32_RangeBars,
+  GR32, GR32_Image, GR32_Layers, GR32_RangeBars,
 { miniGlue lib }
-  igLayers;
+  igBase, igLayers;
 
 type
   TigSelectedPanelArea = (spaUnknown,
@@ -132,13 +132,14 @@ type
     FMouseDownY       : Integer;
     FSnapshotOffsetY  : Integer;
     FMovingPanelIndex : Integer;
+    FMovingPanel      : TigLayer;
     FIsPanelMoving    : Boolean;
     FSnapshotTopLeft  : TPoint;
     FPanelSnapshot    : TBitmap32;
     FScrollThread     : TigScrollPanelThread;
 
 
-    procedure SetLayerList(const AValue: TigLayerList);
+    procedure SetLayerList(const AValue: TLayerCollection);
     procedure ScrollThreadStop;
 
     function GetPanelRect(const APanelIndex: Integer): TRect;
@@ -150,7 +151,7 @@ type
     // callbacks
     procedure ScrollHandler(Sender: TObject);
   protected
-    FLayerList      : TigLayerList;
+    FLayerList      : TLayerCollection;
     procedure PreparePanelSnapshotRendering(const AMouseX, AMouseY: Integer); virtual;
     procedure CheckLayout; virtual;
     procedure Scroll(Dy: Integer); virtual;
@@ -172,7 +173,7 @@ type
 
     procedure Resize; override;
 
-    property LayerList : TigLayerList read FLayerList write SetLayerList;
+    property LayerList : TLayerCollection read FLayerList write SetLayerList;
   published
     property OnMouseDown;
     property OnMouseMove;
@@ -200,6 +201,8 @@ uses
 { miniGlue lib }
   igMath;
 
+type
+  TigPaintBoxAccess = class(TigPaintBox);
 {$R igIcons.res}
 
 const
@@ -718,7 +721,7 @@ begin
   end;
 end;
 
-procedure TigLayerPanelManager.SetLayerList(const AValue: TigLayerList);
+procedure TigLayerPanelManager.SetLayerList(const AValue: TLayerCollection);
 begin
   FLayerList := AValue;
   CheckLayout;
@@ -743,7 +746,8 @@ end;
 function TigLayerPanelManager.GetPanelRect(const APanelIndex: Integer): TRect;
 begin
   Result.Left   := 0;
-  Result.Top    := (FLayerList.MaxIndex - APanelIndex) * LAYER_PANEL_HEIGHT + FViewportOffset.Y;
+  ///Result.Top    := (FLayerList.MaxIndex - APanelIndex) * LAYER_PANEL_HEIGHT + FViewportOffset.Y;
+  Result.Top    := (FLayerList.Count-1 - APanelIndex) * LAYER_PANEL_HEIGHT + FViewportOffset.Y;
   Result.Right  := Self.ClientWidth - 1;
   Result.Bottom := Result.Top + LAYER_PANEL_HEIGHT - 1;
 end;
@@ -760,7 +764,7 @@ begin
 
     if LYActual < FWorkSize.Y then
     begin
-      Result := FLayerList.MaxIndex - LYActual div LAYER_PANEL_HEIGHT;
+      Result := FLayerList.Count - LYActual div LAYER_PANEL_HEIGHT -1;
     end;
   end;
 end;
@@ -799,17 +803,19 @@ procedure TigLayerPanelManager.PreparePanelSnapshotRendering(
 var
   LPanelIndex : Integer;
   LPanelRect  : TRect;
-  LPanel      : TigLayer;
+  LPanel      : TCustomLayer;
 begin
   FMovingPanelIndex := -1;
+  FMovingPanel := nil;
 
   if Assigned(FLayerList) and (FLayerList.Count > 0) then
   begin
     LPanelIndex := GetPanelIndexAtXY(AMouseX, AMouseY);
-    LPanel      := FLayerList.LayerPanels[LPanelIndex];
+    LPanel      := FLayerList[LPanelIndex];
 
     if Assigned(LPanel) then
     begin
+      FMovingPanel      := TigLayer(LPanel);
       FMovingPanelIndex := LPanelIndex;
       LPanelRect        := Self.GetPanelRect(LPanelIndex);
       FSnapshotOffsetY  := LPanelRect.Top - AMouseY;
@@ -865,7 +871,7 @@ end;
 procedure TigLayerPanelManager.DoPaintBuffer;
 var
   i, y, LMaxY : Integer;
-  LLayerPanel : TigLayer;
+  LLayer      : TCustomLayer;
   LRect       : TRect;
 begin
   CheckLayout;
@@ -875,15 +881,15 @@ begin
   begin
     if FLayerList.Count > 0 then
     begin
-      for i := FLayerList.MaxIndex downto 0 do
+      for i := FLayerList.Count-1 downto 0 do
       begin
-        LLayerPanel := FLayerList.LayerPanels[i];
+        LLayer := FLayerList[i];
         LRect       := GetPanelRect(i);
 
         // only render the panel that in the viewport area...
-        if IsRectInViewport(LRect) then
+        if IsRectInViewport(LRect) and (LLayer is TigLayer) then
         begin
-          FPanelTheme.Paint(Buffer, LLayerPanel, LRect);
+          FPanelTheme.Paint(Buffer, TigLayer(LLayer), LRect);
         end;
       end;
 
@@ -909,7 +915,7 @@ procedure TigLayerPanelManager.MouseDown(Button: TMouseButton;
 var
   LIndex      : Integer;
   LPanelRect  : TRect;
-  LLayerPanel : TigLayer;
+  LLayer : TigLayer;
 begin
   if Button = mbLeft then
   begin
@@ -927,14 +933,14 @@ begin
       if LIndex >= 0 then
       begin
         LPanelRect  := Self.GetPanelRect(LIndex);
-        LLayerPanel := FLayerList.LayerPanels[LIndex];
+        LLayer := FLayerList[LIndex] as TigLayer;
 
-        case FPanelTheme.GetPanelAreaAtXY(LLayerPanel, LPanelRect, X, Y) of
+        case FPanelTheme.GetPanelAreaAtXY(LLayer, LPanelRect, X, Y) of
           spaLayerThumbnail:
             begin
-              if Assigned(LLayerPanel.OnLayerThumbDblClick) then
+              if Assigned(LLayer.OnLayerThumbDblClick) then
               begin
-                LLayerPanel.OnLayerThumbDblClick(LLayerPanel);
+                LLayer.OnLayerThumbDblClick(LLayer);
               end;
             end;
           (*
@@ -956,9 +962,9 @@ begin
            *)
           spaLayerCaption:
             begin
-              if Assigned(LLayerPanel.OnPanelDblClick) then
+              if Assigned(LLayer.OnPanelDblClick) then
               begin
-                LLayerPanel.OnPanelDblClick(LLayerPanel);
+                LLayer.OnPanelDblClick(LLayer);
               end;
             end;
         end;
@@ -972,7 +978,10 @@ begin
       // after the dialog is closed, the current panel is still
       // in Moving mode.
       if LIndex >= 0 then
-        FLayerList.SelectLayerPanel(LIndex);
+      begin
+        LLayer := FLayerList[LIndex] as TigLayer;
+        TigPaintBoxAccess(FLayerList.Owner).SelectedLayer := LLayer;
+      end;
       FLeftButtonDown := True;
     end;
   end;
@@ -1021,7 +1030,7 @@ procedure TigLayerPanelManager.MouseUp(Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
   LIndex      : Integer;
-  LLayerPanel : TigLayer;
+  LLayer      : TigLayer;
   LPanelRect  : TRect;
   LValidArea  : TRect;
   LPos        : TPoint;
@@ -1059,7 +1068,8 @@ begin
         // otherwise, we should to refresh the view by ourselves.
         if (FMovingPanelIndex <> LIndex) then
         begin
-          FLayerList.Move(FMovingPanelIndex, LIndex);
+          ///FLayerList.Move(FMovingPanelIndex, LIndex);
+          FMovingPanel.Index := LIndex;
           //FLayerList.SelectLayerPanel(LIndex);
         end
         else
@@ -1074,12 +1084,12 @@ begin
         if LIndex >= 0 then
         begin
           LPanelRect  := Self.GetPanelRect(LIndex);
-          LLayerPanel := FLayerList.LayerPanels[LIndex];
+          LLayer := FLayerList[LIndex] as TigLayer;
 
-          case FPanelTheme.GetPanelAreaAtXY(LLayerPanel, LPanelRect, X, Y) of
+          case FPanelTheme.GetPanelAreaAtXY(LLayer, LPanelRect, X, Y) of
             spaVisibleMark:
               begin
-                LLayerPanel.IsLayerVisible := not LLayerPanel.IsLayerVisible;
+                LLayer.IsLayerVisible := not LLayer.IsLayerVisible;
               end;
 
             spaStageMark:
@@ -1089,8 +1099,9 @@ begin
 
             spaLayerThumbnail:
               begin
-                FLayerList.SelectLayerPanel(LIndex);
-                FLayerList.SelectedPanel.LayerProcessStage := lpsLayer;
+                ///FLayerList.SelectLayerPanel(LIndex);
+                TigPaintBoxAccess(FLayerList.Owner).SelectedLayer := LLayer;
+                //FLayerList.SelectedPanel.LayerProcessStage := lpsLayer;
               end;
             (*
             spaMaskLinkageMark:
@@ -1107,7 +1118,8 @@ begin
             spaLogoThumbnail,
             spaLayerCaption:
               begin
-                FLayerList.SelectLayerPanel(LIndex);
+                //FLayerList.SelectLayerPanel(LIndex);
+                TigPaintBoxAccess(FLayerList.Owner).SelectedLayer := LLayer;
               end;
           end;
 
@@ -1127,6 +1139,7 @@ procedure TigLayerPanelManager.KeyDown(var Key: Word; Shift: TShiftState);
 var
   LCurIndex    : Integer;
   LTargetIndex : Integer;
+  LLayer : TigLayer;
 begin
   if FIsPanelMoving then
   begin
@@ -1135,21 +1148,25 @@ begin
 
   if Assigned(FLayerList) and (FLayerList.Count > 1) then
   begin
+          LLayer := TigPaintBoxAccess(FLayerList.Owner).SelectedLayer;
+          LCurIndex := LLayer.Index;
     case Key of
       VK_UP:
         begin
-          LCurIndex    := FLayerList.SelectedIndex;
+          ///LCurIndex    := FLayerList.SelectedIndex;
           LTargetIndex := LCurIndex + 1;
 
-          if LCurIndex < FLayerList.MaxIndex then
+          if LCurIndex < FLayerList.Count then
           begin
             if ssShift in Shift then
             begin
-              FLayerList.Move(LCurIndex, LTargetIndex);
+              //FLayerList.Move(LCurIndex, LTargetIndex);
+              LLayer.Index := LTargetIndex;
             end
             else
             begin
-              FLayerList.SelectLayerPanel(LTargetIndex);
+              //FLayerList.SelectLayerPanel(LTargetIndex);
+              TigPaintBoxAccess(FLayerList.Owner).SelectedLayer := LLayer;
             end;
 
             ScrollSelectedPanelInViewport;
@@ -1158,18 +1175,24 @@ begin
         
       VK_DOWN:
         begin
-          LCurIndex    := FLayerList.SelectedIndex;
+          ///LCurIndex    := FLayerList.SelectedIndex;
+          
           LTargetIndex := LCurIndex - 1;
 
           if LCurIndex > 0 then
           begin
             if ssShift in Shift then
             begin
-              FLayerList.Move(LCurIndex, LTargetIndex);
+              ///FLayerList.Move(LCurIndex, LTargetIndex);
+              LLayer.Index := LTargetIndex;
             end
             else
             begin
-              FLayerList.SelectLayerPanel(LTargetIndex);
+              //FLayerList.SelectLayerPanel(LTargetIndex);
+              with TigPaintBoxAccess(FLayerList.Owner) do
+              begin
+                SelectedLayer := TigLayer(Layers[LTargetIndex]); 
+              end;
             end;
 
             ScrollSelectedPanelInViewport;
@@ -1188,7 +1211,7 @@ var
 begin
   Result := False;
   
-  if Assigned(FLayerList) and FLayerList.IsValidIndex(APanelIndex) then
+  if Assigned(FLayerList) and (FLayerList.Count > 0) and (APanelIndex < FLayerList.Count ) then
   begin
     LRect := GetPanelRect(APanelIndex);
 
@@ -1213,7 +1236,8 @@ begin
   
   if Assigned(FLayerList) and (FLayerList.Count > 0) then
   begin
-    LIndex := FLayerList.SelectedIndex;
+    ///LIndex := FLayerList.SelectedIndex;
+    LIndex := TigPaintBoxAccess(FLayerList.Owner).SelectedLayer.Index;
     Result := ScrollPanelInViewport(LIndex);
   end;
 end;
@@ -1225,9 +1249,9 @@ var
 begin
   Result := nil;
 
-  if Assigned(FLayerList) and FLayerList.IsValidIndex(APanelIndex) then
+  if Assigned(FLayerList) and (FLayerList.Count > 0) and (APanelIndex < FLayerList.Count ) then
   begin
-    LPanel := FLayerList.LayerPanels[APanelIndex];
+    LPanel := FLayerList[APanelIndex] as TigLayer;
     Result := FPanelTheme.GetSnapshot(LPanel, Self.ClientWidth, LAYER_PANEL_HEIGHT);
   end;
 end;
@@ -1238,7 +1262,8 @@ begin
 
   if Assigned(FLayerList) then
   begin
-    Result := GetPanelSnapshot(FLayerList.SelectedIndex);
+    ///Result := GetPanelSnapshot(FLayerList.SelectedIndex);
+    Result := GetPanelSnapshot(TigPaintBoxAccess(FLayerList.Owner).SelectedLayer.Index);
   end;
 end;
 

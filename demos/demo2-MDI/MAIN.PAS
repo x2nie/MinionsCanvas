@@ -189,7 +189,7 @@ begin
 
       //LLayerPanel := CreateNormalLayer( $FF000000 or Cardinal(Random($FFFFFF)), False );
       //LLayerPanel := TigNormalLayerPanel.Create(GIntegrator.ActivePaintBox.LayerList); //error access violation
-      LLayerPanel := TigNormalLayerPanel.Create(nil);
+      LLayerPanel := TigNormalLayerPanel.Create(GIntegrator.ActivePaintBox.Layers);
       LLayerPanel.BeginUpdate;
       with GIntegrator.ActivePaintBox.Bitmap do
       LLayerPanel.LayerBitmap.SetSize(Width,height);
@@ -197,9 +197,10 @@ begin
       //LLayerPanel.UpdateLayerThumbnail;
       LLayerPanel.EndUpdate;
 
-      LPanelIndex := GIntegrator.ActivePaintBox.LayerList.SelectedIndex + 1;
+      LPanelIndex := GIntegrator.ActivePaintBox.SelectedLayer.Index + 1;
 
-      GIntegrator.ActivePaintBox.LayerList.Insert(LPanelIndex, LLayerPanel);
+      ///GIntegrator.ActivePaintBox.LayerList.Insert(LPanelIndex, LLayerPanel);
+      LLayerPanel.Index := LPanelIndex;
 
       cmd := TigCmdLayer_New.Create(GIntegrator.ActivePaintBox.UndoRedo);
       cmd.ChangedLayer(LLayerPanel);
@@ -242,7 +243,8 @@ begin
   if not Assigned(GIntegrator.ActivePaintBox) then
     Exit;
     cmd := TigCmdLayer_Delete.Create(GIntegrator.ActivePaintBox.UndoRedo);
-    cmd.ChangingLayer(GIntegrator.ActivePaintBox.LayerList.SelectedPanel); //save
+    ///cmd.ChangingLayer(GIntegrator.ActivePaintBox.LayerList.SelectedPanel); //save
+    cmd.ChangingLayer(GIntegrator.ActivePaintBox.SelectedLayer); //save
     //GIntegrator.ActivePaintBox.LayerList.DeleteSelectedLayerPanel;
     cmd.Play; //delete
     GIntegrator.ActivePaintBox.UndoRedo.AddUndo(cmd,'Delete Layer');
@@ -356,7 +358,7 @@ var LLayer : TigBitmapLayer;
 begin
   if assigned(GIntegrator.ActivePaintBox) then
   begin
-    LLayer := GIntegrator.ActivePaintBox.LayerList.SelectedPanel;
+    LLayer := GIntegrator.ActivePaintBox.SelectedLayer as TigBitmapLayer;
     if assigned(LLayer) then
     begin
       lbName.Caption := llayer.DisplayName;
@@ -375,7 +377,7 @@ var LLayer : TigBitmapLayer;
 begin
   if assigned(GIntegrator.ActivePaintBox) then
   begin
-    LLayer := GIntegrator.ActivePaintBox.LayerList.SelectedPanel;
+    LLayer := GIntegrator.ActivePaintBox.SelectedLayer as TigBitmapLayer;
     if assigned(LLayer) then
     begin
       if LLayer is TigBitmapLayer then
@@ -392,7 +394,7 @@ var LLayer : TigBitmapLayer;
 begin
   if assigned(GIntegrator.ActivePaintBox) then
   begin
-    LLayer := GIntegrator.ActivePaintBox.LayerList.SelectedPanel;
+    LLayer := GIntegrator.ActivePaintBox.SelectedLayer as TigBitmapLayer;
     if assigned(LLayer) then
     begin
       if LLayer is TigBitmapLayer then

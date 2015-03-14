@@ -108,6 +108,7 @@ type
     property ChangedRect          : TRect                read FChangedRect;  //used by collection.update
     property LayerThumbnail       : TBitmap32            read GetLayerThumb;
     property IsSelected           : Boolean              read FSelected             write FSelected;
+    //property IsSelected           : Boolean              read GetIsSelected;
     property IsDuplicated         : Boolean              read FDuplicated           write FDuplicated;
 
     //property OnChange             : TNotifyEvent         read FOnChange             write FOnChange;
@@ -757,6 +758,7 @@ var
   LRect       : TRect;
   DstRect: TRect;
 
+  ShiftX, ShiftY : TFloat;
   {LPixelCount : Integer;
   LForeBits   : PColor32;
   LBackBits   : PColor32;
@@ -780,8 +782,12 @@ Exit;}
   DstRect := Buffer.ClipRect;
   
   if FLayerBitmap.Empty then Exit;
-  LRect := Rect(0,0, FLayerBitmap.Width -1, FLayerBitmap.Height-1);
+  LayerCollection.GetViewportShift(ShiftX, ShiftY);
 
+  LRect := MakeRect(FloatRect(ShiftX, ShiftY, ShiftX+FLayerBitmap.Width -1, ShiftY+FLayerBitmap.Height-1));
+
+  Buffer.Draw(LRect, FLayerBitmap.BoundsRect, FLayerBitmap);
+  Exit;
   
   // for sure the range check
   GR32.IntersectRect(LRect, DstRect, LRect);

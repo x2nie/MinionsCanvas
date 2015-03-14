@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, StdCtrls,
-  igBase;
+  igBase, igLayers;
 
 type
   TigComboBoxBlendMode = class(TComboBox)
@@ -45,6 +45,7 @@ end;
 
 procedure TigComboBoxBlendMode.Change;
 var TempNotifyEvent : TNotifyEvent;
+  LLayer : TigLayer;
 begin
   //we need OnChange triggered at the last chance.
   TempNotifyEvent := OnChange;
@@ -52,7 +53,12 @@ begin
     OnChange := nil;
     inherited; //without OnChange triggered
     if GIntegrator.ActivePaintBox <> nil then
-      GIntegrator.ActivePaintBox.LayerList.SelectedPanel.LayerBlendMode := TBlendMode32(ItemIndex);
+    begin
+      ///GIntegrator.ActivePaintBox.LayerList.SelectedPanel.LayerBlendMode := TBlendMode32(ItemIndex);
+      LLayer := GIntegrator.ActivePaintBox.SelectedLayer;
+      if LLayer is TigBitmapLayer then
+        TigBitmapLayer(LLayer).LayerBlendMode := TBlendMode32(ItemIndex);
+    end;
 
     if Assigned(TempNotifyEvent) then
       TempNotifyEvent(Self);

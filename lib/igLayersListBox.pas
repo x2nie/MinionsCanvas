@@ -71,12 +71,12 @@ begin
   if Assigned(GIntegrator.ActivePaintBox) then
   begin
     //remove event
-    if Assigned(LayerList) and  (LayerList <> GIntegrator.ActivePaintBox.LayerList) then
-      LayerList.OnLayerChanged := nil;
+    ///`if Assigned(LayerList) and  (LayerList <> GIntegrator.ActivePaintBox.LayerList) then
+      ///LayerList.OnLayerChanged := nil;
 
     //install event
     Self.LayerList := GIntegrator.ActivePaintBox.LayerList;
-    LayerList.OnLayerChanged := SoInvalidate;
+    ///LayerList.OnLayerChanged := SoInvalidate;
   end
   else
   begin
