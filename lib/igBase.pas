@@ -148,6 +148,7 @@ type
   private
     FLayerList: TLayerCollection;
     FUndoRedo: TigUndoRedoManager;
+    FSelectedLayer: TigBitmapLayer;
     procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
     function GetLayerList: TLayerCollection;
 
@@ -162,6 +163,7 @@ type
 
     //property LayerList : TLayerCollection read FLayerList;
     property LayerList : TLayerCollection read GetLayerList; //deprecated, use Layers instead
+    property SelectedLayer : TigBitmapLayer read FSelectedLayer write FSelectedLayer;
 
     property UndoRedo : TigUndoRedoManager read FUndoRedo; 
   published
@@ -847,7 +849,7 @@ procedure TigPaintBox.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
   inherited;
-  ///GIntegrator.DoMouseDown(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
+  GIntegrator.DoMouseDown(Self, Button, Shift, X, Y, self.FSelectedLayer {FLayerList.SelectedPanel});///
 end;
 
 procedure TigPaintBox.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -860,7 +862,7 @@ procedure TigPaintBox.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
 begin
   inherited;
-  ///GIntegrator.DoMouseUp(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
+  GIntegrator.DoMouseUp(Self, Button, Shift, X, Y, self.FSelectedLayer {FLayerList.SelectedPanel});///
 end;
 
 procedure TigPaintBox.SetFocus;
