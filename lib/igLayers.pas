@@ -91,7 +91,7 @@ type
 
     function GetEmpty: Boolean; virtual;//override;
     procedure PaintLayerThumb; virtual;
-    procedure Paint(ABuffer: TBitmap32; DstRect: TRect); virtual;
+    ///procedure Paint(ABuffer: TBitmap32; DstRect: TRect); virtual;
 
     function GetLayerThumb: TBitmap32;
     procedure SetLayerEnabled(AValue: Boolean);
@@ -158,6 +158,9 @@ type
     FOnLogoThumbDblClick  : TNotifyEvent;
     FOnProcessStageChanged : TigLayerProcessStageChanged;
 
+    procedure Paint(Buffer: TBitmap32); override;
+
+
     function GetLayerOpacity: Byte;
 
     function GetThumbZoomScale(
@@ -177,7 +180,7 @@ type
     procedure LayerBlend(F: TColor32; var B: TColor32; M: TColor32); virtual;
     procedure InitMask;
     procedure PaintLayerThumb; override;
-    procedure Paint(ABuffer: TBitmap32; DstRect: TRect); override;
+    ///procedure Paint(ABuffer: TBitmap32; DstRect: TRect); override;
 
   public
     constructor Create(ALayerCollection: TLayerCollection); override;
@@ -739,7 +742,8 @@ begin
   FMaskBitmap.Assign(Value);
 end;
 
-procedure TigBitmapLayer.Paint(ABuffer: TBitmap32; DstRect: TRect);
+
+procedure TigBitmapLayer.Paint(Buffer: TBitmap32{; DstRect: TRect});
 var
   i            : Integer;
   k, j, x, y : Integer;
@@ -751,6 +755,7 @@ var
   LLayerRow    : PColor32Array;
   LMaskRow     : PColor32Array;
   LRect       : TRect;
+  DstRect: TRect;
 
   {LPixelCount : Integer;
   LForeBits   : PColor32;
@@ -772,7 +777,8 @@ begin
     LayerBitmap.DrawMode, LayerBlend);
 
 Exit;}
-
+  DstRect := Buffer.ClipRect;
+  
   if FLayerBitmap.Empty then Exit;
   LRect := Rect(0,0, FLayerBitmap.Width -1, FLayerBitmap.Height-1);
 
@@ -789,7 +795,7 @@ Exit;}
     y := j + LRect.Top;
 
     // get entries of one line pixels on the background bitmap ...
-    LResultRow := ABuffer.ScanLine[y];
+    LResultRow := Buffer.ScanLine[y];
 
     // get entries of one line pixels on each layer bitmap ...
     LLayerRow := FLayerBitmap.ScanLine[y];
@@ -805,7 +811,7 @@ Exit;}
       x := k + LRect.Left;
 
       Assert(x * y < FLayerBitmap.Width * FLayerBitmap.Height, 'FLayerBitmap');
-      Assert(x * y < ABuffer.Width * ABuffer.Height, 'ABuffer');
+      Assert(x * y < Buffer.Width * Buffer.Height, 'ABuffer');
 
       if Self.Index = 0 then
       begin
@@ -1225,7 +1231,7 @@ begin
         if (not LLayerPanel.IsLayerVisible) {or LLayerPanel.FLayerBitmap.Empty} then
           Continue;
 
-        LLayerPanel.Paint(FCombineResult, LRect);
+        ///LLayerPanel.Paint(FCombineResult, LRect);
       end;
 
 
@@ -1928,10 +1934,10 @@ begin
   Result := True;
 end;
 
-procedure TigLayer.Paint(ABuffer: TBitmap32; DstRect: TRect);
+{procedure TigLayer.Paint(ABuffer: TBitmap32; DstRect: TRect);
 begin
 
-end;
+end;}
 
 function TigLayer.GetLayerThumb: TBitmap32;
 begin

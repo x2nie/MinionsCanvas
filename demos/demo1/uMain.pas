@@ -42,6 +42,7 @@ begin //
       //LLayerPanel.UpdateLayerThumbnail;
 
   LLayerPanel.EndUpdate;
+  imgWorkArea.SelectedLayer := LLayerPanel;
 
       //LPanelIndex := GIntegrator.ActivePaintBox.LayerList.SelectedIndex + 1;
   imgWorkArea.Bitmap.SetSizeFrom(LLayerPanel.LayerBitmap);
