@@ -41,13 +41,14 @@ var P : TPicture;
 begin
   p := TPicture.Create;
   p.LoadFromFile(AFileName);
-  with TigNormalLayerPanel(img1.LayerList.LayerPanels[0]) do
+  ///with TigNormalLayerPanel(img1.LayerList.LayerPanels[0]) do
+  with TigNormalLayerPanel(img1.Layers[0]) do
   begin
 
     //LayerBitmap.LoadFromFile(AFileName);
     LayerBitmap.Assign(p);
     img1.Bitmap.SetSizeFrom(LayerBitmap);
-    img1.LayerList.CombineResult.SetSizeFrom(img1.Bitmap);
+    ///img1.LayerList.CombineResult.SetSizeFrom(img1.Bitmap);
     Changed;
   end;
 end;
@@ -56,14 +57,14 @@ procedure TMDIChild.FormCreate(Sender: TObject);
 var
   LLayerPanel :  TigNormalLayerPanel;
 begin
-    LLayerPanel :=  TigNormalLayerPanel.Create(nil);
+    LLayerPanel :=  TigNormalLayerPanel.Create(img1.Layers);
     LLayerPanel.IsAsBackground := True;
     LLayerPanel.LayerBitmap.SetSize(  img1.Bitmap.Width, img1.Bitmap.Height);
     LLayerPanel.LayerBitmap.Clear(clWhite32);
     //LLayerPanel.UpdateLayerThumbnail;
     //TigNormalLayerPanel(LLayerPanel).IsAsBackground := True;
-
-    img1.LayerList.Add(LLayerPanel);
+    img1.SelectedLayer := LLayerPanel;
+    //img1.LayerList.Add(LLayerPanel);
 
 end;
 
