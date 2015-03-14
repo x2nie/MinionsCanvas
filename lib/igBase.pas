@@ -146,9 +146,10 @@ type
   { the drawing-canvas object
   }
   private
-    FLayerList: TigLayerList;
+    FLayerList: TLayerCollection;
     FUndoRedo: TigUndoRedoManager;
     procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
+    function GetLayerList: TLayerCollection;
 
   protected
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -159,7 +160,9 @@ type
     destructor Destroy; override;
     procedure SetFocus; override;
 
-    property LayerList : TigLayerList read FLayerList;
+    //property LayerList : TLayerCollection read FLayerList;
+    property LayerList : TLayerCollection read GetLayerList; //deprecated, use Layers instead
+
     property UndoRedo : TigUndoRedoManager read FUndoRedo; 
   published
     property Align;
@@ -255,7 +258,7 @@ type
   TigUndoRedoManager = class(TComponent)
   private
     FItemIndex: Integer;
-    FPanelList: TigLayerList;
+    FPanelList: TLayerCollection;
     function GetCount: Integer;
 
   protected
@@ -277,7 +280,7 @@ type
 
     property Strings :TStrings read FUndoList;
     property Count : Integer read GetCount;
-    property LayerList : TigLayerList read FPanelList write FPanelList;
+    property LayerList : TLayerCollection read FPanelList write FPanelList;
     property ItemIndex : Integer read FItemIndex;
   published
 
@@ -288,7 +291,7 @@ type
     FManager: TigUndoRedoManager;
   protected
     {properties}
-    function LayerList : TigLayerList;
+    function LayerList : TLayerCollection;
     property Manager : TigUndoRedoManager read FManager write FManager;
   protected
     {helper, call internally}
@@ -791,9 +794,9 @@ end;
 procedure TigPaintBox.AfterLayerCombined(ASender: TObject;
   const ARect: TRect);
 begin
-  Bitmap.FillRectS(ARect, $00FFFFFF);  // must be transparent white
+{///  Bitmap.FillRectS(ARect, $00FFFFFF);  // must be transparent white
   Bitmap.Draw(ARect, ARect, FLayerList.CombineResult);
-  Bitmap.Changed(ARect);
+  Bitmap.Changed(ARect);}
 end;
 
 constructor TigPaintBox.Create(AOwner: TComponent);
@@ -804,8 +807,8 @@ begin
   Options := [pboAutoFocus];
   TabStop := True;
   //FAgent := TigAgent.Create(self); //autodestroy. //maybe better to use integrator directly.
-  FLayerList := TigLayerList.Create(Self); //TPersistent is not autodestroy
-  FLayerList.OnLayerCombined := AfterLayerCombined;
+  FLayerList := TLayerCollection.Create(Self); //TPersistent is not autodestroy
+  ///FLayerList.OnLayerCombined := AfterLayerCombined;
 
   FUndoRedo:= TigUndoRedoManager.Create(Self);
   FUndoRedo.LayerList := FLayerList;
@@ -835,24 +838,29 @@ begin
   inherited;
 end;
 
+function TigPaintBox.GetLayerList: TLayerCollection;
+begin
+  Result := Layers;
+end;
+
 procedure TigPaintBox.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
   inherited;
-  GIntegrator.DoMouseDown(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
+  ///GIntegrator.DoMouseDown(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
 end;
 
 procedure TigPaintBox.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  GIntegrator.DoMouseMove(Self, Shift, X, Y, FLayerList.SelectedPanel);
+  ///GIntegrator.DoMouseMove(Self, Shift, X, Y, FLayerList.SelectedPanel);
 end;
 
 procedure TigPaintBox.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
 begin
   inherited;
-  GIntegrator.DoMouseUp(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
+  ///GIntegrator.DoMouseUp(Self, Button, Shift, X, Y, FLayerList.SelectedPanel);
 end;
 
 procedure TigPaintBox.SetFocus;
@@ -1002,7 +1010,7 @@ begin
     FManager := TigUndoRedoManager (AOwner);
 end;
 
-function TigCommand.LayerList: TigLayerList;
+function TigCommand.LayerList: TLayerCollection;
 begin
   Result := nil;
   if Assigned(self.FManager) then
@@ -1084,7 +1092,7 @@ begin
     //DebugSave(FModifiedStream);
 
     //refresh reference to current layer object, maybe has been recreated by other command
-    FLayer := LayerList.LayerPanels[Self.LayerIndex];
+    ///FLayer := LayerList.LayerPanels[Self.LayerIndex];
 
     AStream.Position := 0;
     AStream.ReadComponent(self); //restore
@@ -1125,7 +1133,7 @@ begin
     //FLayer := TigNormalLayerPanel.Create( Self.PanelList, 300,300); //its work
     FLayer := FLayerClass.Create(self.LayerList);
     FLayer.IsDuplicated := true; //dont increment the layer name
-    self.LayerList.Insert(self.LayerIndex, FLayer);
+    ///self.LayerList.Insert(self.LayerIndex, FLayer);
   end;
   //inherited;
   RestoreFromStream( FModifiedStream );
@@ -1133,7 +1141,7 @@ end;
 
 procedure TigCmdLayer_New.Revert;
 begin
-  LayerList.DeleteLayerPanel(self.FLayerIndex);
+  ///LayerList.DeleteLayerPanel(self.FLayerIndex);
   FLayer := nil;
 end;
 
@@ -1148,7 +1156,7 @@ end;
 
 procedure TigCmdLayer_Delete.Play; //redo
 begin
-  LayerList.DeleteLayerPanel(self.FLayerIndex);
+  ///LayerList.DeleteLayerPanel(self.FLayerIndex);
   FLayer := nil;
 end;
 
@@ -1159,7 +1167,7 @@ begin
     //FLayer := TigNormalLayerPanel.Create( Self.PanelList, 300,300); //its work
     FLayer := FLayerClass.Create(self.LayerList);
     FLayer.IsDuplicated := true; //dont increment the layer name    
-    self.LayerList.Insert(self.LayerIndex, FLayer);
+    ///self.LayerList.Insert(self.LayerIndex, FLayer);
   end;
   RestoreFromStream(FOriginalStream);
 end;

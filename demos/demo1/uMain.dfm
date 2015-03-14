@@ -26,6 +26,11 @@ object Form1: TForm1
     Top = 24
     Width = 300
     Height = 300
+    Bitmap.ResamplerClassName = 'TNearestResampler'
+    BitmapAlign = baTopLeft
+    Scale = 1.000000000000000000
+    ScaleMode = smNormal
+    TabOrder = 0
   end
   object Memo1: TMemo
     Left = 328
