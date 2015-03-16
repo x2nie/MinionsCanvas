@@ -32,7 +32,7 @@ begin //
   //set a drawing tool for mouse operation's response.
   GIntegrator.ActivateTool(TigToolBrushSimple);
 
-  LLayerPanel := TigNormalLayerPanel.Create(imgWorkArea.LayerList);
+  LLayerPanel := TigNormalLayerPanel.Create(imgWorkArea.Layers);
   LLayerPanel.BeginUpdate;
       //with img1.Bitmap do
     with imgWorkArea do
