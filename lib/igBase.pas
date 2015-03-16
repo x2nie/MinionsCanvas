@@ -162,7 +162,7 @@ type
     procedure SetFocus; override;
 
     //property LayerList : TLayerCollection read FLayerList;
-    property LayerList : TLayerCollection read GetLayerList; //deprecated, use Layers instead
+    //property LayerList : TLayerCollection read GetLayerList; //deprecated, use Layers instead
     property SelectedLayer : TigLayer read FSelectedLayer write FSelectedLayer;
 
     property UndoRedo : TigUndoRedoManager read FUndoRedo; 
