@@ -75,7 +75,7 @@ begin
       ///LayerList.OnLayerChanged := nil;
 
     //install event
-    Self.LayerList := GIntegrator.ActivePaintBox.LayerList;
+    Self.LayerList := GIntegrator.ActivePaintBox.Layers;
     ///LayerList.OnLayerChanged := SoInvalidate;
   end
   else
