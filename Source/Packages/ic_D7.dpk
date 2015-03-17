@@ -1,0 +1,57 @@
+package ic_D7;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'MinionsCanvas'}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  GR32_D7,
+  vclx,
+  vclactnband;
+
+contains
+  icBase in '..\icBase.pas',
+  icLayerPanelManager in '..\icLayerPanelManager.pas',
+  icLayers in '..\icLayers.pas',
+  icLayersListBox in '..\icLayersListBox.pas',
+  icComboboxBlendModes in '..\icComboboxBlendModes.pas',
+  icSwatch_ListView in '..\icSwatch_ListView.pas',
+  icPattern in '..\icPattern.pas',
+  icGrid_ListView_Layers in '..\icGrid_ListView_Layers.pas',
+  icCore_rw in '..\icCore_rw.pas',
+  icMath in '..\icMath.pas',
+  icPaintFuncs in '..\icPaintFuncs.pas',
+  bivGrid in '..\bivGrid.pas',
+  icCore_Items in '..\icCore_Items.pas',
+  icSwatch_rwGPL in '..\icSwatch_rwGPL.pas',
+  icSwatch_rwACO in '..\icSwatch_rwACO.pas',
+  icSwatch_rwASE in '..\icSwatch_rwASE.pas',
+  icGrid in '..\icGrid.pas',
+  icGradient in '..\icGradient.pas',
+  icSwatch in '..\icSwatch.pas',
+  icGradient_rwPhotoshopGRD in '..\icGradient_rwPhotoshopGRD.pas';
+
+end.
