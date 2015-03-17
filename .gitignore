@@ -1,0 +1,25 @@
+#################
+## Lazarus
+#################
+*.res
+*.ppu
+*.o
+*.or
+*.compiled
+*.exe
+*.lps
+lib
+units
+/laz_*
+/laz-*
+
+#################
+## Delphi
+#################
+*.dcu
+*.~*
+*.cfg
+*.dof
+*.ddp
+
+
