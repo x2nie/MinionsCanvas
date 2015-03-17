@@ -3,7 +3,7 @@ object Form1: TForm1
   Top = 222
   Width = 645
   Height = 365
-  Caption = 'iSee Hello-World (Demo 1)'
+  Caption = 'Hello-World'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,9 +17,9 @@ object Form1: TForm1
   object lbl1: TLabel
     Left = 8
     Top = 8
-    Width = 141
+    Width = 191
     Height = 13
-    Caption = 'Use mouse to start paint here:'
+    Caption = 'Drag mouse  to start paint in bellow box :'
   end
   object imgWorkArea: TicPaintBox
     Left = 8
@@ -43,8 +43,8 @@ object Form1: TForm1
     BorderStyle = bsNone
     Color = clBtnFace
     Lines.Strings = (
-      'Wellcome to MinionsCanvas (iSee)'
-      '(hello world demo)'
+      'Wellcome to MinionsCanvas ( iSee )'
+      '-= hello world demo =-'
       ''
       'This application show you about How easy to use '
       'MinionsCanvas components.'
