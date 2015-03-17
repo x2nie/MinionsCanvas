@@ -199,11 +199,11 @@ uses
 { Graphics32 }
   GR32_LowLevel,
 { miniGlue lib }
-  igMath;
+  icMath;
 
 type
   TicPaintBoxAccess = class(TicPaintBox);
-{$R igIcons.res}
+{$R icIcons.res}
 
 const
   MIN_OBJECT_SPAN    = 2;
@@ -282,7 +282,7 @@ var
 begin
   Result     := spaUnknown;
   LTestPoint := Point(AX, AY);
-  LSize      := igMath.GetRectSize(APanelRect);
+  LSize      := icMath.GetRectSize(APanelRect);
   LSpan2     := FObjectSpan * 2;
   LBmp       := nil;
 
@@ -400,7 +400,7 @@ var
   LRectSize : TSize;
   LIconRect : TRect;
 begin
-  LRectSize := igMath.GetRectSize(ARect);
+  LRectSize := icMath.GetRectSize(ARect);
 
   LIconRect.Left   := ARect.Left + (LRectSize.cx - FLayerVisibleIcon.Width) div 2;
   LIconRect.Top    := ARect.Top  + (LRectSize.cy - FLayerVisibleIcon.Height) div 2;
@@ -422,7 +422,7 @@ var
   LIconRect : TRect;
   LBmp      : TBitmap32;
 begin
-  LRectSize := igMath.GetRectSize(ARect);
+  LRectSize := icMath.GetRectSize(ARect);
   LBmp      := nil;
 
   case AStage of
@@ -453,7 +453,7 @@ var
   LIconRect : TRect;
   LBmp      : TBitmap32;
 begin
-  LRectSize := igMath.GetRectSize(ARect);
+  LRectSize := icMath.GetRectSize(ARect);
 
   if ALinked then
   begin
@@ -489,7 +489,7 @@ var
   LBmp          : TBitmap32;
   LCaptionColor : TColor32;
 begin
-  LSize := igMath.GetRectSize(ARect);
+  LSize := icMath.GetRectSize(ARect);
   LBmp  := nil;
 
   ABuffer.BeginUpdate;

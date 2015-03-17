@@ -373,7 +373,7 @@ uses
 { Graphics32 }
   GR32_LowLevel, GR32_Resamplers, GR32_Blend,
 { miniGlue lib }
-  icBase,igPaintFuncs;
+  icBase,icPaintFuncs;
 
 function TicNormalLayerPanel_Create(APanelList : TicLayerList;
   AWidth,AHeight: Integer; AColor : TColor32;  AsBackground : Boolean): TicNormalLayerPanel;

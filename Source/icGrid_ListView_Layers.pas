@@ -36,7 +36,7 @@ interface
 uses
   Classes, Controls,
   GR32, GR32_Image, GR32_Layers,
-  igGrid
+  icGrid
   ;
 
 type
@@ -99,8 +99,8 @@ type
 implementation
 uses
   SysUtils,Math, GR32_Resamplers, GR32_RepaintOpt,
-  igGrid_ListView,
-  igPaintFuncs
+  icGrid_ListView,
+  icPaintFuncs
   ;
 
 type

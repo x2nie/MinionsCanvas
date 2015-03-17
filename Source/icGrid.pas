@@ -168,7 +168,7 @@ implementation
 
 uses
 { miniGlue }
-  igPaintFuncs;
+  icPaintFuncs;
 
 
 { TicGridItem }
