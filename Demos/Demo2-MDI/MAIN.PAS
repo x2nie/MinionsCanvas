@@ -5,7 +5,7 @@ interface
 uses Windows, SysUtils, Classes, Graphics, Forms, Controls, Menus,
   StdCtrls, Dialogs, Buttons, Messages, ExtCtrls, ComCtrls, StdActns,
   ActnList, ToolWin, ImgList,
-  GR32_Image, GR32_RangeBars,
+  GR32, GR32_Image, GR32_RangeBars,
   icLayerPanelManager, icLayersListBox, icBase;
 
 type
@@ -194,6 +194,7 @@ begin
       LLayerPanel.BeginUpdate;
       with GIntegrator.ActivePaintBox.Bitmap do
       LLayerPanel.LayerBitmap.SetSize(Width,height);
+      LLayerPanel.SetBounds( FloatRect(LLayerPanel.LayerBitmap.BoundsRect) );
       LLayerPanel.LayerBitmap.Clear($FF000000 or Cardinal(Random($FFFFFF)));
       //LLayerPanel.UpdateLayerThumbnail;
       LLayerPanel.EndUpdate;
@@ -202,6 +203,7 @@ begin
 
       ///GIntegrator.ActivePaintBox.LayerList.Insert(LPanelIndex, LLayerPanel);
       LLayerPanel.Index := LPanelIndex;
+      GIntegrator.ActivePaintBox.SelectedLayer := LLayerPanel;
 
       cmd := TicCmdLayer_New.Create(GIntegrator.ActivePaintBox.UndoRedo);
       cmd.ChangedLayer(LLayerPanel);

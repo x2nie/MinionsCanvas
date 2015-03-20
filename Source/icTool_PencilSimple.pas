@@ -83,7 +83,7 @@ begin
     InflateRect(LRect, 1,1);
 
     TicBItmapLayer(Layer).LayerBitmap.Pixel[FLastPoint.X, FLastPoint.Y] :=  $7F000000;
-    Layer.Changed(LRect);
+    //Layer.Changed(LRect);
 
   end;
 end;
@@ -105,10 +105,9 @@ begin
     LRect.Bottom:= Max(LPoint.Y, FLastPoint.Y);
     InflateRect(LRect,1,1);
 
-
     TicBItmapLayer(Layer).LayerBitmap.LineS(FLastPoint.X, FLastPoint.Y, LPoint.X, LPoint.Y, $7F000000);
     FLastPoint := LPoint;
-    Layer.Changed(LRect);
+    //Layer.Changed(LRect);
   end;
 
 

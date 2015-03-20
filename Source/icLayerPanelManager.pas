@@ -1071,6 +1071,7 @@ begin
           ///FLayerList.Move(FMovingPanelIndex, LIndex);
           FMovingPanel.Index := LIndex;
           //FLayerList.SelectLayerPanel(LIndex);
+          GIntegrator.InvalidateListeners;
         end
         else
         begin

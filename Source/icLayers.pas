@@ -301,6 +301,7 @@ uses
   SysUtils, Graphics, Math,
 { Graphics32 }
   GR32_Image,  GR32_LowLevel, GR32_Resamplers, GR32_Blend,  GR32_Transforms,
+  GR32_RepaintOpt,
 { miniGlue lib }
   icBase,icPaintFuncs;
 
@@ -1212,12 +1213,21 @@ end;
 
 procedure TicBitmapLayer.BitmapAreaChanged(Sender: TObject;
   const Area: TRect; const Info: Cardinal);
-var R : TRect;  
+var
+  R : TRect;
+  W : Integer;  
 begin
   if LayerBitmap.Empty then Exit;
-  
+
   R.TopLeft := FInViewPortTransformation.Transform(Area.TopLeft);
   R.BottomRight := FInViewPortTransformation.Transform(Area.BottomRight);
+
+  W := Trunc(LayerBitmap.Resampler.Width) + 1;
+  InflateArea(R, W,W);
+  //InflateRect(R, 2,2);
+
+
+
   Changed(R);
 end;
 

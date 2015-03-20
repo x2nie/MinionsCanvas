@@ -150,6 +150,7 @@ type
     FSelectedLayer: TicLayer;
     procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
     function GetLayerList: TLayerCollection;
+    procedure SetSelectedLayer(const Value: TicLayer);
 
   protected
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -162,7 +163,7 @@ type
 
     //property LayerList : TLayerCollection read FLayerList;
     //property LayerList : TLayerCollection read GetLayerList; //deprecated, use Layers instead
-    property SelectedLayer : TicLayer read FSelectedLayer write FSelectedLayer;
+    property SelectedLayer : TicLayer read FSelectedLayer write SetSelectedLayer;
 
     property UndoRedo : TicUndoRedoManager read FUndoRedo; 
   published
@@ -870,6 +871,26 @@ begin
 end;
 
 
+
+procedure TicPaintBox.SetSelectedLayer(const Value: TicLayer);
+var
+  i : Integer;
+begin
+  for i := 0 to Layers.Count-1 do
+  begin
+    if Layers[i] is TicLayer then
+    with TicLayer(Layers[i]) do
+    begin
+      IsSelected := False;
+    end;
+  end;
+
+  FSelectedLayer := Value;
+  Value.IsSelected := True;
+  GIntegrator.SelectionChanged;
+  //todo : multiple selection
+  GIntegrator.InvalidateListeners; // such layer listbox doesn't invalidate her self
+end;
 
 { TicUndoRedoManager }
 
