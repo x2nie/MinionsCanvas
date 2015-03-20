@@ -76,7 +76,7 @@ type
     FDisplayName: string;
   protected
     //FUpdateCount: Integer;
-    FLayerVisible          : Boolean;
+    //FLayerVisible          : Boolean;
     FLayerEnabled          : Boolean;               // indicate whether the layer is currently editable
     FDuplicated            : Boolean;               // indicate whether this layer is duplicated from another one
     FSelected              : Boolean;
@@ -94,7 +94,6 @@ type
 
     function GetLayerThumb: TBitmap32;
     procedure SetLayerEnabled(AValue: Boolean);
-    procedure SetLayerVisible(AValue: Boolean);
   public
     constructor Create(ALayerCollection: TLayerCollection); virtual; 
     function PanelList : TLayerCollection;///TigLayerList; //ref to Owner / Collection
@@ -116,7 +115,8 @@ type
   published
     //for backup/restore or undo/redo or actionlist-script
     property IsLayerEnabled       : Boolean              read FLayerEnabled         write SetLayerEnabled;
-    property IsLayerVisible       : Boolean              read FLayerVisible         write SetLayerVisible;
+    //property IsLayerVisible       : Boolean              read FLayerVisible         write SetLayerVisible;
+    property Visible;
   end;
 
   TicLayerPanelClass = class of TicLayer;
@@ -415,15 +415,6 @@ begin
     begin
       FOnLayerDisabled(Self);
     end;
-  end;
-end;
-
-procedure TicLayer.SetLayerVisible(AValue: Boolean);
-begin
-  if FLayerVisible <> AValue then
-  begin
-    FLayerVisible := AValue;
-    Changed;
   end;
 end;
 
@@ -798,7 +789,6 @@ begin
   FLayerBlendMode    := bbmNormal32;
   FLayerBlendEvent   := GetBlendMode( Ord(FLayerBlendMode) );
   FDuplicated        := False;
-  FLayerVisible      := True;
   FSelected          := True;
   FLayerEnabled      := True;
   FMaskEnabled       := False;

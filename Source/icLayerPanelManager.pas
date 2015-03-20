@@ -496,7 +496,7 @@ begin
   try
     // draw layer visible mark
     LRect := GetLayerVisibleIconRect(ARect);
-    DrawLayerVisibleIcon(ABuffer, LRect, APanel.IsLayerVisible);
+    DrawLayerVisibleIcon(ABuffer, LRect, APanel.Visible);
     ABuffer.LineS(LRect.Right, LRect.Top, LRect.Right, LRect.Bottom, FSpanColor);
 
     // draw process stage mark
@@ -1089,7 +1089,7 @@ begin
           case FPanelTheme.GetPanelAreaAtXY(LLayer, LPanelRect, X, Y) of
             spaVisibleMark:
               begin
-                LLayer.IsLayerVisible := not LLayer.IsLayerVisible;
+                LLayer.Visible := not LLayer.Visible;
               end;
 
             spaStageMark:
