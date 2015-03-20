@@ -42,10 +42,12 @@ uses
   Classes, Contnrs,
 { Graphics32 }
   GR32, GR32_Layers,
-{ externals\Graphics32_add_ons }
+{ GR32_Plus }
   GR32_Add_BlendModes,
+  GR32_ElasticLayers
 { miniGlue }
-  icCore_Items;
+  //icCore_Items
+  ;
 
 type
   TicLayerPixelFeature = (lpfNone,
@@ -69,7 +71,7 @@ type
   { Event }
   TicLayerChangeEvent = procedure(Sender: TObject; ALayer: TicLayer) of object;
 
-  TicLayer = class( TCustomLayer {TigCoreItem} )
+  TicLayer = class( TElasticLayer {TCustomLayer} {TigCoreItem} )
   private
     //FOnChange: TNotifyEvent;
     FChangedRect: TRect;
