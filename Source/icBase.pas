@@ -146,7 +146,6 @@ type
   { the drawing-canvas object
   }
   private
-    FLayerList: TLayerCollection;
     FUndoRedo: TicUndoRedoManager;
     FSelectedLayer: TicLayer;
     procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
@@ -260,7 +259,7 @@ type
   TicUndoRedoManager = class(TComponent)
   private
     FItemIndex: Integer;
-    FPanelList: TLayerCollection;
+    FLayers: TLayerCollection;
     function GetCount: Integer;
 
   protected
@@ -282,7 +281,7 @@ type
 
     property Strings :TStrings read FUndoList;
     property Count : Integer read GetCount;
-    property LayerList : TLayerCollection read FPanelList write FPanelList;
+    property LayerList : TLayerCollection read FLayers write FLayers;
     property ItemIndex : Integer read FItemIndex;
   published
 
@@ -809,11 +808,11 @@ begin
   Options := [pboAutoFocus];
   TabStop := True;
   //FAgent := TicAgent.Create(self); //autodestroy. //maybe better to use integrator directly.
-  FLayerList := TLayerCollection.Create(Self); //TPersistent is not autodestroy
+  //FLayerList := TLayerCollection.Create(Self); //TPersistent is not autodestroy
   ///FLayerList.OnLayerCombined := AfterLayerCombined;
 
   FUndoRedo:= TicUndoRedoManager.Create(Self);
-  FUndoRedo.LayerList := FLayerList;
+  FUndoRedo.LayerList := Layers;
   if not (csDesigning in self.ComponentState) then
   begin
     // set background size before create background layer
@@ -836,7 +835,6 @@ end;
 
 destructor TicPaintBox.Destroy;
 begin
-  FLayerList.Free;
   inherited;
 end;
 
