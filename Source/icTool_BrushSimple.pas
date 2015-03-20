@@ -82,7 +82,7 @@ begin
     LRect.Bottom := LPoint.Y + 10;
 
     TicBItmapLayer(Layer).LayerBitmap.FillRectS(LRect, $7F000000);
-    Layer.Changed(LRect);
+    //Layer.Changed(LRect);
 
   end;
 end;
@@ -103,7 +103,8 @@ begin
     LRect.Bottom := LPoint.Y + 10;
 
     TicBItmapLayer(Layer).LayerBitmap.FillRectS(LRect, $7F000000);
-    Layer.Changed(LRect);
+    //Layer.Changed(LRect);
+    //Layer.Changed;
   end;
 
 

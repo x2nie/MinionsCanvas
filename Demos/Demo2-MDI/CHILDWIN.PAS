@@ -59,6 +59,7 @@ var
 begin
     LLayerPanel :=  TicNormalLayerPanel.Create(img1.Layers);
     LLayerPanel.IsAsBackground := True;
+    //LLayerPanel.SetBounds( FloatRect( img1.Bitmap.BoundsRect) );
     LLayerPanel.LayerBitmap.SetSize(  img1.Bitmap.Width, img1.Bitmap.Height);
     LLayerPanel.LayerBitmap.Clear(clWhite32);
     LLayerPanel.SetBounds( FloatRect( LLayerPanel.LayerBitmap.BoundsRect) );

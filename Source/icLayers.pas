@@ -103,7 +103,7 @@ type
     procedure Changed(const ARect: TRect); overload;
 
     property DisplayName          : string               read FDisplayName write FDisplayName; 
-    property ChangedRect          : TRect                read FChangedRect;  //used by collection.update
+    //property ChangedRect          : TRect                read FChangedRect;  //used by collection.update
     property LayerThumbnail       : TBitmap32            read GetLayerThumb;
     property IsSelected           : Boolean              read FSelected             write FSelected;
     //property IsSelected           : Boolean              read GetIsSelected;
@@ -131,6 +131,7 @@ type
     procedure SetLayerBitmap(const Value: TBitmap32);
     procedure SetMaskBitmap(const Value: TBitmap32);
     procedure BitmapResized(Sender: TObject);
+    procedure BitmapAreaChanged(Sender: TObject; const Area: TRect; const Info: Cardinal);
 
   protected
     ///FOwner                : TicLayerList;
@@ -866,7 +867,8 @@ begin
   begin
     ///DrawMode    := dmBlend;
     ///CombineMode := cmMerge;
-    OnResize    := BitmapResized; 
+    OnResize      := BitmapResized;
+    OnAreaChanged := BitmapAreaChanged;
     //SetSize(ALayerWidth, ALayerHeight);
     //Clear(AFillColor);
   end;
@@ -1206,6 +1208,17 @@ constructor TicLayer.Create(ALayerCollection: TLayerCollection);
 begin
   inherited;
   Scaled := True;
+end;
+
+procedure TicBitmapLayer.BitmapAreaChanged(Sender: TObject;
+  const Area: TRect; const Info: Cardinal);
+var R : TRect;  
+begin
+  if LayerBitmap.Empty then Exit;
+  
+  R.TopLeft := FInViewPortTransformation.Transform(Area.TopLeft);
+  R.BottomRight := FInViewPortTransformation.Transform(Area.BottomRight);
+  Changed(R);
 end;
 
 end.
