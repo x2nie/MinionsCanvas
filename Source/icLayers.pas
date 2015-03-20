@@ -75,12 +75,12 @@ type
     FChangedRect: TRect;
     FDisplayName: string;
   protected
-    FUpdateCount: Integer;
+    //FUpdateCount: Integer;
     FLayerVisible          : Boolean;
     FLayerEnabled          : Boolean;               // indicate whether the layer is currently editable
     FDuplicated            : Boolean;               // indicate whether this layer is duplicated from another one
     FSelected              : Boolean;
-    FLayerThumb           : TBitmap32;
+    FLayerThumb            : TBitmap32;
     FThumbValid            : Boolean;               // indicate thumbnail has been rebuild from layer
     FOnLayerDisabled       : TNotifyEvent;
     FOnLayerEnabled        : TNotifyEvent;
@@ -100,8 +100,6 @@ type
     function PanelList : TLayerCollection;///TigLayerList; //ref to Owner / Collection
     procedure Changed; overload;
     procedure Changed(const ARect: TRect); overload;
-    procedure BeginUpdate; virtual;
-    procedure EndUpdate; virtual;
 
     property DisplayName          : string               read FDisplayName write FDisplayName; 
     property ChangedRect          : TRect                read FChangedRect;  //used by collection.update
@@ -589,7 +587,7 @@ procedure TicLayer.Changed(const ARect: TRect);
 begin
   FThumbValid := False;
 
-  if (FUpdateCount > 0) then
+  if (UpdateCount > 0) then
     Exit;
 
   FChangedRect := ARect;
@@ -1163,16 +1161,6 @@ begin
   FLayerThumb.FrameRectS(LRect, clBlack32);
 end;
 
-procedure TicLayer.BeginUpdate;
-begin
-  Inc(FUpdateCount);
-end;
-
-procedure TicLayer.EndUpdate;
-begin
-  Assert(FUpdateCount > 0, 'Unpaired TThreadPersistent.EndUpdate');
-  Dec(FUpdateCount);
-end;
 
 procedure TicNormalLayerPanel.SetAsBackground(const Value: Boolean);
 begin

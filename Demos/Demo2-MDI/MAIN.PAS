@@ -4,8 +4,9 @@ interface
 
 uses Windows, SysUtils, Classes, Graphics, Forms, Controls, Menus,
   StdCtrls, Dialogs, Buttons, Messages, ExtCtrls, ComCtrls, StdActns,
-  ActnList, ToolWin, ImgList, GR32_Image, icLayerPanelManager,
-  icLayersListBox, GR32_RangeBars, icBase;
+  ActnList, ToolWin, ImgList,
+  GR32_Image, GR32_RangeBars,
+  icLayerPanelManager, icLayersListBox, icBase;
 
 type
   TMainForm = class(TForm)
