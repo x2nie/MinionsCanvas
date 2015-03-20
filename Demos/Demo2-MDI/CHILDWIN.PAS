@@ -61,6 +61,7 @@ begin
     LLayerPanel.IsAsBackground := True;
     LLayerPanel.LayerBitmap.SetSize(  img1.Bitmap.Width, img1.Bitmap.Height);
     LLayerPanel.LayerBitmap.Clear(clWhite32);
+    LLayerPanel.SetBounds( FloatRect( LLayerPanel.LayerBitmap.BoundsRect) );
     //LLayerPanel.UpdateLayerThumbnail;
     //TicNormalLayerPanel(LLayerPanel).IsAsBackground := True;
     img1.SelectedLayer := LLayerPanel;

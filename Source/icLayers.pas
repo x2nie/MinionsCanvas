@@ -71,7 +71,7 @@ type
   { Event }
   TicLayerChangeEvent = procedure(Sender: TObject; ALayer: TicLayer) of object;
 
-  TicLayer = class( TElasticLayer {TCustomLayer} {TigCoreItem} )
+  TicLayer = class( TElasticLayer)
   private
     //FOnChange: TNotifyEvent;
     FChangedRect: TRect;
@@ -97,9 +97,9 @@ type
     function GetLayerThumb: TBitmap32;
     procedure SetLayerEnabled(AValue: Boolean);
   public
-    constructor Create(ALayerCollection: TLayerCollection); virtual; 
-    function PanelList : TLayerCollection;///TigLayerList; //ref to Owner / Collection
-    procedure Changed; overload;
+    constructor Create(ALayerCollection: TLayerCollection); override; 
+    //function PanelList : TLayerCollection;///TigLayerList; //ref to Owner / Collection
+    procedure Changed; overload; override; 
     procedure Changed(const ARect: TRect); overload;
 
     property DisplayName          : string               read FDisplayName write FDisplayName; 
@@ -130,6 +130,8 @@ type
     procedure DoParentLayerChanged;
     procedure SetLayerBitmap(const Value: TBitmap32);
     procedure SetMaskBitmap(const Value: TBitmap32);
+    procedure BitmapResized(Sender: TObject);
+
   protected
     ///FOwner                : TicLayerList;
     FLayerBitmap          : TBitmap32;
@@ -139,7 +141,7 @@ type
     FLogoBitmap           : TBitmap32;
     FLogoThumb            : TBitmap32;
     FLayerBlendMode       : TBlendMode32;
-    FLayerBlendEvent      : TPixelCombineEvent;
+    //FLayerBlendEvent      : TPixelCombineEvent;
     FLayerProcessStage    : TicLayerProcessStage;
     FPixelFeature         : TicLayerPixelFeature;  // the pixel feature of the layer
     //FSelected             : Boolean;
@@ -177,7 +179,7 @@ type
     procedure SetLayerBlendMode(AValue: TBlendMode32);
     procedure SetLayerOpacity(AValue: Byte);
     procedure SetLayerProcessStage(AValue: TicLayerProcessStage);
-    procedure LayerBlend(F: TColor32; var B: TColor32; M: TColor32); virtual;
+    //procedure LayerBlend(F: TColor32; var B: TColor32; M: TColor32); virtual;
     procedure InitMask;
     procedure PaintLayerThumb; override;
     ///procedure Paint(ABuffer: TBitmap32; DstRect: TRect); override;
@@ -297,10 +299,14 @@ uses
 { Delphi }
   SysUtils, Graphics, Math,
 { Graphics32 }
-  GR32_LowLevel, GR32_Resamplers, GR32_Blend,
+  GR32_Image,  GR32_LowLevel, GR32_Resamplers, GR32_Blend,  GR32_Transforms,
 { miniGlue lib }
   icBase,icPaintFuncs;
 
+type
+  TLayerCollectionAccess = class(TLayerCollection);
+  TImage32Access = class(TCustomImage32);
+    
 { TicBitmapLayer }
 
 {constructor TicBitmapLayer.Create(ALayerCollection: TLayerCollection;
@@ -327,7 +333,7 @@ end;}
 
 destructor TicBitmapLayer.Destroy;
 begin
-  FLayerBlendEvent      := nil;
+  //FLayerBlendEvent      := nil;
   ///FOwner                := nil;
   //FOnChange             := nil;
   FOnThumbUpdate        := nil;
@@ -457,9 +463,19 @@ procedure TicBitmapLayer.SetLayerBlendMode(AValue: TBlendMode32);
 begin
   if FLayerBlendMode <> AValue then
   begin
-    FLayerBlendMode  := AValue;
-    FLayerBlendEvent := GetBlendMode( Ord(FLayerBlendMode) );
-    
+    FLayerBlendMode := AValue;
+    case AValue of
+      bbmNormal32 :
+        begin
+          FLayerBitmap.OnPixelCombine := nil;
+          FLayerBitmap.DrawMode := dmBlend;
+        end;
+      else
+        begin
+          FLayerBitmap.DrawMode := dmCustom;
+          FLayerBitmap.OnPixelCombine := GetBlendMode(ord(FLayerBlendMode));
+        end;
+    end;
     Changed;
   end;
 end;
@@ -485,12 +501,6 @@ begin
       FOnProcessStageChanged(Self, FLayerProcessStage);
     end;
   end;
-end;
-
-procedure TicBitmapLayer.LayerBlend(
-  F: TColor32; var B: TColor32; M: TColor32);
-begin
-  FLayerBlendEvent(F, B, M);
 end;
 
 procedure TicBitmapLayer.InitMask;
@@ -559,8 +569,10 @@ end;
 
 procedure TicLayer.Changed;
 begin
-  Changed(EMPTY_RECT); //I can't determine the whole bounds of vector (non raster) layer.
-  
+  FThumbValid := False;
+  inherited ///{Changed(False)};
+  //Changed(EMPTY_RECT); //I can't determine the whole bounds of vector (non raster) layer.
+
   {FThumbValid := False;
   FChangedRect := EMPTY_RECT;
   inherited Changed(False); //true = allitem, false = self
@@ -651,7 +663,44 @@ begin
 end;
 
 
-procedure TicBitmapLayer.Paint(Buffer: TBitmap32{; DstRect: TRect});
+procedure TicBitmapLayer.Paint(Buffer: TBitmap32);
+var ImageRect : TRect;
+  DstRect, ClipRect, TempRect: TRect;
+  //LTransformer : TTicTransformation;
+  ShiftX, ShiftY, ScaleX, ScaleY: Single;  
+begin
+ if FLayerBitmap.Empty then Exit;
+
+  //LEdges := GetScaledEdges;
+
+  //Buffer.FrameRectS(MakeRect(EdgesToFloatRect(LEdges)), clBlueViolet32);
+
+  //LTransformer := TTicTransformation.Create;
+  //LTransformer.Assign(Self.FTransformation);
+
+  // Scale to viewport if activated.
+  FInViewPortTransformation.Edges := GetScaledEdges;
+  FInViewPortTransformation.SrcRect := FTransformation.SrcRect;
+
+  DstRect := MakeRect(FInViewPortTransformation.GetTransformedBounds);
+  //DstRect := MakeRect(EdgesToFloatRect(LTransformer.Edges));
+  ClipRect := Buffer.ClipRect;
+  IntersectRect(ClipRect, ClipRect, DstRect);
+  if IsRectEmpty(ClipRect) then Exit;
+  
+  if Cropped and (LayerCollection.Owner is TCustomImage32) and
+    not (TImage32Access(LayerCollection.Owner).PaintToMode) then
+  begin
+    ImageRect := TCustomImage32(LayerCollection.Owner).GetBitmapRect;
+    IntersectRect(ClipRect, ClipRect, ImageRect);
+    if IsRectEmpty(ClipRect) then Exit;
+  end;
+
+  //Transform(Buffer, FBitmap, FTransformation,ClipRect);
+  Transform(Buffer, FLayerBitmap, FInViewPortTransformation,ClipRect);
+end;
+
+(*procedure TicBitmapLayer.PaintOld(Buffer: TBitmap32{; DstRect: TRect});
 var
   i            : Integer;
   k, j, x, y : Integer;
@@ -782,14 +831,14 @@ Exit;}
       Inc(LMaskBits);
     end;
   end;}
-end;
+end;   *)
 
 constructor TicBitmapLayer.Create(ALayerCollection: TLayerCollection);
 begin
   inherited {Create(AOwner)};///
   ///FOwner             := AOwner;
   FLayerBlendMode    := bbmNormal32;
-  FLayerBlendEvent   := GetBlendMode( Ord(FLayerBlendMode) );
+  //FLayerBlendEvent   := GetBlendMode( Ord(FLayerBlendMode) );
   FDuplicated        := False;
   FSelected          := True;
   FLayerEnabled      := True;
@@ -815,9 +864,9 @@ begin
   FLayerBitmap := TBitmap32.Create;
   with FLayerBitmap do
   begin
-    DrawMode    := dmBlend;
-    CombineMode := cmMerge;
-
+    ///DrawMode    := dmBlend;
+    ///CombineMode := cmMerge;
+    OnResize    := BitmapResized; 
     //SetSize(ALayerWidth, ALayerHeight);
     //Clear(AFillColor);
   end;
@@ -1078,27 +1127,10 @@ begin
   end;
 end;
 
-
-
-constructor TicLayer.Create(ALayerCollection: TLayerCollection);
-begin
-  inherited {Create(AOwner)};///
-end;
-
-function TicLayer.PanelList: TLayerCollection;///TigLayerList;
-begin
-  Result := LayerCollection;// Collection as TicLayerList;
-end;
-
 function TicLayer.GetEmpty: Boolean;
 begin
   Result := True;
 end;
-
-{procedure TicLayer.Paint(ABuffer: TBitmap32; DstRect: TRect);
-begin
-
-end;}
 
 function TicLayer.GetLayerThumb: TBitmap32;
 begin
@@ -1163,6 +1195,17 @@ begin
     DisplayName       := FDefaultLayerName;
   end;
 
+end;
+
+procedure TicBitmapLayer.BitmapResized(Sender: TObject);
+begin
+  SourceRect := FloatRect(0, 0, LayerBitmap.Width - 1, LayerBitmap.Height - 1);
+end;
+
+constructor TicLayer.Create(ALayerCollection: TLayerCollection);
+begin
+  inherited;
+  Scaled := True;
 end;
 
 end.
