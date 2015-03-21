@@ -98,6 +98,8 @@ type
     actUndo1: TMenuItem;
     actRedo1: TMenuItem;
     N2: TMenuItem;
+    actTool_RB: TAction;
+    btnRB: TToolButton;
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure HelpAbout1Execute(Sender: TObject);
@@ -117,6 +119,7 @@ type
     procedure igAgent1SelectionChange(Sender: TObject);
     procedure cmbbxBlendModesChange(Sender: TObject);
     procedure ggbrLayerOpacityUserChange(Sender: TObject);
+    procedure actTool_RBExecute(Sender: TObject);
   private
     { Private declarations }
     procedure CreateMDIChild(const Name: string);
@@ -137,7 +140,7 @@ uses CHILDWIN, about,
   GR32_Add_BlendModes,
   icComboboxBlendModes, icLayers,
   icTool_BrushSimple,
-  icTool_PencilSimple;
+  icTool_PencilSimple, icTool_RubberBand;
 
 type TicCustomLayerPanelAccess = class(TicBitmapLayer);
   
@@ -408,5 +411,10 @@ begin
   end;
 end;
 
+
+procedure TMainForm.actTool_RBExecute(Sender: TObject);
+begin
+  actTool_RB.Checked := GIntegrator.ActivateTool(TicToolRubberBand);
+end;
 
 end.

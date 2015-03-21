@@ -977,7 +977,7 @@ begin
       // preventing from the Double-Click opens a dialog and
       // after the dialog is closed, the current panel is still
       // in Moving mode.
-      if LIndex >= 0 then
+      if (LIndex >= 0) and (FLayerList[LIndex] is TicLayer) then // exclude rubber band wich is TElasticLayer
       begin
         LLayer := FLayerList[LIndex] as TicLayer;
         TicPaintBoxAccess(FLayerList.Owner).SelectedLayer := LLayer;

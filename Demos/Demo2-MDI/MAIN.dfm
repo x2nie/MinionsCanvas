@@ -127,8 +127,13 @@ object MainForm: TMainForm
       Top = 0
       Action = actTool_Pencil
     end
-    object btn1: TToolButton
+    object btnRB: TToolButton
       Left = 282
+      Top = 0
+      Action = actTool_RB
+    end
+    object btn1: TToolButton
+      Left = 305
       Top = 0
       Width = 8
       Caption = 'btn1'
@@ -136,14 +141,14 @@ object MainForm: TMainForm
       Style = tbsSeparator
     end
     object btnUndo: TToolButton
-      Left = 290
+      Left = 313
       Top = 0
       Action = actUndo
       DropdownMenu = pmUndo
       Style = tbsDropDown
     end
     object btnRedo: TToolButton
-      Left = 326
+      Left = 349
       Top = 0
       Action = actRedo
       DropdownMenu = pmRedo
@@ -537,6 +542,13 @@ object MainForm: TMainForm
       ShortCut = 16473
       OnExecute = actRedoExecute
       OnUpdate = actRedoUpdate
+    end
+    object actTool_RB: TAction
+      Category = 'Tool'
+      Caption = 'actTool_RB'
+      ImageIndex = 10
+      OnExecute = actTool_RBExecute
+      OnUpdate = EnabledWhenMDIavailabled
     end
   end
   object ImageList1: TImageList

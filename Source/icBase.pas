@@ -148,8 +148,7 @@ type
   private
     FUndoRedo: TicUndoRedoManager;
     FSelectedLayer: TicLayer;
-    procedure AfterLayerCombined(ASender: TObject; const ARect: TRect);
-    function GetLayerList: TLayerCollection;
+    //function GetLayerList: TLayerCollection;
     procedure SetSelectedLayer(const Value: TicLayer);
 
   protected
@@ -161,8 +160,6 @@ type
     destructor Destroy; override;
     procedure SetFocus; override;
 
-    //property LayerList : TLayerCollection read FLayerList;
-    //property LayerList : TLayerCollection read GetLayerList; //deprecated, use Layers instead
     property SelectedLayer : TicLayer read FSelectedLayer write SetSelectedLayer;
 
     property UndoRedo : TicUndoRedoManager read FUndoRedo; 
@@ -793,14 +790,6 @@ end;
 
 { TicPaintBox }
 
-procedure TicPaintBox.AfterLayerCombined(ASender: TObject;
-  const ARect: TRect);
-begin
-{///  Bitmap.FillRectS(ARect, $00FFFFFF);  // must be transparent white
-  Bitmap.Draw(ARect, ARect, FLayerList.CombineResult);
-  Bitmap.Changed(ARect);}
-end;
-
 constructor TicPaintBox.Create(AOwner: TComponent);
 var
   LLayerPanel : TicNormalLayerPanel;
@@ -839,10 +828,6 @@ begin
   inherited;
 end;
 
-function TicPaintBox.GetLayerList: TLayerCollection;
-begin
-  Result := Layers;
-end;
 
 procedure TicPaintBox.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
