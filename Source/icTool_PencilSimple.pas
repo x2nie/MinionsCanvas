@@ -105,7 +105,9 @@ begin
     LRect.Bottom:= Max(LPoint.Y, FLastPoint.Y);
     InflateRect(LRect,1,1);
 
-    TicBItmapLayer(Layer).LayerBitmap.LineS(FLastPoint.X, FLastPoint.Y, LPoint.X, LPoint.Y, $7F000000);
+    //this doesn't comply the paintoptimizer.
+    TicBItmapLayer(Layer).LayerBitmap.LineS(FLastPoint.X, FLastPoint.Y, LPoint.X, LPoint.Y, $7F000000, True);
+
     FLastPoint := LPoint;
     //Layer.Changed(LRect);
   end;

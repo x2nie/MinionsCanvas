@@ -866,7 +866,7 @@ begin
   FLayerBitmap := TBitmap32.Create;
   with FLayerBitmap do
   begin
-    ///DrawMode    := dmBlend;
+    DrawMode    := dmBlend;
     ///CombineMode := cmMerge;
     OnResize      := BitmapResized;
     OnAreaChanged := BitmapAreaChanged;
