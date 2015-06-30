@@ -1235,7 +1235,7 @@ var
 begin
   Result := False;
   
-  if Assigned(FLayerList) and (FLayerList.Count > 0) then
+  if Assigned(FLayerList) and (FLayerList.Count > 0) and assigned(TicPaintBoxAccess(FLayerList.Owner).SelectedLayer) then
   begin
     ///LIndex := FLayerList.SelectedIndex;
     LIndex := TicPaintBoxAccess(FLayerList.Owner).SelectedLayer.Index;

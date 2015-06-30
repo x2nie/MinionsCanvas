@@ -688,8 +688,8 @@ begin
   //DstRect := MakeRect(EdgesToFloatRect(LTransformer.Edges));
   ClipRect := Buffer.ClipRect;
   IntersectRect(ClipRect, ClipRect, DstRect);
-  if IsRectEmpty(ClipRect) then Exit;
-  
+  ///if IsRectEmpty(ClipRect) then Exit;
+
   if Cropped and (LayerCollection.Owner is TCustomImage32) and
     not (TImage32Access(LayerCollection.Owner).PaintToMode) then
   begin
@@ -700,6 +700,7 @@ begin
 
   //Transform(Buffer, FBitmap, FTransformation,ClipRect);
   Transform(Buffer, FLayerBitmap, FInViewPortTransformation,ClipRect);
+  //Buffer.Draw(0,0, FLayerBitmap);
 end;
 
 (*procedure TicBitmapLayer.PaintOld(Buffer: TBitmap32{; DstRect: TRect});
